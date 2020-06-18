@@ -20,6 +20,12 @@ namespace Device_Control_2
         private void Form1_Load(object sender, EventArgs e)
         {
             dataGridView1.Rows.Add(63);
+            dataGridView1[0, 0].Value = "48";
+            dataGridView1[1, 0].Value = "Module: 5 Port: 5 - 10/100 Mbit TX";
+            dataGridView1[2, 0].Value = "LAPTOP RSS1";
+            dataGridView1[3, 0].Value = "Связь есть";
+            dataGridView1[4, 0].Value = "100";
+            dataGridView1[5, 0].Value = "Ethernet";
         }
     }
 }
