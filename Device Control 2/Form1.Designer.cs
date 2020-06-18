@@ -40,6 +40,7 @@
             this.Column4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column5 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Вид = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.panel1 = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -164,11 +165,20 @@
             this.Вид.Name = "Вид";
             this.Вид.ReadOnly = true;
             // 
+            // panel1
+            // 
+            this.panel1.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.panel1.Location = new System.Drawing.Point(190, 1);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(622, 65);
+            this.panel1.TabIndex = 3;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(813, 440);
+            this.Controls.Add(this.panel1);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.tabControl1);
             this.Name = "Form1";
@@ -195,6 +205,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Column4;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column5;
         private System.Windows.Forms.DataGridViewTextBoxColumn Вид;
+        private System.Windows.Forms.Panel panel1;
     }
 }
 
