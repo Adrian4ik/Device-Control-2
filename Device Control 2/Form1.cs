@@ -12,6 +12,8 @@ namespace Device_Control_2
 {
     public partial class Form1 : Form
     {
+        string[,] lolkekcheburek = new string[63, 6];
+
         public Form1()
         {
             InitializeComponent();
@@ -19,13 +21,29 @@ namespace Device_Control_2
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            dataGridView1.Rows.Add(63);
-            dataGridView1[0, 0].Value = "48";
-            dataGridView1[1, 0].Value = "Module: 5 Port: 5 - 10/100 Mbit TX";
-            dataGridView1[2, 0].Value = "LAPTOP RSS1";
-            dataGridView1[3, 0].Value = "Связь есть";
-            dataGridView1[4, 0].Value = "100";
-            dataGridView1[5, 0].Value = "Ethernet";
+            dataGridView1.Rows.Add(64);
+
+            lolkekcheburek[0, 0] = "48";
+            lolkekcheburek[1, 0] = "Module: 5 Port: 5 - 10/100 Mbit TX";
+            lolkekcheburek[2, 0] = "LAPTOP RSS1";
+            lolkekcheburek[3, 0] = "Связь есть";
+            lolkekcheburek[4, 0] = "100";
+            lolkekcheburek[5, 0] = "Ethernet";
+
+            Fill_Grid();
+        }
+
+        private void Fill_Grid()
+        {
+            for (int i = 0; i < 64; i++)
+            {
+                dataGridView1[0, i].Value = lolkekcheburek[0, 0];
+                dataGridView1[1, i].Value = lolkekcheburek[1, 0];
+                dataGridView1[2, i].Value = lolkekcheburek[2, 0];
+                dataGridView1[3, i].Value = lolkekcheburek[3, 0];
+                dataGridView1[4, i].Value = lolkekcheburek[4, 0];
+                dataGridView1[5, i].Value = lolkekcheburek[5, 0];
+            }
         }
     }
 }
