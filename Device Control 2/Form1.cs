@@ -37,6 +37,7 @@ namespace Device_Control_2
 
         string[,] lolkekcheburek = new string[63, 6];
 
+        #region Gif
         /// <summary>
         /// Creates a GIF using .Net GIF encoding and additional animation headers.
         /// </summary>
@@ -231,6 +232,7 @@ namespace Device_Control_2
                 _writer.Dispose();
             }
         }
+        #endregion
 
         public Form1()
         {
@@ -239,6 +241,8 @@ namespace Device_Control_2
 
         void FillConstants()
         {
+            int ifIndex = 0;
+
             comm[0] = "public";
             comm[1] = "private";
 
@@ -321,7 +325,7 @@ namespace Device_Control_2
             }*/
 
 
-            int output_i, ifIndex = 0;
+            int output_i;
             string output_s;
 
             if (NetworkInterface.GetIsNetworkAvailable())
@@ -356,6 +360,75 @@ namespace Device_Control_2
                 Console.WriteLine("Network is unavailable, check connection and restart program.");
 
             Console.Read();
+        }
+
+        [Obsolete]
+        private static string snmp_request_str(string host, string comm, string mib)
+        {
+            int commlength, miblength, datatype, datalength, datastart;
+            string output;
+            SNMP conn = new SNMP();
+            byte[] response = new byte[1024];
+
+            // Send sysName SNMP request
+            response = conn.get("get", host, comm, mib);
+            if (response[0] == 0xff)
+            {
+                Console.WriteLine("No response from {0}", host);
+                //return;
+            }
+
+            // If response, get the community name and MIB lengths
+            commlength = Convert.ToInt16(response[6]);
+            miblength = Convert.ToInt16(response[23 + commlength]);
+
+            // Extract the MIB data from the SNMP response
+            datatype = Convert.ToInt16(response[24 + commlength + miblength]);
+            datalength = Convert.ToInt16(response[25 + commlength + miblength]);
+            datastart = 26 + commlength + miblength;
+
+            //output = BitConverter.ToString(response, datastart, datalength);
+            output = Encoding.ASCII.GetString(response, datastart, datalength);
+
+            //output = BitConverter.ToInt32(response, datastart);
+
+            return output;
+        }
+
+        [Obsolete]
+        private static int snmp_request_int(string host, string comm, string mib)
+        {
+            int commlength, miblength, datatype, datalength, datastart;
+            int output = 0;
+            SNMP conn = new SNMP();
+            byte[] response = new byte[1024];
+
+            // Send a SysUptime SNMP request
+            response = conn.get("get", host, comm, mib);
+            if (response[0] == 0xff)
+            {
+                Console.WriteLine("No response from {0}", host);
+                //return;
+            }
+
+            // Get the community and MIB lengths of the response
+            commlength = Convert.ToInt16(response[6]);
+            miblength = Convert.ToInt16(response[23 + commlength]);
+
+            // Extract the MIB data from the SNMp response
+            datatype = Convert.ToInt16(response[24 + commlength + miblength]);
+            datalength = Convert.ToInt16(response[25 + commlength + miblength]);
+            datastart = 26 + commlength + miblength;
+
+            // The sysUptime value may by a multi-byte integer
+            // Each byte read must be shifted to the higher byte order
+            while (datalength > 0)
+            {
+                output = (output << 8) + response[datastart++];
+                datalength--;
+            }
+
+            return output;
         }
 
         private void Fill_Grid()

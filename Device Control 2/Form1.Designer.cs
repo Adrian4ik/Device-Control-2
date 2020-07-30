@@ -130,7 +130,7 @@
             // 
             // Column3
             // 
-            this.Column3.DefaultCellStyle = dataGridViewCellStyle3;
+            this.Column3.DefaultCellStyle = dataGridViewCellStyle6;
             this.Column3.Frozen = true;
             this.Column3.HeaderText = "Абонент";
             this.Column3.Name = "Column3";
@@ -141,7 +141,7 @@
             // 
             // Column4
             // 
-            this.Column4.DefaultCellStyle = dataGridViewCellStyle3;
+            this.Column4.DefaultCellStyle = dataGridViewCellStyle6;
             this.Column4.Frozen = true;
             this.Column4.HeaderText = "Состояние";
             this.Column4.Name = "Column4";
@@ -152,7 +152,7 @@
             // 
             // Column5
             // 
-            this.Column5.DefaultCellStyle = dataGridViewCellStyle3;
+            this.Column5.DefaultCellStyle = dataGridViewCellStyle6;
             this.Column5.Frozen = true;
             this.Column5.HeaderText = "Скорость, Мб/с";
             this.Column5.Name = "Column5";
@@ -163,7 +163,7 @@
             // 
             // Column6
             // 
-            this.Column6.DefaultCellStyle = dataGridViewCellStyle3;
+            this.Column6.DefaultCellStyle = dataGridViewCellStyle6;
             this.Column6.Frozen = true;
             this.Column6.HeaderText = "Вид";
             this.Column6.Name = "Column6";
