@@ -6,6 +6,7 @@ using System.Diagnostics.Contracts;
 using System.Drawing;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,13 +16,22 @@ namespace Device_Control_2
 {
     public partial class Form1 : Form
     {
-        int commlength, miblength, datatype, datalength, datastart;
-        int uptime = 0;
-        string output;
-        SNMP conn = new SNMP();
-        byte[] response = new byte[1024];
+        string[] comm = new string[8];
+        // все виды комьюнити: public, private, ...
 
+        string[] client = new string[1024];
+        // список клиентов (не более 1024 клиентов)
 
+        string[,] mibs = new string[1024, 1024];
+        // mib'ы клиентов (не более 1024 mib'ов на клиента)
+        // mibs[клиент, mib]
+        // все mib диапазона 0-23 - стандартные, которые относятся ко всем устройствам
+        // локальные mib устройств прописаны в диапазоне 24-1024
+
+        private void Form1_Resize(object sender, EventArgs e)
+        {
+
+        }
 
         string[,] lolkekcheburek = new string[63, 6];
 
@@ -30,6 +40,50 @@ namespace Device_Control_2
             InitializeComponent();
         }
 
+        void FillConstants()
+        {
+            comm[0] = "public";
+            comm[1] = "private";
+
+            client[0] = "127.0.0.1";
+            client[1] = "10.1.2.252"; // БКМ
+            client[2] = "10.1.2.254"; // БРИ
+
+            for (int i = 0; i < client.Count(); i++)
+            {
+                mibs[i, 0] = "1.3.6.1.2.1.1.1.0"; // sysDescr
+                mibs[i, 1] = "1.3.6.1.2.1.1.3.0"; // sysUptime
+                mibs[i, 2] = "1.3.6.1.2.1.1.4.0"; // sysContact
+                mibs[i, 3] = "1.3.6.1.2.1.1.5.0"; // sysName
+                mibs[i, 4] = "1.3.6.1.2.1.1.6.0"; // sysLocation
+                mibs[i, 5] = "1.3.6.1.2.1.1.7.0"; // sysService
+                mibs[i, 6] = "1.3.6.1.2.1.2.1.0"; // ifNumber
+                //mibs[i, 7] = "1.3.6.1.2.1.2.2.1.1." + ifIndex; // sysLocation
+            }
+
+            mibs[1, 24] = "1.2.643.2.92.1.1.30.0";          // systime oid
+            mibs[1, 25] = "1.2.643.2.92.1.1.11.1.9.1";      // abonent ifname
+            mibs[1, 26] = "1.2.643.2.92.2.5.1.0";           // temperature
+            mibs[1, 26] = "1.2.643.2.92.2.5.2.0";           // max temperature
+            mibs[1, 26] = "1.2.643.2.92.2.5.3.0";           // min temperature
+            mibs[1, 27] = "1.2.643.2.92.1.3.1.3.1.0";       // fan 1
+            mibs[1, 28] = "1.2.643.2.92.1.3.1.3.2.0";       // fan 1 speed
+            mibs[1, 29] = "1.2.643.2.92.1.3.1.3.3.0";       // fan 2
+            mibs[1, 30] = "1.2.643.2.92.1.3.1.3.4.0";       // fan 2 speed
+            mibs[1, 31] = "1.2.643.2.92.1.3.1.3.5.0";       // fan 3
+            mibs[1, 32] = "1.2.643.2.92.1.3.1.3.6.0";       // fan 3 speed
+
+            mibs[2, 24] = "1.3.6.1.4.1.248.14.2.5.1.0";     // hmTemperature
+            mibs[2, 25] = "1.3.6.1.4.1.248.14.2.5.2.0";     // hmTempUprLimit
+            mibs[2, 26] = "1.3.6.1.4.1.248.14.2.5.3.0";     // hmTempLwrLimit
+            mibs[2, 27] = "1.3.6.1.4.1.248.14.1.2.1.3.1.1"; // hmPSState:1
+            mibs[2, 28] = "1.3.6.1.4.1.248.14.1.2.1.3.1.2"; // hmPSState:2
+            mibs[2, 29] = "1.3.6.1.4.1.248.14.1.3.1.3.1.1"; // hmFanState:1
+            mibs[2, 30] = "1.3.6.1.4.1.248.14.1.1.30.0";    // hmSystemTime
+            mibs[2, 31] = "1.3.6.1.4.1.248.14.1.1.11.1.9.1." + ifIndex; // hmIfaceName
+        }
+
+        [Obsolete]
         private void Form1_Load(object sender, EventArgs e)// , string[] argv
         {
             dataGridView1.Rows.Add(64);
@@ -42,6 +96,7 @@ namespace Device_Control_2
             lolkekcheburek[5, 0] = "Ethernet";
 
             Fill_Grid();
+            FillConstants();
 
 
 /*          |// // // // // // // // // // // // // //|
@@ -50,7 +105,7 @@ namespace Device_Control_2
             |// // // // // // // // // // // // // //|
 */
 
-            commlength = Convert.ToInt16(response[6]);
+            /*commlength = Convert.ToInt16(response[6]);
             miblength = Convert.ToInt16(response[23 + commlength]);
 
             datatype = Convert.ToInt16(response[24 + commlength + miblength]);
@@ -61,14 +116,49 @@ namespace Device_Control_2
 
             label11.Text = "sysName - Datatype: " + datatype + ", Value: " + output;
 
-            response = conn.get("get", argv[0], argv[1], "1.3.6.1.2.1.1.6.0");
+            response = conn.get("get", "127.0.0.1", "public", "1.3.6.1.2.1.1.6.0");
             if(response[0] == 0xff)
             {
-                label12.Text = "No response from " + argv[0];
+                label12.Text = "No response from Loopback";
                 return;
+            }*/
+
+
+            int output_i, ifIndex = 0;
+            string output_s;
+
+            if (NetworkInterface.GetIsNetworkAvailable())
+            {
+                Console.WriteLine("Device SNMP information:");
+
+                output_s = snmp_request_str(client[1], comm[0], mibs[1, 0]);
+                Console.WriteLine("  sysName: {0}", output_s);
+
+                output_s = snmp_request_str(client[1], comm[0], mibs[1, 1]);
+                Console.WriteLine("  sysLocation: {0}", output_s);
+
+                output_s = snmp_request_str(client[1], comm[0], mibs[1, 2]);
+                Console.WriteLine("  sysContact: {0}", output_s);
+
+                output_i = snmp_request_int(client[1], comm[0], mibs[1, 3]);
+                Console.WriteLine("  systime oid: {0}", output_i);
+
+                output_s = snmp_request_str(client[1], comm[0], mibs[1, 24]);
+                Console.WriteLine("  abonent ifname: {0}", output_s);
+
+                output_i = snmp_request_int(client[1], comm[0], mibs[1, 25]);
+                Console.WriteLine("  temperature: {0}", output_i);
+
+                output_i = snmp_request_int(client[1], comm[0], mibs[1, 26]);
+                Console.WriteLine("  fan 1: {0}", output_i);
+
+                output_i = snmp_request_int(client[1], comm[0], mibs[1, 27]);
+                Console.WriteLine("  fan 1 speed: {0}", output_i);
             }
+            else
+                Console.WriteLine("Network is unavailable, check connection and restart program.");
 
-
+            Console.Read();
         }
 
         private void Fill_Grid()
@@ -82,6 +172,77 @@ namespace Device_Control_2
                 dataGridView1[4, i].Value = lolkekcheburek[4, 0];
                 dataGridView1[5, i].Value = lolkekcheburek[5, 0];
             }
+        }
+
+
+
+        [Obsolete]
+        private static string snmp_request_str(string host, string comm, string mib)
+        {
+            int commlength, miblength, datatype, datalength, datastart;
+            string output;
+            SNMP conn = new SNMP();
+            byte[] response = new byte[1024];
+
+            // Send sysName SNMP request
+            response = conn.get("get", host, comm, mib);
+            if (response[0] == 0xff)
+            {
+                Console.WriteLine("No response from {0}", host);
+                //return;
+            }
+
+            // If response, get the community name and MIB lengths
+            commlength = Convert.ToInt16(response[6]);
+            miblength = Convert.ToInt16(response[23 + commlength]);
+
+            // Extract the MIB data from the SNMP response
+            datatype = Convert.ToInt16(response[24 + commlength + miblength]);
+            datalength = Convert.ToInt16(response[25 + commlength + miblength]);
+            datastart = 26 + commlength + miblength;
+
+            //output = BitConverter.ToString(response, datastart, datalength);
+            output = Encoding.ASCII.GetString(response, datastart, datalength);
+
+            //output = BitConverter.ToInt32(response, datastart);
+
+            return output;
+        }
+
+        [Obsolete]
+        private static int snmp_request_int(string host, string comm, string mib)
+        {
+            int commlength, miblength, datatype, datalength, datastart;
+            int output = 0;
+            SNMP conn = new SNMP();
+            byte[] response = new byte[1024];
+
+            // Send a SysUptime SNMP request
+            response = conn.get("get", host, comm, mib);
+            if (response[0] == 0xff)
+            {
+                Console.WriteLine("No response from {0}", host);
+                //return;
+            }
+
+            // Get the community and MIB lengths of the response
+            commlength = Convert.ToInt16(response[6]);
+            miblength = Convert.ToInt16(response[23 + commlength]);
+
+            // Extract the MIB data from the SNMp response
+            datatype = Convert.ToInt16(response[24 + commlength + miblength]);
+            datalength = Convert.ToInt16(response[25 + commlength + miblength]);
+            datastart = 26 + commlength + miblength;
+
+            // The sysUptime value may by a multi-byte integer
+            // Each byte read must be shifted to the higher byte order
+            while (datalength > 0)
+            {
+                output = (output << 8) + response[datastart++];
+                datalength--;
+            }
+
+            return output;
         }
     }
 
