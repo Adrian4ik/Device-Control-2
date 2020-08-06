@@ -18,6 +18,7 @@ namespace Device_Control_2
 {
     public partial class Form1 : Form
     {
+        #region Переменные
         string[] comm = new string[8];
         // все виды комьюнити: public, private, ...
 
@@ -34,6 +35,7 @@ namespace Device_Control_2
 
         int[,] output_i = new int[1024, 1024];
         string[,] output_s = new string[1024, 1024];
+        #endregion
 
         public Form1()
         {
@@ -83,12 +85,6 @@ namespace Device_Control_2
             mibs[2, 29] = "1.3.6.1.4.1.248.14.1.3.1.3.1.1"; // hmFanState:1
             mibs[2, 30] = "1.3.6.1.4.1.248.14.1.1.30.0";    // hmSystemTime
             mibs[2, 31] = "1.3.6.1.4.1.248.14.1.1.11.1.9.1." + ifIndex; // hmIfaceName
-        }
-
-        [Obsolete]
-        private void Form1_Load(object sender, EventArgs e)// , string[] argv
-        {
-            dataGridView1.Rows.Add(64);
 
             lolkekcheburek[0, 0] = "48";
             lolkekcheburek[1, 0] = "Module: 5 Port: 5 - 10/100 Mbit TX";
@@ -96,21 +92,35 @@ namespace Device_Control_2
             lolkekcheburek[3, 0] = "Связь есть";
             lolkekcheburek[4, 0] = "100";
             lolkekcheburek[5, 0] = "Ethernet";
+        }
+
+        [Obsolete]
+        private void Form1_Load(object sender, EventArgs e)// , string[] argv
+        {
+            dataGridView1.Rows.Add(64);
 
             FillConstants();
 
-            //Survey();
+            Check_clients();
+
+            label1.Text = "БРИ-СМ";
+
+            //Survey_main();
 
             Fill_main();
 
-            Fill_Grid();
+            label2.Text = "Автономный";
 
-            pictureBox1.Image = Properties.Resources.red24;
+            //Survey_grids();
+
+            Fill_grids();
+
+            label3.Text = "Последний раз обновлено: " + DateTime.Now.Hour + ":" + DateTime.Now.Minute;
         }
 
-        private void Check_TXT()
+        private void Check_clients()
         {
-            string[] al;
+            //string[] al;
 
             /*
             if (!File.Exists("Clients.txt"))
@@ -120,73 +130,29 @@ namespace Device_Control_2
                 File.WriteAllLines("Clients.txt", StandartClientList); // и заполняем стандартным списком
             }
             */
-            al = File.ReadAllLines("Clients.txt"); // читаем список клиентов
-        }
 
-        [Obsolete]
-        void Survey()
-        {
-            #region Comment
-            /*          |// // // // // // // // // // // // // //|
-                        |/ // // // // // // // // // // // // // |
-                        | // // // // // // // // // // // // // /|
-                        |// // // // // // // // // // // // // //|
-            */
+            if(!Directory.Exists("devices"))
+                Directory.CreateDirectory("devices");
 
-            /*commlength = Convert.ToInt16(response[6]);
-            miblength = Convert.ToInt16(response[23 + commlength]);
-
-            datatype = Convert.ToInt16(response[24 + commlength + miblength]);
-            datalength = Convert.ToInt16(response[25 + commlength + miblength]);
-
-            datastart = 26 + commlength + miblength;
-            output = Encoding.ASCII.GetString(response, datastart, datalength);
-
-            label11.Text = "sysName - Datatype: " + datatype + ", Value: " + output;
-
-            response = conn.get("get", "127.0.0.1", "public", "1.3.6.1.2.1.1.6.0");
-            if(response[0] == 0xff)
+            if (!Directory.Exists("devices\\localhost"))
             {
-                label12.Text = "No response from Loopback";
-                return;
-            }*/
-            #endregion
-
-            if (NetworkInterface.GetIsNetworkAvailable())
-            {
-                Console.WriteLine("Device SNMP information:");
-
-                output_s[1, 0] = snmp_request_str(client[1], comm[0], mibs[1, 0]);
-                //Console.WriteLine("  sysDescr: {0}", output_s[1, 0]);
-
-                output_i[1, 1] = snmp_request_int(client[1], comm[0], mibs[1, 1]);
-                //Console.WriteLine("  sysUptime: {0}", output_s[1, 1]);
-
-                output_s[1, 3] = snmp_request_str(client[1], comm[0], mibs[1, 3]);
-                //Console.WriteLine("  sysName: {0}", output_s[1, 3]);
-
-                output_s[1, 4] = snmp_request_str(client[1], comm[0], mibs[1, 4]);
-                //Console.WriteLine("  sysLocation: {0}", output_s[1, 4]);
-
-                //output_i[1, 3] = snmp_request_int(client[1], comm[0], mibs[1, 3]);
-                //Console.WriteLine("  systime oid: {0}", output_i[1, 3]);
-
-                output_i[1, 24] = snmp_request_int(client[1], comm[0], mibs[1, 24]);
-                //Console.WriteLine("  systime oid: {0}", output_s[1, 24]);
-
-                //output_i[1, 25] = snmp_request_int(client[1], comm[0], mibs[1, 25]);
-                //Console.WriteLine("  temperature: {0}", output_i[1, 25]);
-
-                //output_i[1, 26] = snmp_request_int(client[1], comm[0], mibs[1, 26]);
-                //Console.WriteLine("  fan 1: {0}", output_i[1, 26]);
-
-                //output_i[1, 27] = snmp_request_int(client[1], comm[0], mibs[1, 27]);
-                //Console.WriteLine("  fan 1 speed: {0}", output_i[1, 27]);
+                Directory.CreateDirectory("devices\\localhost");
             }
-            else
-                Console.WriteLine("Network is unavailable, check connection and restart program.");
 
-            Console.Read();
+            if(!File.Exists("devices\\localhost\\config.xml"))
+            {
+                FileStream f = File.Create("devices\\localhost\\config.xml");
+                f.Close();
+            }
+
+
+            if (!File.Exists("devices\\localhost\\optlist.xml"))
+            {
+                FileStream f = File.Create("devices\\localhost\\optlist.xml");
+                f.Close();
+            }
+
+            //al = File.ReadAllLines("Clients.txt"); // читаем список клиентов
         }
 
         [Obsolete]
@@ -258,6 +224,84 @@ namespace Device_Control_2
             return output;
         }
 
+        [Obsolete]
+        private void Survey_main()
+        {
+            #region Comment
+            /*          |// // // // // // // // // // // // // //|
+                        |/ // // // // // // // // // // // // // |
+                        | // // // // // // // // // // // // // /|
+                        |// // // // // // // // // // // // // //|
+            */
+
+            /*commlength = Convert.ToInt16(response[6]);
+            miblength = Convert.ToInt16(response[23 + commlength]);
+
+            datatype = Convert.ToInt16(response[24 + commlength + miblength]);
+            datalength = Convert.ToInt16(response[25 + commlength + miblength]);
+
+            datastart = 26 + commlength + miblength;
+            output = Encoding.ASCII.GetString(response, datastart, datalength);
+
+            label11.Text = "sysName - Datatype: " + datatype + ", Value: " + output;
+
+            response = conn.get("get", "127.0.0.1", "public", "1.3.6.1.2.1.1.6.0");
+            if(response[0] == 0xff)
+            {
+                label12.Text = "No response from Loopback";
+                return;
+            }*/
+            #endregion
+
+            pictureBox1.Image = Properties.Resources.ajax_loader;
+
+            if (NetworkInterface.GetIsNetworkAvailable())
+            {
+                Console.WriteLine("Device SNMP information:");
+
+                output_s[1, 0] = snmp_request_str(client[1], comm[0], mibs[1, 0]);
+                //Console.WriteLine("  sysDescr: {0}", output_s[1, 0]);
+
+                output_i[1, 1] = snmp_request_int(client[1], comm[0], mibs[1, 1]);
+                //Console.WriteLine("  sysUptime: {0}", output_s[1, 1]);
+
+                output_s[1, 3] = snmp_request_str(client[1], comm[0], mibs[1, 3]);
+                //Console.WriteLine("  sysName: {0}", output_s[1, 3]);
+
+                output_s[1, 4] = snmp_request_str(client[1], comm[0], mibs[1, 4]);
+                //Console.WriteLine("  sysLocation: {0}", output_s[1, 4]);
+
+                //output_i[1, 3] = snmp_request_int(client[1], comm[0], mibs[1, 3]);
+                //Console.WriteLine("  systime oid: {0}", output_i[1, 3]);
+
+                output_i[1, 24] = snmp_request_int(client[1], comm[0], mibs[1, 24]);
+                //Console.WriteLine("  systime oid: {0}", output_s[1, 24]);
+
+                //output_i[1, 25] = snmp_request_int(client[1], comm[0], mibs[1, 25]);
+                //Console.WriteLine("  temperature: {0}", output_i[1, 25]);
+
+                output_i[1, 26] = snmp_request_int(client[1], comm[0], mibs[1, 26]);
+                //Console.WriteLine("  fan 1: {0}", output_i[1, 26]);
+
+                output_i[1, 27] = snmp_request_int(client[1], comm[0], mibs[1, 27]);
+                //Console.WriteLine("  fan 1 speed: {0}", output_i[1, 27]);
+
+                output_i[1, 28] = snmp_request_int(client[1], comm[0], mibs[1, 28]);
+
+                output_i[1, 30] = snmp_request_int(client[1], comm[0], mibs[1, 30]);
+
+                pictureBox1.Image = Properties.Resources.green24;
+            }
+            else
+            {
+                Console.WriteLine("Network is unavailable, check connection and restart program.");
+
+                pictureBox1.Image = Properties.Resources.red24;
+            }
+
+            Console.Read();
+        }
+
         private void Fill_main()
         {
             label11.Text = output_s[1, 0];
@@ -265,9 +309,21 @@ namespace Device_Control_2
             label13.Text = output_s[1, 3];
             label14.Text = output_s[1, 4];
             label15.Text = output_i[1, 24].ToString();
+
+            label21.Text = output_i[1, 26].ToString();
+            label22.Text = output_i[1, 27].ToString();
+            label23.Text = output_i[1, 28].ToString();
+            label24.Text = "";
+            label25.Text = "";
+            label26.Text = output_i[1, 30].ToString();
         }
 
-        private void Fill_Grid()
+        private void Survey_grids()
+        {
+
+        }
+
+        private void Fill_grids()
         {
             for (int i = 0; i < 64; i++)
             {
