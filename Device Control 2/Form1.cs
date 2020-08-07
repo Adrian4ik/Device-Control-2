@@ -87,7 +87,7 @@ namespace Device_Control_2
             mibs[2, 31] = "1.3.6.1.4.1.248.14.1.1.11.1.9.1." + ifIndex; // hmIfaceName
 
             lolkekcheburek[0, 0] = "48";
-            lolkekcheburek[1, 0] = "Module: 5 Port: 5 - 10/100 Mbit TX";
+            lolkekcheburek[1, 0] = "Module: " + "5" + " Port: " + "5" + " - 10/100 Mbit TX";
             lolkekcheburek[2, 0] = "LAPTOP RSS1";
             lolkekcheburek[3, 0] = "Связь есть";
             lolkekcheburek[4, 0] = "100";
@@ -105,7 +105,7 @@ namespace Device_Control_2
 
             label1.Text = "БРИ-СМ";
 
-            //Survey_main();
+            Survey_main();
 
             Fill_main();
 
@@ -305,7 +305,7 @@ namespace Device_Control_2
         private void Fill_main()
         {
             label11.Text = output_s[1, 0];
-            label12.Text = output_i[1, 1].ToString();
+            label12.Text = "2h " + (output_i[1, 1] / 6000 - 120) + "m";
             label13.Text = output_s[1, 3];
             label14.Text = output_s[1, 4];
             label15.Text = output_i[1, 24].ToString();
