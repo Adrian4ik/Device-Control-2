@@ -11,6 +11,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -19,22 +20,22 @@ namespace Device_Control_2
     public partial class Form1 : Form
     {
         #region Переменные
-        string[] comm = new string[8];
+        static string[] comm = new string[8];
         // все виды комьюнити: public, private, ...
 
-        string[] client = new string[1024];
+        static string[] client = new string[1024];
         // список клиентов (не более 1024 клиентов)
 
-        string[,] mibs = new string[1024, 1024];
+        static string[,] mibs = new string[1024, 1024];
         // mib'ы клиентов (не более 1024 mib'ов на клиента)
         // mibs[клиент, mib]
         // все mib диапазона 0-23 - стандартные, которые относятся ко всем устройствам
         // локальные mib устройств прописаны в диапазоне 24-1024
 
-        string[,] lolkekcheburek = new string[63, 6];
+        static string[,] lolkekcheburek = new string[63, 6];
 
-        int[,] output_i = new int[1024, 1024];
-        string[,] output_s = new string[1024, 1024];
+        static int[,] output_i = new int[1024, 1024];
+        static string[,] output_s = new string[1024, 1024];
         #endregion
 
         public Form1()
@@ -111,7 +112,7 @@ namespace Device_Control_2
 
             label2.Text = "Автономный";
 
-            //Survey_grids();
+            Survey_grids();
 
             Fill_grids();
 
@@ -224,7 +225,6 @@ namespace Device_Control_2
             return output;
         }
 
-        [Obsolete]
         private void Survey_main()
         {
             #region Comment
@@ -259,38 +259,10 @@ namespace Device_Control_2
             {
                 Console.WriteLine("Device SNMP information:");
 
-                output_s[1, 0] = snmp_request_str(client[1], comm[0], mibs[1, 0]);
-                //Console.WriteLine("  sysDescr: {0}", output_s[1, 0]);
+                Thread myThread = new Thread(new ThreadStart(Count));
+                myThread.Start();
 
-                output_i[1, 1] = snmp_request_int(client[1], comm[0], mibs[1, 1]);
-                //Console.WriteLine("  sysUptime: {0}", output_s[1, 1]);
-
-                output_s[1, 3] = snmp_request_str(client[1], comm[0], mibs[1, 3]);
-                //Console.WriteLine("  sysName: {0}", output_s[1, 3]);
-
-                output_s[1, 4] = snmp_request_str(client[1], comm[0], mibs[1, 4]);
-                //Console.WriteLine("  sysLocation: {0}", output_s[1, 4]);
-
-                //output_i[1, 3] = snmp_request_int(client[1], comm[0], mibs[1, 3]);
-                //Console.WriteLine("  systime oid: {0}", output_i[1, 3]);
-
-                output_i[1, 24] = snmp_request_int(client[1], comm[0], mibs[1, 24]);
-                //Console.WriteLine("  systime oid: {0}", output_s[1, 24]);
-
-                //output_i[1, 25] = snmp_request_int(client[1], comm[0], mibs[1, 25]);
-                //Console.WriteLine("  temperature: {0}", output_i[1, 25]);
-
-                output_i[1, 26] = snmp_request_int(client[1], comm[0], mibs[1, 26]);
-                //Console.WriteLine("  fan 1: {0}", output_i[1, 26]);
-
-                output_i[1, 27] = snmp_request_int(client[1], comm[0], mibs[1, 27]);
-                //Console.WriteLine("  fan 1 speed: {0}", output_i[1, 27]);
-
-                output_i[1, 28] = snmp_request_int(client[1], comm[0], mibs[1, 28]);
-
-                output_i[1, 30] = snmp_request_int(client[1], comm[0], mibs[1, 30]);
-
-                pictureBox1.Image = Properties.Resources.green24;
+                
             }
             else
             {
@@ -302,10 +274,48 @@ namespace Device_Control_2
             Console.Read();
         }
 
+        private void DoIconGreen()
+        {
+            pictureBox1.Image = Properties.Resources.green24;
+        }
+
+        [Obsolete]
+        private static void Count()
+        {
+            output_s[1, 0] = snmp_request_str(client[1], comm[0], mibs[1, 0]);
+
+            output_i[1, 1] = snmp_request_int(client[1], comm[0], mibs[1, 1]);
+
+            output_s[1, 3] = snmp_request_str(client[1], comm[0], mibs[1, 3]);
+
+            output_s[1, 4] = snmp_request_str(client[1], comm[0], mibs[1, 4]);
+
+            output_i[1, 24] = snmp_request_int(client[1], comm[0], mibs[1, 24]);
+
+            //output_i[1, 25] = snmp_request_int(client[1], comm[0], mibs[1, 25]);
+
+            output_i[1, 26] = snmp_request_int(client[1], comm[0], mibs[1, 26]);
+
+            output_i[1, 27] = snmp_request_int(client[1], comm[0], mibs[1, 27]);
+
+            output_i[1, 28] = snmp_request_int(client[1], comm[0], mibs[1, 28]);
+
+            output_i[1, 30] = snmp_request_int(client[1], comm[0], mibs[1, 30]);
+
+            CountdownEvent cde = new CountdownEvent(1);
+            cde.Reset();
+        }
+
+        public class ThresholdReachedEventArgs : EventArgs
+        {
+            public int Threshold { get; set; }
+            public DateTime TimeReached { get; set; }
+        }
+
         private void Fill_main()
         {
             label11.Text = output_s[1, 0];
-            label12.Text = "2h " + (output_i[1, 1] / 6000 - 120) + "m";
+            label12.Text = /*"2h " + */(output_i[1, 1] / 6000/* - 120*/) + "m";
             label13.Text = output_s[1, 3];
             label14.Text = output_s[1, 4];
             label15.Text = output_i[1, 24].ToString();
@@ -438,8 +448,14 @@ namespace Device_Control_2
             packet[pos++] = 0x06; //Object type
             packet[pos++] = Convert.ToByte(miblen - 1); //length
 
-            //Start of MIB
-            packet[pos++] = 0x2b;
+            //Start of MIB (1.3... / 1.2...)
+            /////////////////////////////////////////////////////////////////
+            if (mib[1] == 2)
+                packet[pos++] = 0x2a;
+            else
+                packet[pos++] = 0x2b;
+            /////////////////////////////////////////////////////////////////
+
             //Place MIB array in packet
             for (i = 2; i < miblen; i++)
                 packet[pos++] = Convert.ToByte(mib[i]);
