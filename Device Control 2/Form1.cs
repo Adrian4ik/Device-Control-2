@@ -15,6 +15,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using SnmpSharpNet;
+
 namespace Device_Control_2
 {
     public partial class Form1 : Form
@@ -36,6 +38,14 @@ namespace Device_Control_2
 
         static int[,] output_i = new int[1024, 1024];
         static string[,] output_s = new string[1024, 1024];
+
+        static AutoResetEvent waiter = new AutoResetEvent(false);
+
+        Pdu list0 = new Pdu(PduType.Get);
+        Pdu list1 = new Pdu(PduType.Get);
+        Pdu list2 = new Pdu(PduType.Get);
+
+        Notification notify = new Notification();
         #endregion
 
         public Form1()
@@ -56,27 +66,35 @@ namespace Device_Control_2
 
             for (int i = 0; i < client.Count(); i++)
             {
-                mibs[i, 0] = "1.3.6.1.2.1.1.1.0"; // sysDescr
-                mibs[i, 1] = "1.3.6.1.2.1.1.3.0"; // sysUptime
-                mibs[i, 2] = "1.3.6.1.2.1.1.4.0"; // sysContact
-                mibs[i, 3] = "1.3.6.1.2.1.1.5.0"; // sysName
-                mibs[i, 4] = "1.3.6.1.2.1.1.6.0"; // sysLocation
-                mibs[i, 5] = "1.3.6.1.2.1.1.7.0"; // sysService
-                mibs[i, 6] = "1.3.6.1.2.1.2.1.0"; // ifNumber
+                //mibs[i, 0] = "1.3.6.1.2.1.1.1.0"; // sysDescr
+                //mibs[i, 1] = "1.3.6.1.2.1.1.3.0"; // sysUptime
+                //mibs[i, 2] = "1.3.6.1.2.1.1.4.0"; // sysContact
+                //mibs[i, 3] = "1.3.6.1.2.1.1.5.0"; // sysName
+                //mibs[i, 4] = "1.3.6.1.2.1.1.6.0"; // sysLocation
+                //mibs[i, 5] = "1.3.6.1.2.1.1.7.0"; // sysService
+                //mibs[i, 6] = "1.3.6.1.2.1.2.1.0"; // ifNumber
                 //mibs[i, 7] = "1.3.6.1.2.1.2.2.1.1." + ifIndex; // sysLocation
+
+                mibs[i, 0] = "1.3.6.1.2.1.1.1.0"; // sysDescr
+                mibs[i, 1] = "1.3.6.1.2.1.1.2.0"; // sysObjectID
+                mibs[i, 2] = "1.3.6.1.2.1.1.3.0"; // sysUpTime
+                mibs[i, 3] = "1.3.6.1.2.1.1.4.0"; // sysContact
+                mibs[i, 4] = "1.3.6.1.2.1.1.5.0"; // sysName
+                mibs[i, 5] = "1.3.6.1.2.1.1.6.0"; // sysLocation
+                mibs[i, 6] = "1.3.6.1.2.1.2.1.0"; // ifNumber
             }
 
             mibs[1, 24] = "1.2.643.2.92.1.1.30.0";          // systime oid
-            mibs[1, 25] = "1.2.643.2.92.1.1.11.1.9.1";      // abonent ifname
-            mibs[1, 26] = "1.2.643.2.92.2.5.1.0";           // temperature
-            mibs[1, 27] = "1.2.643.2.92.2.5.2.0";           // max temperature
-            mibs[1, 28] = "1.2.643.2.92.2.5.3.0";           // min temperature
-            mibs[1, 29] = "1.2.643.2.92.1.3.1.3.1.0";       // fan 1
-            mibs[1, 30] = "1.2.643.2.92.1.3.1.3.2.0";       // fan 1 speed
-            mibs[1, 31] = "1.2.643.2.92.1.3.1.3.3.0";       // fan 2
-            mibs[1, 32] = "1.2.643.2.92.1.3.1.3.4.0";       // fan 2 speed
-            mibs[1, 33] = "1.2.643.2.92.1.3.1.3.5.0";       // fan 3
-            mibs[1, 34] = "1.2.643.2.92.1.3.1.3.6.0";       // fan 3 speed
+            //mibs[1, 25] = "1.2.643.2.92.1.1.11.1.9.1";      // abonent ifname
+            mibs[1, 25] = "1.2.643.2.92.2.5.1.0";           // temperature
+            mibs[1, 26] = "1.2.643.2.92.2.5.2.0";           // max temperature
+            mibs[1, 27] = "1.2.643.2.92.2.5.3.0";           // min temperature
+            mibs[1, 28] = "1.2.643.2.92.1.3.1.3.1.0";       // fan 1
+            mibs[1, 29] = "1.2.643.2.92.1.3.1.3.2.0";       // fan 1 speed
+            mibs[1, 30] = "1.2.643.2.92.1.3.1.3.3.0";       // fan 2
+            mibs[1, 31] = "1.2.643.2.92.1.3.1.3.4.0";       // fan 2 speed
+            mibs[1, 32] = "1.2.643.2.92.1.3.1.3.5.0";       // fan 3
+            mibs[1, 33] = "1.2.643.2.92.1.3.1.3.6.0";       // fan 3 speed
 
             mibs[2, 24] = "1.3.6.1.4.1.248.14.2.5.1.0";     // hmTemperature
             mibs[2, 25] = "1.3.6.1.4.1.248.14.2.5.2.0";     // hmTempUprLimit
@@ -105,18 +123,24 @@ namespace Device_Control_2
             Check_clients();
 
             label1.Text = "БРИ-СМ";
+            
+            for (int i = 0; i < 7; i++)
+                list0.VbList.Add(mibs[1, i]);
+
+            for (int i = 24; i < 34; i++)
+                list1.VbList.Add(mibs[1, i]);
 
             Survey_main();
 
-            Fill_main();
+            //Fill_main();
 
             label2.Text = "Автономный";
 
-            Survey_grids();
+            //Survey_grids();
 
-            Fill_grids();
+            //Fill_grids();
 
-            label3.Text = "Последний раз обновлено: " + DateTime.Now.Hour + ":" + DateTime.Now.Minute;
+            label3.Text = "Последний раз обновлено: " + DateTime.Now.ToString().Substring(11, 5);
         }
 
         private void Check_clients()
@@ -225,62 +249,142 @@ namespace Device_Control_2
             return output;
         }
 
+        private static SnmpV1Packet SurveyList(string comm, string ip, Pdu list)
+        {
+            // SNMP community name
+            OctetString community = new OctetString(comm);
+
+            // Define agent parameters class
+            AgentParameters param = new AgentParameters(community);
+            // Set SNMP version to 1 (or 2)
+            param.Version = SnmpVersion.Ver1;
+            // Construct the agent address object
+            // IpAddress class is easy to use here because
+            //  it will try to resolve constructor parameter if it doesn't
+            //  parse to an IP address
+            IpAddress agent = new IpAddress(ip);
+
+            // Construct target
+            UdpTarget target = new UdpTarget((IPAddress)agent, 161, 2000, 1);
+
+            // Pdu class used for all requests
+            Pdu pdu = list;
+
+            // Make SNMP request
+            SnmpV1Packet result = (SnmpV1Packet)target.Request(pdu, param);
+
+            // If result is null then agent didn't reply or we couldn't parse the reply.
+            if (result != null)
+                if (result.Pdu.ErrorStatus != 0)
+                    Console.WriteLine("Error in SNMP reply. Error {0} index {1}", result.Pdu.ErrorStatus, result.Pdu.ErrorIndex);
+                else
+                {
+                    target.Close();
+
+                    return result;
+                }
+            else
+                Console.WriteLine("No response received from SNMP agent.");
+
+            target.Close();
+
+            return result;
+        }
+
         private void Survey_main()
         {
-            #region Comment
-            /*          |// // // // // // // // // // // // // //|
-                        |/ // // // // // // // // // // // // // |
-                        | // // // // // // // // // // // // // /|
-                        |// // // // // // // // // // // // // //|
-            */
-
-            /*commlength = Convert.ToInt16(response[6]);
-            miblength = Convert.ToInt16(response[23 + commlength]);
-
-            datatype = Convert.ToInt16(response[24 + commlength + miblength]);
-            datalength = Convert.ToInt16(response[25 + commlength + miblength]);
-
-            datastart = 26 + commlength + miblength;
-            output = Encoding.ASCII.GetString(response, datastart, datalength);
-
-            label11.Text = "sysName - Datatype: " + datatype + ", Value: " + output;
-
-            response = conn.get("get", "127.0.0.1", "public", "1.3.6.1.2.1.1.6.0");
-            if(response[0] == 0xff)
-            {
-                label12.Text = "No response from Loopback";
-                return;
-            }*/
-            #endregion
-
-            pictureBox1.Image = Properties.Resources.ajax_loader;
-
             if (NetworkInterface.GetIsNetworkAvailable())
             {
-                Console.WriteLine("Device SNMP information:");
+                ChangePingIcon(0);
 
-                Thread myThread = new Thread(new ThreadStart(Count));
-                myThread.Start();
+                Ping ping = new Ping();
+                ping.PingCompleted += new PingCompletedEventHandler(Received_ping_reply);
+                ping.SendAsync(client[1], 3000, waiter);
 
-                
+                ChangeSNMPIcon(0);
+
+                SnmpV1Packet result = SurveyList(comm[0], client[1], list0);
+
+                label11.Text = result.Pdu.VbList[0].Value.ToString();
+                label12.Text = result.Pdu.VbList[2].Value.ToString();
+                label13.Text = result.Pdu.VbList[4].Value.ToString();
+                label14.Text = result.Pdu.VbList[5].Value.ToString();
+
+                result = SurveyList(comm[0], client[1], list1);
+
+                long convertedTime = Convert.ToInt64(result.Pdu.VbList[0].Value.ToString()); //сконвертированное в long время из string
+
+                label15.Text = DateTimeOffset.FromUnixTimeSeconds(convertedTime).ToString().Substring(0, 19);
+
+                label21.Text = result.Pdu.VbList[1].Value.ToString();
+                label22.Text = result.Pdu.VbList[2].Value.ToString();
+                label23.Text = result.Pdu.VbList[3].Value.ToString();
+                label24.Text = result.Pdu.VbList[4].Value.ToString();
+                label25.Text = "";
+                label26.Text = result.Pdu.VbList[5].Value.ToString();
+
+                ChangeSNMPIcon(1);
+
+                int curt = Convert.ToInt32(result.Pdu.VbList[1].Value.ToString());
+                int maxt = Convert.ToInt32(result.Pdu.VbList[2].Value.ToString());
+                int mint = Convert.ToInt32(result.Pdu.VbList[3].Value.ToString());
+
+                if (curt >= maxt || curt <= mint)
+                    notify.Show();
             }
             else
             {
                 Console.WriteLine("Network is unavailable, check connection and restart program.");
 
-                pictureBox1.Image = Properties.Resources.red24;
+                ChangeSNMPIcon(3);
             }
-
-            Console.Read();
         }
 
-        private void DoIconGreen()
+        private void ChangeSNMPIcon(int stat)
         {
-            pictureBox1.Image = Properties.Resources.green24;
+            switch(stat)
+            {
+                case 0:
+                    pictureBox2.Image = Properties.Resources.ajax_loader;
+                    break;
+                case 1:
+                    pictureBox2.Image = Properties.Resources.green24;
+                    break;
+                case 2:
+                    pictureBox2.Image = Properties.Resources.orange24;
+                    break;
+                case 3:
+                    pictureBox2.Image = Properties.Resources.red24;
+                    break;
+                case 4:
+                    pictureBox2.Image = Properties.Resources.gray24;
+                    break;
+            }
         }
 
-        [Obsolete]
-        private static void Count()
+        private void ChangePingIcon(int stat)
+        {
+            switch (stat)
+            {
+                case 0:
+                    pictureBox1.Image = Properties.Resources.ajax_loader;
+                    break;
+                case 1:
+                    pictureBox1.Image = Properties.Resources.green24;
+                    break;
+                case 2:
+                    pictureBox1.Image = Properties.Resources.orange24;
+                    break;
+                case 3:
+                    pictureBox1.Image = Properties.Resources.red24;
+                    break;
+                case 4:
+                    pictureBox1.Image = Properties.Resources.gray24;
+                    break;
+            }
+        }
+
+        /*private static void Count()
         {
             output_s[1, 0] = snmp_request_str(client[1], comm[0], mibs[1, 0]);
 
@@ -310,7 +414,7 @@ namespace Device_Control_2
         {
             public int Threshold { get; set; }
             public DateTime TimeReached { get; set; }
-        }
+        }*/
 
         private void Fill_main()
         {
@@ -349,6 +453,23 @@ namespace Device_Control_2
         private void Form1_Resize(object sender, EventArgs e)
         {
 
+        }
+
+        private void Received_ping_reply(object sender, PingCompletedEventArgs e)
+        {
+            if (e.Cancelled)
+                ((AutoResetEvent)e.UserState).Set();
+
+            if (e.Error != null)
+                ((AutoResetEvent)e.UserState).Set();
+
+            // Let the main thread resume.
+            ((AutoResetEvent)e.UserState).Set();
+
+            if(e.Reply.Status == IPStatus.Success)
+                ChangePingIcon(1);
+            else
+                ChangePingIcon(3);
         }
     }
 
