@@ -22,10 +22,14 @@ namespace Device_Control_2
     public partial class Form1 : Form
     {
         #region Переменные
+        int client_count = 3, ifNum;
+
+        string[,] interfaces = new string[1024, 6];
+
         static string[] comm = new string[8];
         // все виды комьюнити: public, private, ...
 
-        static string[] client = new string[1024];
+        static string[,] client = new string[1024,2];
         // список клиентов (не более 1024 клиентов)
 
         static string[,] mibs = new string[1024, 1024];
@@ -53,18 +57,40 @@ namespace Device_Control_2
             InitializeComponent();
         }
 
-        void FillConstants()
+        private void Preprocessing()
+        {
+            dataGridView1.Rows.Add(64);
+
+            FillConstants();
+
+            Check_clients();
+
+            label1.Text = client[1, 1];
+
+            for (int i = 0; i < 7; i++)
+                list0.VbList.Add(mibs[1, i]);
+
+            for (int i = 24; i < 34; i++)
+                list1.VbList.Add(mibs[1, i]);
+        }
+
+        private void FillConstants()
         {
             int ifIndex = 0;
 
             comm[0] = "public";
             comm[1] = "private";
 
-            client[0] = "127.0.0.1";
-            client[1] = "10.1.2.252"; // БКМ
-            client[2] = "10.1.2.254"; // БРИ
+            client[0, 0] = "127.0.0.1";
+            client[0, 1] = "Loopback";
+            client[1, 0] = "10.1.2.252";
+            client[1, 1] = "БКМ";
+            client[2, 0] = "10.1.2.254";
+            client[2, 1] = "БРИ";
 
-            for (int i = 0; i < client.Count(); i++)
+
+
+            for (int i = 0; i < client_count; i++)
             {
                 //mibs[i, 0] = "1.3.6.1.2.1.1.1.0"; // sysDescr
                 //mibs[i, 1] = "1.3.6.1.2.1.1.3.0"; // sysUptime
@@ -113,34 +139,22 @@ namespace Device_Control_2
             lolkekcheburek[5, 0] = "Ethernet";
         }
 
-        [Obsolete]
         private void Form1_Load(object sender, EventArgs e)// , string[] argv
         {
-            dataGridView1.Rows.Add(64);
-
-            FillConstants();
-
-            Check_clients();
-
-            label1.Text = "БРИ-СМ";
-            
-            for (int i = 0; i < 7; i++)
-                list0.VbList.Add(mibs[1, i]);
-
-            for (int i = 24; i < 34; i++)
-                list1.VbList.Add(mibs[1, i]);
+            Preprocessing();
 
             Survey_main();
 
             //Fill_main();
 
-            label2.Text = "Автономный";
+            Survey_grids();
 
-            //Survey_grids();
+            Fill_grids();
 
-            //Fill_grids();
-
-            label3.Text = "Последний раз обновлено: " + DateTime.Now.ToString().Substring(11, 5);
+            // Тернарная операция: z = (x > y) ? x : y;
+            string time = (DateTime.Now.Hour > 10) ? DateTime.Now.Hour + ":" : "0" + DateTime.Now.Hour + ":";
+            time += (DateTime.Now.Minute > 10) ? DateTime.Now.Minute.ToString() : "0" + DateTime.Now.Minute;
+            label3.Text = "Последний раз обновлено: " + time;
         }
 
         private void Check_clients()
@@ -180,76 +194,76 @@ namespace Device_Control_2
             //al = File.ReadAllLines("Clients.txt"); // читаем список клиентов
         }
 
-        [Obsolete]
-        private static string snmp_request_str(string host, string comm, string mib)
-        {
-            int commlength, miblength, datatype, datalength, datastart;
-            string output;
-            SNMP conn = new SNMP();
-            byte[] response = new byte[1024];
+        //[Obsolete]
+        //private static string snmp_request_str(string host, string comm, string mib)
+        //{
+        //    int commlength, miblength, datatype, datalength, datastart;
+        //    string output;
+        //    SNMP conn = new SNMP();
+        //    byte[] response = new byte[1024];
 
-            // Send sysName SNMP request
-            response = conn.get("get", host, comm, mib);
-            if (response[0] == 0xff)
-            {
-                Console.WriteLine("No response from {0}", host);
-                //return;
-            }
+        //    // Send sysName SNMP request
+        //    response = conn.get("get", host, comm, mib);
+        //    if (response[0] == 0xff)
+        //    {
+        //        Console.WriteLine("No response from {0}", host);
+        //        //return;
+        //    }
 
-            // If response, get the community name and MIB lengths
-            commlength = Convert.ToInt16(response[6]);
-            miblength = Convert.ToInt16(response[23 + commlength]);
+        //    // If response, get the community name and MIB lengths
+        //    commlength = Convert.ToInt16(response[6]);
+        //    miblength = Convert.ToInt16(response[23 + commlength]);
 
-            // Extract the MIB data from the SNMP response
-            datatype = Convert.ToInt16(response[24 + commlength + miblength]);
-            datalength = Convert.ToInt16(response[25 + commlength + miblength]);
-            datastart = 26 + commlength + miblength;
+        //    // Extract the MIB data from the SNMP response
+        //    datatype = Convert.ToInt16(response[24 + commlength + miblength]);
+        //    datalength = Convert.ToInt16(response[25 + commlength + miblength]);
+        //    datastart = 26 + commlength + miblength;
 
-            //output = BitConverter.ToString(response, datastart, datalength);
-            output = Encoding.ASCII.GetString(response, datastart, datalength);
+        //    //output = BitConverter.ToString(response, datastart, datalength);
+        //    output = Encoding.ASCII.GetString(response, datastart, datalength);
 
-            //output = BitConverter.ToInt32(response, datastart);
+        //    //output = BitConverter.ToInt32(response, datastart);
 
-            return output;
-        }
+        //    return output;
+        //}
 
-        [Obsolete]
-        private static int snmp_request_int(string host, string comm, string mib)
-        {
-            int commlength, miblength, datatype, datalength, datastart;
-            int output = 0;
-            SNMP conn = new SNMP();
-            byte[] response = new byte[1024];
+        //[Obsolete]
+        //private static int snmp_request_int(string host, string comm, string mib)
+        //{
+        //    int commlength, miblength, datatype, datalength, datastart;
+        //    int output = 0;
+        //    SNMP conn = new SNMP();
+        //    byte[] response = new byte[1024];
 
-            // Send a SysUptime SNMP request
-            response = conn.get("get", host, comm, mib);
-            if (response[0] == 0xff)
-            {
-                Console.WriteLine("No response from {0}", host);
-                //return;
-            }
+        //    // Send a SysUptime SNMP request
+        //    response = conn.get("get", host, comm, mib);
+        //    if (response[0] == 0xff)
+        //    {
+        //        Console.WriteLine("No response from {0}", host);
+        //        //return;
+        //    }
 
-            // Get the community and MIB lengths of the response
-            commlength = Convert.ToInt16(response[6]);
-            miblength = Convert.ToInt16(response[23 + commlength]);
+        //    // Get the community and MIB lengths of the response
+        //    commlength = Convert.ToInt16(response[6]);
+        //    miblength = Convert.ToInt16(response[23 + commlength]);
 
-            // Extract the MIB data from the SNMp response
-            datatype = Convert.ToInt16(response[24 + commlength + miblength]);
-            datalength = Convert.ToInt16(response[25 + commlength + miblength]);
-            datastart = 26 + commlength + miblength;
+        //    // Extract the MIB data from the SNMp response
+        //    datatype = Convert.ToInt16(response[24 + commlength + miblength]);
+        //    datalength = Convert.ToInt16(response[25 + commlength + miblength]);
+        //    datastart = 26 + commlength + miblength;
 
-            // The sysUptime value may by a multi-byte integer
-            // Each byte read must be shifted to the higher byte order
-            while (datalength > 0)
-            {
-                output = (output << 8) + response[datastart++];
-                datalength--;
-            }
+        //    // The sysUptime value may by a multi-byte integer
+        //    // Each byte read must be shifted to the higher byte order
+        //    while (datalength > 0)
+        //    {
+        //        output = (output << 8) + response[datastart++];
+        //        datalength--;
+        //    }
 
-            return output;
-        }
+        //    return output;
+        //}
 
-        private static SnmpV1Packet SurveyList(string comm, string ip, Pdu list)
+        private SnmpV1Packet SurveyList(string comm, string ip, Pdu list)
         {
             // SNMP community name
             OctetString community = new OctetString(comm);
@@ -295,22 +309,23 @@ namespace Device_Control_2
         {
             if (NetworkInterface.GetIsNetworkAvailable())
             {
-                ChangePingIcon(0);
+                Change_Ping_Status(0);
 
                 Ping ping = new Ping();
                 ping.PingCompleted += new PingCompletedEventHandler(Received_ping_reply);
-                ping.SendAsync(client[1], 3000, waiter);
+                ping.SendAsync(client[1, 0], 3000, waiter);
 
-                ChangeSNMPIcon(0);
+                Change_SNMP_Status(0);
 
-                SnmpV1Packet result = SurveyList(comm[0], client[1], list0);
+                SnmpV1Packet result = SurveyList(comm[0], client[1, 0], list0);
 
                 label11.Text = result.Pdu.VbList[0].Value.ToString();
                 label12.Text = result.Pdu.VbList[2].Value.ToString();
                 label13.Text = result.Pdu.VbList[4].Value.ToString();
                 label14.Text = result.Pdu.VbList[5].Value.ToString();
+                ifNum = Convert.ToInt32(result.Pdu.VbList[6].Value.ToString());
 
-                result = SurveyList(comm[0], client[1], list1);
+                result = SurveyList(comm[0], client[1, 0], list1);
 
                 long convertedTime = Convert.ToInt64(result.Pdu.VbList[0].Value.ToString()); //сконвертированное в long время из string
 
@@ -319,11 +334,11 @@ namespace Device_Control_2
                 label21.Text = result.Pdu.VbList[1].Value.ToString();
                 label22.Text = result.Pdu.VbList[2].Value.ToString();
                 label23.Text = result.Pdu.VbList[3].Value.ToString();
-                label24.Text = result.Pdu.VbList[4].Value.ToString();
-                label25.Text = "";
-                label26.Text = result.Pdu.VbList[5].Value.ToString();
+                label24.Text = result.Pdu.VbList[5].Value.ToString();
+                label25.Text = result.Pdu.VbList[7].Value.ToString();
+                label26.Text = result.Pdu.VbList[9].Value.ToString();
 
-                ChangeSNMPIcon(1);
+                Change_SNMP_Status(1);
 
                 int curt = Convert.ToInt32(result.Pdu.VbList[1].Value.ToString());
                 int maxt = Convert.ToInt32(result.Pdu.VbList[2].Value.ToString());
@@ -336,13 +351,40 @@ namespace Device_Control_2
             {
                 Console.WriteLine("Network is unavailable, check connection and restart program.");
 
-                ChangeSNMPIcon(3);
+                Change_SNMP_Status(3);
             }
         }
 
-        private void ChangeSNMPIcon(int stat)
+        private void Change_SNMP_Status(int stat)
         {
             switch(stat)
+            {
+                case 0:
+                    pictureBox1.Image = Properties.Resources.ajax_loader;
+                    label2.Text = "Соединение";
+                    break;
+                case 1:
+                    pictureBox1.Image = Properties.Resources.green24;
+                    label2.Text = "Режим опроса";
+                    break;
+                case 2:
+                    pictureBox1.Image = Properties.Resources.orange24;
+                    label2.Text = "Не доработано";
+                    break;
+                case 3:
+                    pictureBox1.Image = Properties.Resources.red24;
+                    label2.Text = "Не доработано";
+                    break;
+                case 4:
+                    pictureBox1.Image = Properties.Resources.gray24;
+                    label2.Text = "Неактивный";
+                    break;
+            }
+        }
+        // Доделать
+        private void Change_Ping_Status(int stat)
+        {
+            switch (stat)
             {
                 case 0:
                     pictureBox2.Image = Properties.Resources.ajax_loader;
@@ -358,28 +400,6 @@ namespace Device_Control_2
                     break;
                 case 4:
                     pictureBox2.Image = Properties.Resources.gray24;
-                    break;
-            }
-        }
-
-        private void ChangePingIcon(int stat)
-        {
-            switch (stat)
-            {
-                case 0:
-                    pictureBox1.Image = Properties.Resources.ajax_loader;
-                    break;
-                case 1:
-                    pictureBox1.Image = Properties.Resources.green24;
-                    break;
-                case 2:
-                    pictureBox1.Image = Properties.Resources.orange24;
-                    break;
-                case 3:
-                    pictureBox1.Image = Properties.Resources.red24;
-                    break;
-                case 4:
-                    pictureBox1.Image = Properties.Resources.gray24;
                     break;
             }
         }
@@ -431,25 +451,64 @@ namespace Device_Control_2
             label25.Text = "";
             label26.Text = output_i[1, 30].ToString();
         }
-
+        // Сделать
         private void Survey_grids()
         {
+            int fe = 0;
+            SnmpV1Packet result;
 
+            for (int i = 1; i <= ifNum; i++) // строки
+            {
+                Pdu list = new Pdu(PduType.Get);
+                //Console.Write("port {0}: ", i);
+
+                list.VbList.Add("1.3.6.1.2.1.2.2.1.1." + i); // 0
+                list.VbList.Add("1.3.6.1.2.1.2.2.1.2." + i); // 1
+                list.VbList.Add("1.3.6.1.2.1.2.2.1.3." + i); // 5
+                list.VbList.Add("1.3.6.1.2.1.2.2.1.5." + i); // 4
+                list.VbList.Add("1.3.6.1.2.1.2.2.1.8." + i); // 3
+
+                result = SurveyList(comm[0], client[1, 0], list);
+
+                if (result.Pdu.VbList[1].Value.ToString().Substring(0, 2) == "fe")
+                    fe++;
+
+                if(i == fe)
+                {
+                    string state = (Convert.ToInt32(result.Pdu.VbList[4].Value.ToString()) == 1) ? "Связь есть" : "Отключен";
+                    string type = (Convert.ToInt32(result.Pdu.VbList[2].Value.ToString()) == 6) ? "Ethernet" : "Что-то ещё";
+
+                    interfaces[i - 1, 0] = result.Pdu.VbList[0].Value.ToString();
+                    interfaces[i - 1, 1] = result.Pdu.VbList[1].Value.ToString();
+                    interfaces[i - 1, 3] = state;
+                    interfaces[i - 1, 4] = result.Pdu.VbList[3].Value.ToString();
+                    interfaces[i - 1, 5] = type;
+                }
+            }
+
+            for (int i = 1; i <= fe; i++)
+            {
+                Pdu list = new Pdu(PduType.Get);
+
+                list.VbList.Add("1.2.643.2.92.1.1.11.1.9.1." + i);
+                result = SurveyList(comm[0], client[1, 0], list);
+
+                interfaces[i - 1, 2] = result.Pdu.VbList[0].Value.ToString();
+            }
         }
 
         private void Fill_grids()
         {
             for (int i = 0; i < 64; i++)
-            {
-                dataGridView1[0, i].Value = lolkekcheburek[0, 0];
-                dataGridView1[1, i].Value = lolkekcheburek[1, 0];
-                dataGridView1[2, i].Value = lolkekcheburek[2, 0];
-                dataGridView1[3, i].Value = lolkekcheburek[3, 0];
-                dataGridView1[4, i].Value = lolkekcheburek[4, 0];
-                dataGridView1[5, i].Value = lolkekcheburek[5, 0];
-            }
-        }
+                for(int j = 0; j < 6; j++)
+                    dataGridView1[j, i].Value = interfaces[i, j];
 
+            for (int i = 0; i < 64; i++)
+                if (interfaces[i, 3] == "Отключен")
+                    for (int j = 0; j < 6; j++)
+                        dataGridView1[j, i].Style.BackColor = Color.FromArgb(223, 223, 223);
+        }
+        // Сделать
         private void Form1_Resize(object sender, EventArgs e)
         {
 
@@ -467,9 +526,9 @@ namespace Device_Control_2
             ((AutoResetEvent)e.UserState).Set();
 
             if(e.Reply.Status == IPStatus.Success)
-                ChangePingIcon(1);
+                Change_Ping_Status(2);
             else
-                ChangePingIcon(3);
+                Change_Ping_Status(3);
         }
     }
 

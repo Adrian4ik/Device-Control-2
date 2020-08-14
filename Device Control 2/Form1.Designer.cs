@@ -339,7 +339,8 @@
             this.label7.Size = new System.Drawing.Size(198, 198);
             this.label7.TabIndex = 0;
             this.label7.Text = "Температура текущая, *С\r\n\r\nТемпература максимально\r\nдопустимая, *С\r\nТемпература м" +
-    "инимально\r\nдопустимая, *С\r\nПитание #1\r\n\r\nПитание #2\r\n\r\nВентилятор";
+    "инимально\r\nдопустимая, *С\r\nСкорость вентилятора 1\r\n\r\nСкорость вентилятора 2\r\n\r\nС" +
+    "корость вентилятора 3";
             // 
             // label3
             // 
@@ -365,7 +366,7 @@
             // pictureBox2
             // 
             this.pictureBox2.Image = global::Device_Control_2.Properties.Resources.gray24;
-            this.pictureBox2.Location = new System.Drawing.Point(38, 6);
+            this.pictureBox2.Location = new System.Drawing.Point(581, 7);
             this.pictureBox2.Name = "pictureBox2";
             this.pictureBox2.Size = new System.Drawing.Size(30, 30);
             this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -387,7 +388,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.label2.Location = new System.Drawing.Point(76, 36);
+            this.label2.Location = new System.Drawing.Point(44, 36);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(0, 16);
             this.label2.TabIndex = 1;
@@ -396,7 +397,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.label1.Location = new System.Drawing.Point(74, 6);
+            this.label1.Location = new System.Drawing.Point(42, 6);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(0, 29);
             this.label1.TabIndex = 0;
@@ -419,9 +420,9 @@
             this.label5.ForeColor = System.Drawing.SystemColors.HotTrack;
             this.label5.Location = new System.Drawing.Point(14, 162);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(228, 18);
+            this.label5.Size = new System.Drawing.Size(146, 36);
             this.label5.TabIndex = 1;
-            this.label5.Text = "Неконтролируемые устройства";
+            this.label5.Text = "Неконтролируемые\r\nустройства";
             // 
             // label4
             // 
@@ -430,9 +431,9 @@
             this.label4.ForeColor = System.Drawing.SystemColors.HotTrack;
             this.label4.Location = new System.Drawing.Point(14, 7);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(211, 18);
+            this.label4.Size = new System.Drawing.Size(129, 36);
             this.label4.TabIndex = 0;
-            this.label4.Text = "Контролируемые устройства";
+            this.label4.Text = "Контролируемые\r\nустройства";
             // 
             // timer1
             // 
