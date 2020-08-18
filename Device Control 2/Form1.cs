@@ -22,14 +22,14 @@ namespace Device_Control_2
     public partial class Form1 : Form
     {
         #region Переменные
-        int client_f = 0;
+        int client_f = 1;
 
         string[] std_oids = { "1.3.6.1.2.1.1.1.0", "1.3.6.1.2.1.1.2.0", "1.3.6.1.2.1.1.3.0", "1.3.6.1.2.1.1.4.0", "1.3.6.1.2.1.1.5.0", "1.3.6.1.2.1.1.6.0", "1.3.6.1.2.1.2.1.0", "1.3.6.1.2.1.2.2.1."};
-                            // sysDescr          // sysObjectID       // sysUpTime         // sysContact        // sysName           // sysLocation       // ifNumber
+                            // sysDescr          // sysObjectID       // sysUpTime         // sysContact        // sysName           // sysLocation       // ifNumber          // ifTable
 
-        string[] std_mibs = new string[1024]; // каждый клиент может занимать не более 10 позиций обычных мибов, определение клиента идёт по десяткам либо сотням (сотни нужны как доп. мибы)
+        string[] std_mib = new string[1024]; // каждый клиент может занимать не более 10 позиций обычных мибов, определение клиента идёт по десяткам либо сотням (сотни нужны как доп. мибы)
         // т.е. мибы клиента 1: 11, 12, 13, ... // 101, 102, 103... // 121, 122, 123, ... (10 - 19 и 100 - 199); мибы клиента 2: 21, 22, 23, ... // 201, 202, 203, 204 (20 - 29 и 200 - 299) и т.д.
-        string[] mibs;
+        string[] mib = new string[1024];
         // mib'ы клиентов (не более 1024 mib'ов на клиента)
         // mibs[клиент, mib]
         // все mib диапазона 0-23 - стандартные, которые относятся ко всем устройствам
@@ -82,7 +82,7 @@ namespace Device_Control_2
         {
             Preprocessing();
 
-            Survey(1);
+            Survey();
         }
 
         private void Preprocessing()
@@ -98,7 +98,7 @@ namespace Device_Control_2
         // Доделать
         private void FillConstants()
         {
-            int ifIndex = 0;
+            //int ifIndex = 0;
 
             std_cl[0].Ip = "127.0.0.1";
             std_cl[0].Name = "Loopback";
@@ -109,28 +109,30 @@ namespace Device_Control_2
 
 
 
-            std_mibs[10] = "1.2.643.2.92.1.1.30.0";          // systime oid
-            std_mibs[11] = "1.2.643.2.92.2.5.1.0";           // temperature
-            std_mibs[12] = "1.2.643.2.92.2.5.2.0";           // max temperature
-            std_mibs[13] = "1.2.643.2.92.2.5.3.0";           // min temperature
-            std_mibs[14] = "1.2.643.2.92.1.3.1.3.1.0";       // fan 1
-            std_mibs[15] = "1.2.643.2.92.1.3.1.3.2.0";       // fan 1 speed
-            std_mibs[16] = "1.2.643.2.92.1.3.1.3.3.0";       // fan 2
-            std_mibs[17] = "1.2.643.2.92.1.3.1.3.4.0";       // fan 2 speed
-            std_mibs[18] = "1.2.643.2.92.1.3.1.3.5.0";       // fan 3
-            std_mibs[19] = "1.2.643.2.92.1.3.1.3.6.0";       // fan 3 speed
+            std_mib[10] = "1.2.643.2.92.1.1.30.0";          // systime oid
+            std_mib[11] = "1.2.643.2.92.2.5.1.0";           // temperature
+            std_mib[12] = "1.2.643.2.92.2.5.2.0";           // max temperature
+            std_mib[13] = "1.2.643.2.92.2.5.3.0";           // min temperature
+            std_mib[14] = "1.2.643.2.92.1.3.1.3.1.0";       // fan 1
+            std_mib[15] = "1.2.643.2.92.1.3.1.3.2.0";       // fan 1 speed
+            std_mib[16] = "1.2.643.2.92.1.3.1.3.3.0";       // fan 2
+            std_mib[17] = "1.2.643.2.92.1.3.1.3.4.0";       // fan 2 speed
+            std_mib[18] = "1.2.643.2.92.1.3.1.3.5.0";       // fan 3
+            std_mib[19] = "1.2.643.2.92.1.3.1.3.6.0";       // fan 3 speed
 
-            std_mibs[100] = "1.2.643.2.92.1.1.11.1.9.1.";        // abonent ifname
+            std_mib[100] = "1.2.643.2.92.1.1.11.1.9.1.";        // abonent ifname
 
-            std_mibs[20] = "1.3.6.1.4.1.248.14.2.5.1.0";     // hmTemperature
-            std_mibs[21] = "1.3.6.1.4.1.248.14.2.5.2.0";     // hmTempUprLimit
-            std_mibs[22] = "1.3.6.1.4.1.248.14.2.5.3.0";     // hmTempLwrLimit
-            std_mibs[23] = "1.3.6.1.4.1.248.14.1.2.1.3.1.1"; // hmPSState:1
-            std_mibs[24] = "1.3.6.1.4.1.248.14.1.2.1.3.1.2"; // hmPSState:2
-            std_mibs[25] = "1.3.6.1.4.1.248.14.1.3.1.3.1.1"; // hmFanState:1
-            std_mibs[26] = "1.3.6.1.4.1.248.14.1.1.30.0";    // hmSystemTime
+            std_mib[20] = "1.3.6.1.4.1.248.14.2.5.1.0";     // hmTemperature
+            std_mib[21] = "1.3.6.1.4.1.248.14.2.5.2.0";     // hmTempUprLimit
+            std_mib[22] = "1.3.6.1.4.1.248.14.2.5.3.0";     // hmTempLwrLimit
+            std_mib[23] = "1.3.6.1.4.1.248.14.1.2.1.3.1.1"; // hmPSState:1
+            std_mib[24] = "1.3.6.1.4.1.248.14.1.2.1.3.1.2"; // hmPSState:2
+            std_mib[25] = "1.3.6.1.4.1.248.14.1.3.1.3.1.1"; // hmFanState:1
+            std_mib[26] = "1.3.6.1.4.1.248.14.1.1.30.0";    // hmSystemTime
 
-            std_mibs[200] = "1.3.6.1.4.1.248.14.1.1.11.1.9.1."; // + ifIndex; hmIfaceName
+            std_mib[200] = "1.3.6.1.4.1.248.14.1.1.11.1.9.1."; // + ifIndex; hmIfaceName
+
+            mib = std_mib;
         }
         // Доделать
         private void Check_clients()
@@ -173,69 +175,52 @@ namespace Device_Control_2
                 cl = std_cl;
             // else
 
-            mibs = new string[1024];
-
             for (int i = 0; i < 7; i++)
                 list0.VbList.Add(std_oids[i]);
+            
+            for (int i = 10; i < 20; i++)
+                if (mib[i] != null)
+                    list1.VbList.Add(mib[i]);
 
-            switch (client_f)
-            {
-                case 1:
-                    for (int i = 10; i < 20; i++)
-                        if (std_mibs[i] != null)
-                            list1.VbList.Add(std_mibs[i]);
+            //for (int i = 100; i < 200; i++)
+            //    if (mibs[i] != null)
+            //        list1.VbList.Add(mibs[i]);
 
-                    for (int i = 100; i < 200; i++)
-                        if (std_mibs[i] != null)
-                            list1.VbList.Add(std_mibs[i]);
-                    break;
-                case 2:
-                    for (int i = 20; i < 30; i++)
-                        if (std_mibs[i] != null)
-                            list2.VbList.Add(std_mibs[i]);
-                    break;
-                case 3:
-                    for (int i = 30; i < 40; i++)
-                        if (std_mibs[i] != null)
-                            list3.VbList.Add(std_mibs[i]);
-                    break;
-                case 4:
-                    for (int i = 40; i < 50; i++)
-                        if (std_mibs[i] != null)
-                            list4.VbList.Add(std_mibs[i]);
-                    break;
-                case 5:
-                    for (int i = 50; i < 60; i++)
-                        if (std_mibs[i] != null)
-                            list5.VbList.Add(std_mibs[i]);
-                    break;
-                case 6:
-                    for (int i = 60; i < 70; i++)
-                        if (std_mibs[i] != null)
-                            list6.VbList.Add(std_mibs[i]);
-                    break;
-                case 7:
-                    for (int i = 70; i < 80; i++)
-                        if (std_mibs[i] != null)
-                            list7.VbList.Add(std_mibs[i]);
-                    break;
-                case 8:
-                    for (int i = 80; i < 90; i++)
-                        if (std_mibs[i] != null)
-                            list8.VbList.Add(std_mibs[i]);
-                    break;
-                case 9:
-                    for (int i = 90; i < 100; i++)
-                        if (std_mibs[i] != null)
-                            list9.VbList.Add(std_mibs[i]);
-                    break;
-            }
+            for (int i = 20; i < 30; i++)
+                if (mib[i] != null)
+                    list2.VbList.Add(mib[i]);
+
+            for (int i = 30; i < 40; i++)
+                if (mib[i] != null)
+                    list3.VbList.Add(mib[i]);
+
+            for (int i = 40; i < 50; i++)
+                if (mib[i] != null)
+                    list4.VbList.Add(mib[i]);
+
+            for (int i = 50; i < 60; i++)
+                if (mib[i] != null)
+                    list5.VbList.Add(mib[i]);
+
+            for (int i = 60; i < 70; i++)
+                if (mib[i] != null)
+                    list6.VbList.Add(mib[i]);
+
+            for (int i = 70; i < 80; i++)
+                if (mib[i] != null)
+                    list7.VbList.Add(mib[i]);
+
+            for (int i = 80; i < 90; i++)
+                if (mib[i] != null)
+                    list8.VbList.Add(mib[i]);
+
+            for (int i = 90; i < 100; i++)
+                if (mib[i] != null)
+                    list9.VbList.Add(mib[i]);
         }
 
-        private void Survey(int client)
+        private void Survey()
         {
-            client_f = client;
-
             label1.Text = cl[client_f].Name;
 
             if (NetworkInterface.GetIsNetworkAvailable())
@@ -466,9 +451,9 @@ namespace Device_Control_2
                 Pdu list = new Pdu(PduType.Get);
 
                 if(client_f == 1)
-                    list.VbList.Add(std_mibs[100] + i);
+                    list.VbList.Add(mib[100] + i);
                 else
-                    list.VbList.Add(std_mibs[200] + i);
+                    list.VbList.Add(mib[200] + i);
 
                 result = SurveyList(0, cl[client_f].Ip, list);
 
@@ -558,7 +543,7 @@ namespace Device_Control_2
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            Survey(client_f);
+            Survey();
         }
     }
 }
