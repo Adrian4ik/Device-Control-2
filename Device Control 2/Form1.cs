@@ -378,8 +378,8 @@ namespace Device_Control_2
             int maxt = Convert.ToInt32(result.Pdu.VbList[2].Value.ToString());
             int mint = Convert.ToInt32(result.Pdu.VbList[3].Value.ToString());
 
-            if (curt >= maxt || curt <= mint)
-                notify.Show();
+            //if (curt >= maxt || curt <= mint)
+                //notify.Show();
 
             Survey_grid(ifNumber);
         }
@@ -420,8 +420,11 @@ namespace Device_Control_2
             int fi = 0;
             SnmpV1Packet result;
 
-            for (int i = 1; i <= ifNum; i++) // строки
+            // Изменить под пропуски ifIndex
+            //for (int i = 1; i <= ifNum; i++) // строки
+            while(true)
             {
+                int i = 0, k = 0;
                 Pdu list = new Pdu(PduType.Get);
                 //Console.Write("port {0}: ", i);
                                 
@@ -439,7 +442,23 @@ namespace Device_Control_2
                 if(i == fi)
                 {
                     string state = (Convert.ToInt32(result.Pdu.VbList[4].Value.ToString()) == 1) ? "Связь есть" : "Отключен";
-                    string type = (Convert.ToInt32(result.Pdu.VbList[2].Value.ToString()) == 6) ? "Ethernet" : "Что-то ещё";
+                    string type = "";
+
+                    switch(Convert.ToInt32(result.Pdu.VbList[2].Value.ToString()))
+                    {
+                        case 1:
+                            type = "Other";
+                            break;
+                        case 6:
+                            type = "Ethernet";
+                            break;
+                        case 135:
+                            type = "l2vlan";
+                            break;
+                        case 161:
+                            type = "ieee8023AdLag";
+                            break;
+                    }
 
                     interfaces[i - 1, 0] = result.Pdu.VbList[0].Value.ToString();
                     interfaces[i - 1, 1] = result.Pdu.VbList[1].Value.ToString();
