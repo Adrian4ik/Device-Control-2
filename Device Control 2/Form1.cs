@@ -22,7 +22,7 @@ namespace Device_Control_2
     public partial class Form1 : Form
     {
         #region Переменные
-        int client_f = 1;
+        int client_f = 2;
 
         string[] std_oids = { "1.3.6.1.2.1.1.1.0", "1.3.6.1.2.1.1.2.0", "1.3.6.1.2.1.1.3.0", "1.3.6.1.2.1.1.4.0", "1.3.6.1.2.1.1.5.0", "1.3.6.1.2.1.1.6.0", "1.3.6.1.2.1.2.1.0", "1.3.6.1.2.1.2.2.1."};
                             // sysDescr          // sysObjectID       // sysUpTime         // sysContact        // sysName           // sysLocation       // ifNumber          // ifTable
@@ -366,8 +366,11 @@ namespace Device_Control_2
             label22.Text = result.Pdu.VbList[2].Value.ToString();
             label23.Text = result.Pdu.VbList[3].Value.ToString();
             label24.Text = result.Pdu.VbList[5].Value.ToString();
-            label25.Text = result.Pdu.VbList[7].Value.ToString();
-            label26.Text = result.Pdu.VbList[9].Value.ToString();
+            if(client_f == 1)
+            {
+                label25.Text = result.Pdu.VbList[7].Value.ToString();
+                label26.Text = result.Pdu.VbList[9].Value.ToString();
+            }
 
             Change_SNMP_Status(1);
 
@@ -414,7 +417,7 @@ namespace Device_Control_2
         // Доделать
         private void Survey_grid(int ifNum)
         {
-            int fe = 0;
+            int fi = 0;
             SnmpV1Packet result;
 
             for (int i = 1; i <= ifNum; i++) // строки
@@ -430,10 +433,10 @@ namespace Device_Control_2
 
                 result = SurveyList(0, cl[client_f].Ip, list);
 
-                if (result.Pdu.VbList[1].Value.ToString().Substring(0, 2) == "fe")
-                    fe++;
+                if (result.Pdu.VbList[2].Value.ToString() == "6")
+                    fi++;
 
-                if(i == fe)
+                if(i == fi)
                 {
                     string state = (Convert.ToInt32(result.Pdu.VbList[4].Value.ToString()) == 1) ? "Связь есть" : "Отключен";
                     string type = (Convert.ToInt32(result.Pdu.VbList[2].Value.ToString()) == 6) ? "Ethernet" : "Что-то ещё";
@@ -446,7 +449,13 @@ namespace Device_Control_2
                 }
             }
 
-            for (int i = 1; i <= fe; i++)
+            int lim, j = 0;
+            if (client_f == 1)
+                lim = fi;
+            else
+                lim = ifNum;
+
+            for (int i = 1; i <= lim; i++)
             {
                 Pdu list = new Pdu(PduType.Get);
 
@@ -457,7 +466,8 @@ namespace Device_Control_2
 
                 result = SurveyList(0, cl[client_f].Ip, list);
 
-                interfaces[i - 1, 2] = result.Pdu.VbList[0].Value.ToString();
+                if(result.Pdu.VbList[0].Value.ToString() != "Null")
+                    interfaces[j++, 2] = result.Pdu.VbList[0].Value.ToString();
             }
 
             Fill_grid(ifNum);
