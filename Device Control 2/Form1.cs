@@ -418,76 +418,114 @@ namespace Device_Control_2
         private void Survey_grid(int ifNum)
         {
             int fi = 0;
-            SnmpV1Packet result;
 
             // Изменить под пропуски ifIndex
             //for (int i = 1; i <= ifNum; i++) // строки
-            while(true)
+
+            bool flag = true;
+            int i = 1, k = 0;
+
+            while (flag == true) // бред, но работает только в том случае, если оиды из одной подсетки (из разных запрещено делать запросы)
             {
-                int i = 0, k = 0;
                 Pdu list = new Pdu(PduType.Get);
                 //Console.Write("port {0}: ", i);
                                 
-                list.VbList.Add(std_oids[7] + "1." + i); // 0
-                list.VbList.Add(std_oids[7] + "2." + i); // 1
-                list.VbList.Add(std_oids[7] + "3." + i); // 5
-                list.VbList.Add(std_oids[7] + "5." + i); // 4
-                list.VbList.Add(std_oids[7] + "8." + i); // 3
+                list.VbList.Add(std_oids[7] + "1." + i); // 1 столбец
+                list.VbList.Add(std_oids[7] + "2." + i); // 2 столбец
+                list.VbList.Add(std_oids[7] + "3." + i); // 6 столбец
+                list.VbList.Add(std_oids[7] + "5." + i); // 5 столбец
+                list.VbList.Add(std_oids[7] + "8." + i); // 4 столбец
+                //if (client_f == 1)
+                    //list.VbList.Add(mib[100] + i);       // 3 столбец
+                //else
+                    //list.VbList.Add(mib[200] + i);       // 3 столбец
 
-                result = SurveyList(0, cl[client_f].Ip, list);
+                SnmpV1Packet result = SurveyList(0, cl[client_f].Ip, list);
+
+                string type = "";
+
+                if (i == 129)
+                    type = "";
+
+                string lol = result.Pdu.VbList[2].Value.ToString();
+
+                switch (lol)
+                {
+                    case "1":
+                        type = "Other";
+                        break;
+                    case "6":
+                        type = "Ethernet";
+                        break;
+                    case "135":
+                        type = "l2vlan";
+                        break;
+                    case "161":
+                        type = "ieee8023AdLag";
+                        break;
+                    case null:
+                        type = "";
+                        break;
+                    case "":
+                        type = "";
+                        break;
+                    case "Null":
+                        type = "";
+                        break;
+                }
 
                 if (result.Pdu.VbList[2].Value.ToString() == "6")
+                {
                     fi++;
 
-                if(i == fi)
-                {
                     string state = (Convert.ToInt32(result.Pdu.VbList[4].Value.ToString()) == 1) ? "Связь есть" : "Отключен";
-                    string type = "";
 
-                    switch(Convert.ToInt32(result.Pdu.VbList[2].Value.ToString()))
-                    {
-                        case 1:
-                            type = "Other";
-                            break;
-                        case 6:
-                            type = "Ethernet";
-                            break;
-                        case 135:
-                            type = "l2vlan";
-                            break;
-                        case 161:
-                            type = "ieee8023AdLag";
-                            break;
-                    }
+                    interfaces[k, 0] = (k + 1).ToString(); // result.Pdu.VbList[0].Value.ToString();
+                    interfaces[k, 1] = result.Pdu.VbList[1].Value.ToString();
+                    //if (result.Pdu.VbList[5].Value.ToString() != "Null")
+                    //{
+                    //    interfaces[k, 2] = result.Pdu.VbList[5].Value.ToString();
+                    //}
+                    interfaces[k, 3] = state;
+                    interfaces[k, 4] = result.Pdu.VbList[3].Value.ToString();
+                    interfaces[k, 5] = type;
 
-                    interfaces[i - 1, 0] = result.Pdu.VbList[0].Value.ToString();
-                    interfaces[i - 1, 1] = result.Pdu.VbList[1].Value.ToString();
-                    interfaces[i - 1, 3] = state;
-                    interfaces[i - 1, 4] = result.Pdu.VbList[3].Value.ToString();
-                    interfaces[i - 1, 5] = type;
+                    k++;
+
+                    if (k == ifNum)
+                        flag = false;
                 }
+                else
+                    if (result.Pdu.VbList[2].Value.ToString() == "1" || result.Pdu.VbList[2].Value.ToString() == "135" || result.Pdu.VbList[2].Value.ToString() == "161")
+                        flag = false;
+                
+                i++;
+
+                //if(i == fi)
+                //{
+                //}
             }
 
-            int lim, j = 0;
+            /*int lim;
             if (client_f == 1)
                 lim = fi;
             else
                 lim = ifNum;
 
-            for (int i = 1; i <= lim; i++)
+            for (int j = 1; j <= lim; j++)
             {
                 Pdu list = new Pdu(PduType.Get);
 
-                if(client_f == 1)
-                    list.VbList.Add(mib[100] + i);
+                if (client_f == 1)
+                    list.VbList.Add(mib[100] + i);       // 3 столбец
                 else
-                    list.VbList.Add(mib[200] + i);
+                    list.VbList.Add(mib[200] + i);       // 3 столбец
 
                 result = SurveyList(0, cl[client_f].Ip, list);
 
                 if(result.Pdu.VbList[0].Value.ToString() != "Null")
                     interfaces[j++, 2] = result.Pdu.VbList[0].Value.ToString();
-            }
+            }*/
 
             Fill_grid(ifNum);
         }
