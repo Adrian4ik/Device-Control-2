@@ -14,7 +14,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
+using System.Windows.Forms.VisualStyles;
 using SnmpSharpNet;
 
 namespace Device_Control_2
@@ -24,8 +24,36 @@ namespace Device_Control_2
         #region Переменные
         int client_f = 2;
 
+        string[] stdclients = { "folder names: hm_mach4002, octopus, bkm, fs1" };
+
         string[] std_oids = { "1.3.6.1.2.1.1.1.0", "1.3.6.1.2.1.1.2.0", "1.3.6.1.2.1.1.3.0", "1.3.6.1.2.1.1.4.0", "1.3.6.1.2.1.1.5.0", "1.3.6.1.2.1.1.6.0", "1.3.6.1.2.1.2.1.0", "1.3.6.1.2.1.2.2.1."};
                             // sysDescr          // sysObjectID       // sysUpTime         // sysContact        // sysName           // sysLocation       // ifNumber          // ifTable
+
+        string[] std_config = { "Имя: ", "ip: ", "Autoconnect: 1" };
+
+        string[] std_hm_optlist = { "Важные", "",
+                                    "Температура текущая, °С (hmTemperature): 1.3.6.1.4.1.248.14.2.5.1.0",
+                                    "Температура максимально\r\nдопустимая, °С (hmTempUprLimit): 1.3.6.1.4.1.248.14.2.5.2.0",
+                                    "Температура минимально\r\nдопустимая, °С(hmTempLwrLimit): 1.3.6.1.4.1.248.14.2.5.3.0",
+                                    "Питание #1 (hmPSState1): 1.3.6.1.4.1.248.14.1.2.1.3.1.1",
+                                    "Питание #2 (hmPSState2): 1.3.6.1.4.1.248.14.1.2.1.3.1.2",
+                                    "Вентилятор (hmFanState1): 1.3.6.1.4.1.248.14.1.3.1.3.1.1",
+                                    "", "Описание устройства", "",
+                                    "Системное время (hmSystemTime): 1.3.6.1.4.1.248.14.1.1.30.0",
+                                    "", "Интерфейсы", "",
+                                    "hmIfaceName: 1.3.6.1.4.1.248.14.1.1.11.1.9.1.ifIndex" };
+
+        string[] std_optlist = { "Важные", "",
+                                 "Температура текущая, °С (temperature): 1.2.643.2.92.2.5.1.0",
+                                 "Температура максимально\r\nдопустимая, °С (max_temperature): 1.2.643.2.92.2.5.2.0",
+                                 "Температура минимально\r\nдопустимая, °С(min_temperature): 1.2.643.2.92.2.5.3.0",
+                                 "Вентилятор #1 (fan1speed): 1.2.643.2.92.1.3.1.3.2.0",
+                                 "Вентилятор #2 (fan2speed): 1.2.643.2.92.1.3.1.3.4.0",
+                                 "Вентилятор #3 (fan3speed): 1.2.643.2.92.1.3.1.3.6.0",
+                                 "", "Описание устройства", "",
+                                 "Системное время (systime): 1.2.643.2.92.1.1.30.0",
+                                 "", "Интерфейсы", "",
+                                 "hmIfaceName: 1.2.643.2.92.1.1.11.1.9.1.ifIndex" };
 
         string[] std_mib = new string[1024]; // каждый клиент может занимать не более 10 позиций обычных мибов, определение клиента идёт по десяткам либо сотням (сотни нужны как доп. мибы)
         // т.е. мибы клиента 1: 11, 12, 13, ... // 101, 102, 103... // 121, 122, 123, ... (10 - 19 и 100 - 199); мибы клиента 2: 21, 22, 23, ... // 201, 202, 203, 204 (20 - 29 и 200 - 299) и т.д.
@@ -70,6 +98,13 @@ namespace Device_Control_2
         Client[] cl;
         // список клиентов (не более 1024 клиентов)
 
+        struct Device
+        {
+            public string FolderName { get; set; }
+            public string[] Config { get; set; }
+            public string[] OptList { get; set; }
+        }
+
         Notification notify = new Notification();
         #endregion
 
@@ -109,7 +144,7 @@ namespace Device_Control_2
 
 
 
-            std_mib[10] = "1.2.643.2.92.1.1.30.0";          // systime oid
+            std_mib[10] = "1.2.643.2.92.1.1.30.0";          // systime
             std_mib[11] = "1.2.643.2.92.2.5.1.0";           // temperature
             std_mib[12] = "1.2.643.2.92.2.5.2.0";           // max temperature
             std_mib[13] = "1.2.643.2.92.2.5.3.0";           // min temperature
@@ -137,39 +172,41 @@ namespace Device_Control_2
         // Доделать
         private void Check_clients()
         {
-            //string[] al;
-
-            /*
-            if (!File.Exists("Clients.txt"))
+            if (!File.Exists("config.xml"))
             { // если файл со списком клиентов не существует, то...
-                FileStream f = File.Create("Clients.txt"); // создаём его
-                f.Close();
-                File.WriteAllLines("Clients.txt", StandartClientList); // и заполняем стандартным списком
+                FileStream f = File.Create("config.xml"); // создаём его
+                f.Close(); // и закрываем для предотвращения различных ошибок
+                File.WriteAllLines("config.xml", stdclients); // и заполняем файл стандартным списком
             }
-            */
 
-            if(!Directory.Exists("devices"))
-                Directory.CreateDirectory("devices");
-
-            if (!Directory.Exists("devices\\localhost"))
+            if (!Directory.Exists("devices")) // если папка со списком клиентов не существует
             {
-                Directory.CreateDirectory("devices\\localhost");
+                Directory.CreateDirectory("devices"); // то создаём её
+
+                CreateDevice("localhost", std_config, std_oids);
+                CreateDevice("hm_mach4002", std_config, std_hm_optlist);
+                CreateDevice("octopus", std_config, std_hm_optlist);
+                CreateDevice("bkm", std_config, std_optlist);
+                CreateDevice("fs1", std_config, std_hm_optlist);
             }
 
-            if(!File.Exists("devices\\localhost\\config.xml"))
+            string[] al = File.ReadAllLines("config.xml"); // переписываем список клиентов
+
+            if (al[0].Substring(0, 14) == "folder names: ")
+                al[0] = al[0].Substring(14, al[0].Length - 14);
+
+            int flag = 0;
+
+            for (int s = 0; s < al.Count(); s++)
             {
-                FileStream f = File.Create("devices\\localhost\\config.xml");
-                f.Close();
+                for (int c = 0; c < al[s].Length; c++)
+                {
+                    if ("" + al[s][c] + al[s][c + 1] == ", ") // Правило разбиения строки на компоненты (имя1, имя2, имя3)
+                        flag++;
+                    else
+                        g_lists[group, flag][cl] += al[s][c];
+                }
             }
-
-
-            if (!File.Exists("devices\\localhost\\optlist.xml"))
-            {
-                FileStream f = File.Create("devices\\localhost\\optlist.xml");
-                f.Close();
-            }
-
-            //al = File.ReadAllLines("Clients.txt"); // читаем список клиентов
 
             // if()
                 cl = std_cl;
@@ -217,6 +254,56 @@ namespace Device_Control_2
             for (int i = 90; i < 100; i++)
                 if (mib[i] != null)
                     list9.VbList.Add(mib[i]);
+        }
+
+        private Device CheckDevice(string folder_name)
+        {
+            Device device = new Device();
+
+            if (!Directory.Exists("devices\\" + folder_name))
+                Directory.CreateDirectory("devices\\" + folder_name);
+            device.FolderName = folder_name;
+
+            if (!File.Exists("devices\\" + folder_name + "\\config.xml"))
+            {
+                FileStream f = File.Create("devices\\" + folder_name + "\\config.xml");
+                f.Close();
+                File.WriteAllLines("devices\\" + folder_name + "\\config.xml", std_config);
+            }
+
+
+            if (!File.Exists("devices\\" + folder_name + "\\optlist.xml"))
+            {
+                FileStream f = File.Create("devices\\" + folder_name + "\\optlist.xml");
+                f.Close();
+                File.WriteAllLines("devices\\" + folder_name + "\\optlist.xml", std_optlist);
+            }
+
+            return device;
+        }
+
+        private void CreateDevice(string folder_name, string[] std_config, string[] std_optlist)
+        {
+            Device device = new Device();
+
+            if (!Directory.Exists("devices\\" + folder_name))
+                Directory.CreateDirectory("devices\\" + folder_name);
+            device.FolderName = folder_name;
+
+            if (!File.Exists("devices\\" + folder_name + "\\config.xml"))
+            {
+                FileStream f = File.Create("devices\\" + folder_name + "\\config.xml");
+                f.Close();
+                File.WriteAllLines("devices\\" + folder_name + "\\config.xml", std_config);
+            }
+
+
+            if (!File.Exists("devices\\" + folder_name + "\\optlist.xml"))
+            {
+                FileStream f = File.Create("devices\\" + folder_name + "\\optlist.xml");
+                f.Close();
+                File.WriteAllLines("devices\\" + folder_name + "\\optlist.xml", std_optlist);
+            }
         }
 
         private void Survey()
