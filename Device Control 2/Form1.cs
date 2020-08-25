@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,19 +46,19 @@ namespace Device_Control_2
 
         string[] std_optlist = { "Важные", "",
                                  "Температура текущая, °С (temperature): 1.2.643.2.92.2.5.1.0",
-                                 "Температура максимально\r\nдопустимая, °С (max_temperature): 1.2.643.2.92.2.5.2.0",
-                                 "Температура минимально\r\nдопустимая, °С(min_temperature): 1.2.643.2.92.2.5.3.0",
-                                 "Вентилятор #1 (fan1speed): 1.2.643.2.92.1.3.1.3.2.0",
-                                 "Вентилятор #2 (fan2speed): 1.2.643.2.92.1.3.1.3.4.0",
-                                 "Вентилятор #3 (fan3speed): 1.2.643.2.92.1.3.1.3.6.0",
+                                 "Температура максимально\r\nдопустимая, °С (max temperature): 1.2.643.2.92.2.5.2.0",
+                                 "Температура минимально\r\nдопустимая, °С(min temperature): 1.2.643.2.92.2.5.3.0",
+                                 "Вентилятор #1 (fan 1 speed): 1.2.643.2.92.1.3.1.3.2.0",
+                                 "Вентилятор #2 (fan 2 speed): 1.2.643.2.92.1.3.1.3.4.0",
+                                 "Вентилятор #3 (fan 3 speed): 1.2.643.2.92.1.3.1.3.6.0",
                                  "", "Описание устройства", "",
                                  "Системное время (systime): 1.2.643.2.92.1.1.30.0",
                                  "", "Интерфейсы", "",
                                  "hmIfaceName: 1.2.643.2.92.1.1.11.1.9.1.ifIndex" };
 
-        string[] std_mib = new string[1024]; // каждый клиент может занимать не более 10 позиций обычных мибов, определение клиента идёт по десяткам либо сотням (сотни нужны как доп. мибы)
+        string[,] std_mib = new string[1024, 2]; // каждый клиент может занимать не более 10 позиций обычных мибов, определение клиента идёт по десяткам либо сотням (сотни нужны как доп. мибы)
         // т.е. мибы клиента 1: 11, 12, 13, ... // 101, 102, 103... // 121, 122, 123, ... (10 - 19 и 100 - 199); мибы клиента 2: 21, 22, 23, ... // 201, 202, 203, 204 (20 - 29 и 200 - 299) и т.д.
-        string[] mib = new string[1024];
+        string[,] mib = new string[1024, 2];
         // mib'ы клиентов (не более 1024 mib'ов на клиента)
         // mibs[клиент, mib]
         // все mib диапазона 0-23 - стандартные, которые относятся ко всем устройствам
@@ -128,7 +129,10 @@ namespace Device_Control_2
 
             FillConstants();
 
+            cl = std_cl;
             Check_clients();
+
+            WriteLog(false, "Программа запущена");
         }
         // Доделать
         private void FillConstants()
@@ -144,28 +148,45 @@ namespace Device_Control_2
 
 
 
-            std_mib[10] = "1.2.643.2.92.1.1.30.0";          // systime
-            std_mib[11] = "1.2.643.2.92.2.5.1.0";           // temperature
-            std_mib[12] = "1.2.643.2.92.2.5.2.0";           // max temperature
-            std_mib[13] = "1.2.643.2.92.2.5.3.0";           // min temperature
-            std_mib[14] = "1.2.643.2.92.1.3.1.3.1.0";       // fan 1
-            std_mib[15] = "1.2.643.2.92.1.3.1.3.2.0";       // fan 1 speed
-            std_mib[16] = "1.2.643.2.92.1.3.1.3.3.0";       // fan 2
-            std_mib[17] = "1.2.643.2.92.1.3.1.3.4.0";       // fan 2 speed
-            std_mib[18] = "1.2.643.2.92.1.3.1.3.5.0";       // fan 3
-            std_mib[19] = "1.2.643.2.92.1.3.1.3.6.0";       // fan 3 speed
+            std_mib[10, 0] = "1.2.643.2.92.1.1.30.0";
+            std_mib[10, 1] = "systime";
+            std_mib[11, 0] = "1.2.643.2.92.2.5.1.0";
+            std_mib[11, 1] = "temperature";
+            std_mib[12, 0] = "1.2.643.2.92.2.5.2.0";
+            std_mib[12, 1] = "max temperature";
+            std_mib[13, 0] = "1.2.643.2.92.2.5.3.0";
+            std_mib[13, 1] = "min temperature";
+            std_mib[14, 0] = "1.2.643.2.92.1.3.1.3.1.0";
+            std_mib[14, 1] = "fan 1";
+            std_mib[15, 0] = "1.2.643.2.92.1.3.1.3.2.0";
+            std_mib[15, 1] = "fan 1 speed";
+            std_mib[16, 0] = "1.2.643.2.92.1.3.1.3.3.0";
+            std_mib[16, 1] = "fan 2";
+            std_mib[17, 0] = "1.2.643.2.92.1.3.1.3.4.0";
+            std_mib[17, 1] = "fan 2 speed";
+            std_mib[18, 0] = "1.2.643.2.92.1.3.1.3.5.0";
+            std_mib[18, 1] = "fan 3";
+            std_mib[19, 0] = "1.2.643.2.92.1.3.1.3.6.0";
+            std_mib[19, 1] = "fan 3 speed";
 
-            std_mib[100] = "1.2.643.2.92.1.1.11.1.9.1.";        // abonent ifname
+            std_mib[100, 0] = "1.2.643.2.92.1.1.11.1.9.1.";        // abonent ifname
 
-            std_mib[20] = "1.3.6.1.4.1.248.14.2.5.1.0";     // hmTemperature
-            std_mib[21] = "1.3.6.1.4.1.248.14.2.5.2.0";     // hmTempUprLimit
-            std_mib[22] = "1.3.6.1.4.1.248.14.2.5.3.0";     // hmTempLwrLimit
-            std_mib[23] = "1.3.6.1.4.1.248.14.1.2.1.3.1.1"; // hmPSState:1
-            std_mib[24] = "1.3.6.1.4.1.248.14.1.2.1.3.1.2"; // hmPSState:2
-            std_mib[25] = "1.3.6.1.4.1.248.14.1.3.1.3.1.1"; // hmFanState:1
-            std_mib[26] = "1.3.6.1.4.1.248.14.1.1.30.0";    // hmSystemTime
+            std_mib[20, 0] = "1.3.6.1.4.1.248.14.1.1.30.0";
+            std_mib[20, 1] = "hmSystemTime";
+            std_mib[21, 0] = "1.3.6.1.4.1.248.14.2.5.1.0";
+            std_mib[21, 1] = "hmTemperature";
+            std_mib[22, 0] = "1.3.6.1.4.1.248.14.2.5.2.0";
+            std_mib[22, 1] = "hmTempUprLimit";
+            std_mib[23, 0] = "1.3.6.1.4.1.248.14.2.5.3.0";
+            std_mib[23, 1] = "hmTempLwrLimit";
+            std_mib[24, 0] = "1.3.6.1.4.1.248.14.1.2.1.3.1.1";
+            std_mib[24, 1] = "hmPSState:1";
+            std_mib[25, 0] = "1.3.6.1.4.1.248.14.1.2.1.3.1.2";
+            std_mib[25, 1] = "hmPSState:2";
+            std_mib[26, 0] = "1.3.6.1.4.1.248.14.1.3.1.3.1.1";
+            std_mib[26, 1] = "hmFanState:1";
 
-            std_mib[200] = "1.3.6.1.4.1.248.14.1.1.11.1.9.1."; // + ifIndex; hmIfaceName
+            std_mib[200, 0] = "1.3.6.1.4.1.248.14.1.1.11.1.9.1."; // hmIfaceName
 
             mib = std_mib;
         }
@@ -192,7 +213,7 @@ namespace Device_Control_2
 
             string[] al = File.ReadAllLines("config.xml"); // переписываем список клиентов
 
-            if (al[0].Substring(0, 14) == "folder names: ")
+            /*if (al[0].Substring(0, 14) == "folder names: ")
                 al[0] = al[0].Substring(14, al[0].Length - 14);
 
             int flag = 0;
@@ -203,10 +224,10 @@ namespace Device_Control_2
                 {
                     if ("" + al[s][c] + al[s][c + 1] == ", ") // Правило разбиения строки на компоненты (имя1, имя2, имя3)
                         flag++;
-                    else
-                        g_lists[group, flag][cl] += al[s][c];
+                    //else
+                        //g_lists[group, flag][cl] += al[s][c];
                 }
-            }
+            }*/
 
             // if()
                 cl = std_cl;
@@ -216,44 +237,44 @@ namespace Device_Control_2
                 list0.VbList.Add(std_oids[i]);
             
             for (int i = 10; i < 20; i++)
-                if (mib[i] != null)
-                    list1.VbList.Add(mib[i]);
+                if (mib[i, 0] != null)
+                    list1.VbList.Add(mib[i, 0]);
 
             //for (int i = 100; i < 200; i++)
             //    if (mibs[i] != null)
             //        list1.VbList.Add(mibs[i]);
 
             for (int i = 20; i < 30; i++)
-                if (mib[i] != null)
-                    list2.VbList.Add(mib[i]);
+                if (mib[i, 0] != null)
+                    list2.VbList.Add(mib[i, 0]);
 
             for (int i = 30; i < 40; i++)
-                if (mib[i] != null)
-                    list3.VbList.Add(mib[i]);
+                if (mib[i, 0] != null)
+                    list3.VbList.Add(mib[i, 0]);
 
             for (int i = 40; i < 50; i++)
-                if (mib[i] != null)
-                    list4.VbList.Add(mib[i]);
+                if (mib[i, 0] != null)
+                    list4.VbList.Add(mib[i, 0]);
 
             for (int i = 50; i < 60; i++)
-                if (mib[i] != null)
-                    list5.VbList.Add(mib[i]);
+                if (mib[i, 0] != null)
+                    list5.VbList.Add(mib[i, 0]);
 
             for (int i = 60; i < 70; i++)
-                if (mib[i] != null)
-                    list6.VbList.Add(mib[i]);
+                if (mib[i, 0] != null)
+                    list6.VbList.Add(mib[i, 0]);
 
             for (int i = 70; i < 80; i++)
-                if (mib[i] != null)
-                    list7.VbList.Add(mib[i]);
+                if (mib[i, 0] != null)
+                    list7.VbList.Add(mib[i, 0]);
 
             for (int i = 80; i < 90; i++)
-                if (mib[i] != null)
-                    list8.VbList.Add(mib[i]);
+                if (mib[i, 0] != null)
+                    list8.VbList.Add(mib[i, 0]);
 
             for (int i = 90; i < 100; i++)
-                if (mib[i] != null)
-                    list9.VbList.Add(mib[i]);
+                if (mib[i, 0] != null)
+                    list9.VbList.Add(mib[i, 0]);
         }
 
         private Device CheckDevice(string folder_name)
@@ -306,6 +327,87 @@ namespace Device_Control_2
             }
         }
 
+        private void CheckLog()
+        {
+            string date = DateTime.Now.Year.ToString();
+            date += (DateTime.Now.Month < 10) ? "0" + DateTime.Now.Month : DateTime.Now.Month.ToString();
+            date += (DateTime.Now.Day < 10) ? "0" + DateTime.Now.Day : DateTime.Now.Day.ToString();
+
+            if (!Directory.Exists("log"))
+            {
+                Directory.CreateDirectory("log");
+
+                FileStream f = File.Create("log\\" + date + ".txt");
+                f.Close();
+            }
+            else if(!File.Exists("log\\" + date + ".txt"))
+            {
+                FileStream f = File.Create("log\\" + date + ".txt");
+                f.Close();
+            }
+        }
+        
+        private void CheckEventLog()
+        {
+            string date = DateTime.Now.Year.ToString();
+            date += (DateTime.Now.Month < 10) ? "0" + DateTime.Now.Month : DateTime.Now.Month.ToString();
+
+            if (!Directory.Exists("event log"))
+            {
+                Directory.CreateDirectory("event log");
+
+                FileStream f = File.Create("event log\\" + date + ".txt");
+                f.Close();
+            }
+            else if (!File.Exists("event log\\" + date + ".txt"))
+            {
+                FileStream f = File.Create("event log\\" + date + ".txt");
+                f.Close();
+            }
+        }
+
+        private void WriteLog(bool WithClient, string text)
+        {
+            CheckLog();
+
+            string date = DateTime.Now.Year.ToString();
+            date += (DateTime.Now.Month < 10) ? "0" + DateTime.Now.Month : DateTime.Now.Month.ToString();
+            date += (DateTime.Now.Day < 10) ? "0" + DateTime.Now.Day : DateTime.Now.Day.ToString();
+
+            if(WithClient)
+                File.AppendAllText("log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] <" + cl[client_f].Name + " / " + cl[client_f].Ip + "> " + text);
+            else
+                File.AppendAllText("log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] " + text);
+        }
+        private void WriteLog(bool WithClient, string[] text)
+        {
+            CheckLog();
+
+            string date = DateTime.Now.Year.ToString();
+            date += (DateTime.Now.Month < 10) ? "0" + DateTime.Now.Month : DateTime.Now.Month.ToString();
+            date += (DateTime.Now.Day < 10) ? "0" + DateTime.Now.Day : DateTime.Now.Day.ToString();
+
+            if (WithClient)
+                for(int i = 0; i < text.Count(); i++)
+                    File.AppendAllText("log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] <" + cl[client_f].Name + " / " + cl[client_f].Ip + "> " + text[i]);
+            else
+                for (int i = 0; i < text.Count(); i++)
+                    File.AppendAllText("log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] " + text[i]);
+        }
+        
+        private void WriteEvent(bool WithClient, string text)
+        {
+            CheckEventLog();
+
+            string date = DateTime.Now.Year.ToString();
+            date += (DateTime.Now.Month < 10) ? "0" + DateTime.Now.Month : DateTime.Now.Month.ToString();
+
+            if (WithClient)
+                File.AppendAllText("event log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] <" + cl[client_f].Name + " / " + cl[client_f].Ip + "> " + text);
+            else
+                File.AppendAllText("event log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] " + text);
+        }
+
         private void Survey()
         {
             label1.Text = cl[client_f].Name;
@@ -321,6 +423,9 @@ namespace Device_Control_2
             else
             {
                 Console.WriteLine("Network is unavailable, check connection and restart program.");
+
+                WriteLog(false, "Соединение отсутствует");
+                //WriteEvent(false, "Соединение отсутствует");
 
                 Change_SNMP_Status(4);
             }
@@ -342,10 +447,16 @@ namespace Device_Control_2
                 Change_Ping_Status(1);
                 Change_SNMP_Status(0);
 
+                WriteLog(true, "Связь присутствует");
+
                 Fill_main();
             }
             else
+            {
                 Change_Ping_Status(3);
+
+                WriteLog(true, "Связь отсутствует");
+            }
 
             SurveyUpdate();
         }
@@ -372,49 +483,22 @@ namespace Device_Control_2
             }
         }
 
-        /*private static void Count()
-        {
-            output_s[1, 0] = snmp_request_str(client[1], comm[0], mibs[1, 0]);
-
-            output_i[1, 1] = snmp_request_int(client[1], comm[0], mibs[1, 1]);
-
-            output_s[1, 3] = snmp_request_str(client[1], comm[0], mibs[1, 3]);
-
-            output_s[1, 4] = snmp_request_str(client[1], comm[0], mibs[1, 4]);
-
-            output_i[1, 24] = snmp_request_int(client[1], comm[0], mibs[1, 24]);
-
-            //output_i[1, 25] = snmp_request_int(client[1], comm[0], mibs[1, 25]);
-
-            output_i[1, 26] = snmp_request_int(client[1], comm[0], mibs[1, 26]);
-
-            output_i[1, 27] = snmp_request_int(client[1], comm[0], mibs[1, 27]);
-
-            output_i[1, 28] = snmp_request_int(client[1], comm[0], mibs[1, 28]);
-
-            output_i[1, 30] = snmp_request_int(client[1], comm[0], mibs[1, 30]);
-
-            CountdownEvent cde = new CountdownEvent(1);
-            cde.Reset();
-        }
-
-        public class ThresholdReachedEventArgs : EventArgs
-        {
-            public int Threshold { get; set; }
-            public DateTime TimeReached { get; set; }
-        }*/
-
         private void Fill_main()
         {
             SnmpV1Packet result = SurveyList(0, cl[client_f].Ip, list0);
 
+            CheckStdOIDChanges(label11.Text, 0, result.Pdu.VbList[0].Value.ToString());
             label11.Text = result.Pdu.VbList[0].Value.ToString();
+            CheckStdOIDChanges(label12.Text, 2, result.Pdu.VbList[2].Value.ToString());
             label12.Text = result.Pdu.VbList[2].Value.ToString();
+            CheckStdOIDChanges(label13.Text, 4, result.Pdu.VbList[4].Value.ToString());
             label13.Text = result.Pdu.VbList[4].Value.ToString();
+            CheckStdOIDChanges(label14.Text, 5, result.Pdu.VbList[5].Value.ToString());
             label14.Text = result.Pdu.VbList[5].Value.ToString();
+
             int ifNumber = Convert.ToInt32(result.Pdu.VbList[6].Value.ToString());
 
-            switch(client_f)
+            switch (client_f)
             {
                 case 1:
                     result = SurveyList(0, cl[client_f].Ip, list1);
@@ -445,17 +529,28 @@ namespace Device_Control_2
                     break;
             }
 
-            long convertedTime = Convert.ToInt64(result.Pdu.VbList[0].Value.ToString()); //сконвертированное в long время из string
+            string time = result.Pdu.VbList[0].Value.ToString();
+            if (result.Pdu.VbList[0].Type == 48)
+                time = Decrypt_Time(time);
 
+            CheckModOIDChanges(label15.Text, 0, time);
+            long convertedTime = Convert.ToInt64(time); //сконвертированное в long время из string
             label15.Text = DateTimeOffset.FromUnixTimeSeconds(convertedTime).ToString().Substring(0, 19);
 
+            CheckModOIDChanges(label21.Text, 1, result.Pdu.VbList[1].Value.ToString());
             label21.Text = result.Pdu.VbList[1].Value.ToString();
+            CheckModOIDChanges(label22.Text, 2, result.Pdu.VbList[2].Value.ToString());
             label22.Text = result.Pdu.VbList[2].Value.ToString();
+            CheckModOIDChanges(label23.Text, 3, result.Pdu.VbList[3].Value.ToString());
             label23.Text = result.Pdu.VbList[3].Value.ToString();
+            CheckModOIDChanges(label24.Text, 5, result.Pdu.VbList[5].Value.ToString());
             label24.Text = result.Pdu.VbList[5].Value.ToString();
+
             if(client_f == 1)
             {
+                CheckModOIDChanges(label25.Text, 7, result.Pdu.VbList[7].Value.ToString());
                 label25.Text = result.Pdu.VbList[7].Value.ToString();
+                CheckModOIDChanges(label26.Text, 9, result.Pdu.VbList[9].Value.ToString());
                 label26.Text = result.Pdu.VbList[9].Value.ToString();
             }
 
@@ -469,6 +564,108 @@ namespace Device_Control_2
                 //notify.Show();
 
             Survey_grid(ifNumber);
+        }
+
+        private string Decrypt_Time(string value)
+        {
+            string result, days = "", hours = "", minutes = "", seconds = "", milliseconds = "";
+
+            value = value.Substring(0, value.Length - 2);
+
+            for(int i = 0, flag = 0; i < value.Length; i++)
+            {
+                if(value[i] == 'd' || value[i] == 'h' || value[i] == 'm' || value[i] == 's' || value[i] == ' ')
+                {
+                    if(value[i] != ' ')
+                        flag++;
+                }
+                else
+                    switch (flag)
+                    {
+                        case 0:
+                            days += value[i];
+                            break;
+                        case 1:
+                            hours += value[i];
+                            break;
+                        case 2:
+                            minutes += value[i];
+                            break;
+                        case 3:
+                            seconds += value[i];
+                            break;
+                        case 4:
+                            milliseconds += value[i];
+                            break;
+                    }
+            }
+
+            long i_d = Convert.ToInt64(days);
+            long i_h = Convert.ToInt64(hours);
+            long i_m = Convert.ToInt64(minutes);
+            long i_s = Convert.ToInt64(seconds);
+            long ims = Convert.ToInt64(milliseconds);
+
+            ims += i_s * 1000;
+            ims += i_m * 60000;
+            ims += i_h * 3600000;
+            ims += i_d * 86400000;
+
+            ims /= 10;
+
+            result = ims.ToString();
+
+            return result;
+        }
+
+        private void CheckStdOIDChanges(string original, int oid_id, string oid_result)
+        {
+            if(oid_result != original)
+                if(original == "" || original == null)
+                    switch (oid_id)
+                    {
+                        case 0:
+                            WriteLog(true, "Значение переменной: [sysDescr]=" + oid_result);
+                            break;
+                        case 2:
+                            WriteLog(true, "Значение переменной: [sysUpTime]=" + oid_result);
+                            break;
+                        case 4:
+                            WriteLog(true, "Значение переменной: [sysName]=" + oid_result);
+                            break;
+                        case 5:
+                            WriteLog(true, "Значение переменной: [sysLocation]=" + oid_result);
+                            break;
+                    }
+                else
+                    switch (oid_id)
+                    {
+                        case 0:
+                            WriteLog(true, "Значение переменной было изменено: [sysDescr]=" + oid_result);
+                            break;
+                        case 2:
+                            WriteLog(true, "Значение переменной было изменено: [sysUpTime]=" + oid_result);
+                            break;
+                        case 4:
+                            WriteLog(true, "Значение переменной было изменено: [sysName]=" + oid_result);
+                            break;
+                        case 5:
+                            WriteLog(true, "Значение переменной было изменено: [sysLocation]=" + oid_result);
+                            break;
+                    }
+        }
+
+        private void CheckModOIDChanges(string original, int oid_id, string oid_result)
+        {
+            oid_id = (client_f * 10) + oid_id;
+            if (oid_result != original)
+                if (original == "" || original == null)
+                {
+                    string jopa = mib[oid_id, 1];
+                    WriteLog(true, "Значение переменной: [" + mib[oid_id, 1] + "]=" + oid_result);
+                }
+                else
+                    WriteLog(true, "Значение переменной было изменено: [" + mib[oid_id, 1] + "]=" + oid_result);
         }
 
         private void Change_SNMP_Status(int stat)
@@ -509,10 +706,9 @@ namespace Device_Control_2
             // Изменить под пропуски ifIndex
             //for (int i = 1; i <= ifNum; i++) // строки
 
-            bool flag = true;
             int i = 1, k = 0;
 
-            while (flag == true) // бред, но работает только в том случае, если оиды из одной подсетки (из разных запрещено делать запросы)
+            while (/*flag == */true) // бред, но работает только в том случае, если оиды из одной подсетки (из разных запрещено делать запросы)
             {
                 Pdu list = new Pdu(PduType.Get);
                 //Console.Write("port {0}: ", i);
@@ -522,10 +718,6 @@ namespace Device_Control_2
                 list.VbList.Add(std_oids[7] + "3." + i); // 6 столбец
                 list.VbList.Add(std_oids[7] + "5." + i); // 5 столбец
                 list.VbList.Add(std_oids[7] + "8." + i); // 4 столбец
-                //if (client_f == 1)
-                    //list.VbList.Add(mib[100] + i);       // 3 столбец
-                //else
-                    //list.VbList.Add(mib[200] + i);       // 3 столбец
 
                 SnmpV1Packet result = SurveyList(0, cl[client_f].Ip, list);
 
@@ -534,9 +726,9 @@ namespace Device_Control_2
                 if (i == 129)
                     type = "";
 
-                string lol = result.Pdu.VbList[2].Value.ToString();
+                string itype = result.Pdu.VbList[2].Value.ToString();
 
-                switch (lol)
+                switch (itype)
                 {
                     case "1":
                         type = "Other";
@@ -550,13 +742,13 @@ namespace Device_Control_2
                     case "161":
                         type = "ieee8023AdLag";
                         break;
-                    case null:
-                        type = "";
-                        break;
                     case "":
                         type = "";
                         break;
                     case "Null":
+                        type = "";
+                        break;
+                    case null:
                         type = "";
                         break;
                 }
@@ -566,55 +758,80 @@ namespace Device_Control_2
                     fi++;
 
                     string state = (Convert.ToInt32(result.Pdu.VbList[4].Value.ToString()) == 1) ? "Связь есть" : "Отключен";
+                    string state_to_log = "";
+
+                    if (interfaces[k, 3] == "Связь есть")
+                        state_to_log = "1";
+                    else if (interfaces[k, 3] == "Отключен")
+                        state_to_log = "2";
 
                     interfaces[k, 0] = (k + 1).ToString(); // result.Pdu.VbList[0].Value.ToString();
+                    CheckITableChanges(interfaces[k, 1], k, result.Pdu.VbList[1].Value.ToString(), "ifDescr");
                     interfaces[k, 1] = result.Pdu.VbList[1].Value.ToString();
-                    //if (result.Pdu.VbList[5].Value.ToString() != "Null")
-                    //{
-                    //    interfaces[k, 2] = result.Pdu.VbList[5].Value.ToString();
-                    //}
+
+                    CheckITableChanges(state_to_log, k, result.Pdu.VbList[4].Value.ToString(), "ifOperStatus");
                     interfaces[k, 3] = state;
-                    interfaces[k, 4] = result.Pdu.VbList[3].Value.ToString();
+                    CheckITableChanges(Convert.ToInt32(interfaces[k, 4]) * 1000000 + "", k, result.Pdu.VbList[3].Value.ToString(), "ifSpeed");
+                    interfaces[k, 4] = Convert.ToInt32(result.Pdu.VbList[3].Value.ToString()) / 1000000 + "";
                     interfaces[k, 5] = type;
 
                     k++;
 
                     if (k == ifNum)
-                        flag = false;
+                        break;
                 }
                 else
                     if (result.Pdu.VbList[2].Value.ToString() == "1" || result.Pdu.VbList[2].Value.ToString() == "135" || result.Pdu.VbList[2].Value.ToString() == "161")
-                        flag = false;
+                        break;
                 
                 i++;
-
-                //if(i == fi)
-                //{
-                //}
             }
 
-            /*int lim;
-            if (client_f == 1)
-                lim = fi;
-            else
-                lim = ifNum;
+            int ilimit = i;
 
-            for (int j = 1; j <= lim; j++)
+            i = 1;
+            k = 0;
+            
+            while (true)
             {
                 Pdu list = new Pdu(PduType.Get);
 
                 if (client_f == 1)
-                    list.VbList.Add(mib[100] + i);       // 3 столбец
+                    list.VbList.Add(mib[100, 0] + i++);  // 3 столбец
                 else
-                    list.VbList.Add(mib[200] + i);       // 3 столбец
+                    list.VbList.Add(mib[200, 0] + i++);  // 3 столбец
 
-                result = SurveyList(0, cl[client_f].Ip, list);
+                SnmpV1Packet result = SurveyList(0, cl[client_f].Ip, list);
 
-                if(result.Pdu.VbList[0].Value.ToString() != "Null")
-                    interfaces[j++, 2] = result.Pdu.VbList[0].Value.ToString();
-            }*/
+                if (result.Pdu.VbList[0].Value.ToString() != "Null")
+                {
+                    CheckINamesChanges(interfaces[k, 2], k, result.Pdu.VbList[0].Value.ToString());
+                    interfaces[k++, 2] = result.Pdu.VbList[0].Value.ToString();
+                }
+
+                if (i == ilimit || k == ifNum)
+                    break;
+            }
 
             Fill_grid(ifNum);
+        }
+
+        private void CheckITableChanges(string original, int ifindex, string oid_result, string oid_name)
+        {
+            if (oid_result != original)
+                if (original == "" || original == null)
+                    WriteLog(true, "Значение переменной: [" + oid_name + ":" + ++ifindex + "]=" + oid_result);
+                else
+                    WriteLog(true, "Значение переменной было изменено: [" + oid_name + ":" + ++ifindex + "]=" + oid_result);
+        }
+
+        private void CheckINamesChanges(string original, int oid_id, string oid_result)
+        {
+            if (oid_result != original)
+                if (original == "" || original == null)
+                    WriteLog(true, "Значение переменной: [ifname:" + ++oid_id + "]=" + oid_result);
+                else
+                    WriteLog(true, "Значение переменной было изменено: [ifname:" + ++oid_id + "]=" + oid_result);
         }
 
         private void Fill_grid(int rows_count)
@@ -698,6 +915,16 @@ namespace Device_Control_2
         private void timer1_Tick(object sender, EventArgs e)
         {
             Survey();
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            WriteLog(false, "Программа завершена");
+        }
+
+        private void timer2_Tick(object sender, EventArgs e)
+        {
+
         }
     }
 }
