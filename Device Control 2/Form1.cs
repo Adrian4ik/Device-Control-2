@@ -11,11 +11,13 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
+using Microsoft.Win32;
 using SnmpSharpNet;
 
 namespace Device_Control_2
@@ -24,6 +26,10 @@ namespace Device_Control_2
     {
         #region Переменные
         int client_f = 2;
+
+        int[] connection = new int[1024];
+
+        string ExePath = Application.ExecutablePath, Path; // Путь в котором находится .exe файл приложения
 
         string[] stdclients = { "folder names: hm_mach4002, octopus, bkm, fs1" };
 
@@ -106,7 +112,7 @@ namespace Device_Control_2
             public string[] OptList { get; set; }
         }
 
-        Notification notify = new Notification();
+        Notification notify;
         #endregion
 
         public Form1()
@@ -116,9 +122,62 @@ namespace Device_Control_2
 
         private void Form1_Load(object sender, EventArgs e)// , string[] argv
         {
+            FileInfo fi = new FileInfo(ExePath);
+            Path = ExePath.Substring(0, ExePath.Length - fi.Name.Length);
+
             Preprocessing();
 
+            Autorun(false);
+
+            Startup_run(true);
+
+            if (!timer1.Enabled)
+                timer1.Start();
+
+            if (!timer2.Enabled)
+                timer2.Start();
+            
+            notify = new Notification(0, 2, "", cl[client_f].Name, DateTime.Now.ToString());
+
             Survey();
+        }
+
+        private static void Autorun(bool autorun)
+        {
+            string ExePath = Application.ExecutablePath;
+            string name = "";
+            FileInfo fi = new FileInfo(ExePath);
+            int k = fi.Name.IndexOf('.');
+            name = fi.Name.Substring(0, k);
+
+            RegistryKey reg;
+            reg = Registry.CurrentUser.CreateSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run\\");
+            try
+            {
+                if (autorun)
+                    reg.SetValue(name, ExePath);
+                else
+                    reg.DeleteValue(name);
+
+                reg.Close();
+            }
+            catch
+            {
+                
+            }
+        }
+
+        private void Startup_run(bool autorun)
+        {
+            string name = "";
+            FileInfo fi = new FileInfo(ExePath);
+            name = fi.Name;
+
+            string Startup_folder = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
+
+            if (autorun)
+                ShortCut.Create(ExePath, Startup_folder + "\\" + name.Substring(0, name.Length - 4) + ".lnk", "", "");
+
         }
 
         private void Preprocessing()
@@ -193,16 +252,16 @@ namespace Device_Control_2
         // Доделать
         private void Check_clients()
         {
-            if (!File.Exists("config.xml"))
+            if (!File.Exists(Path + "config.xml"))
             { // если файл со списком клиентов не существует, то...
-                FileStream f = File.Create("config.xml"); // создаём его
+                FileStream f = File.Create(Path + "config.xml"); // создаём его
                 f.Close(); // и закрываем для предотвращения различных ошибок
-                File.WriteAllLines("config.xml", stdclients); // и заполняем файл стандартным списком
+                File.WriteAllLines(Path + "config.xml", stdclients); // и заполняем файл стандартным списком
             }
 
-            if (!Directory.Exists("devices")) // если папка со списком клиентов не существует
+            if (!Directory.Exists(Path + "devices")) // если папка со списком клиентов не существует
             {
-                Directory.CreateDirectory("devices"); // то создаём её
+                Directory.CreateDirectory(Path + "devices"); // то создаём её
 
                 CreateDevice("localhost", std_config, std_oids);
                 CreateDevice("hm_mach4002", std_config, std_hm_optlist);
@@ -211,7 +270,7 @@ namespace Device_Control_2
                 CreateDevice("fs1", std_config, std_hm_optlist);
             }
 
-            string[] al = File.ReadAllLines("config.xml"); // переписываем список клиентов
+            string[] al = File.ReadAllLines(Path + "config.xml"); // переписываем список клиентов
 
             /*if (al[0].Substring(0, 14) == "folder names: ")
                 al[0] = al[0].Substring(14, al[0].Length - 14);
@@ -281,23 +340,23 @@ namespace Device_Control_2
         {
             Device device = new Device();
 
-            if (!Directory.Exists("devices\\" + folder_name))
-                Directory.CreateDirectory("devices\\" + folder_name);
+            if (!Directory.Exists(Path + "devices\\" + folder_name))
+                Directory.CreateDirectory(Path + "devices\\" + folder_name);
             device.FolderName = folder_name;
 
-            if (!File.Exists("devices\\" + folder_name + "\\config.xml"))
+            if (!File.Exists(Path + "devices\\" + folder_name + "\\config.xml"))
             {
-                FileStream f = File.Create("devices\\" + folder_name + "\\config.xml");
+                FileStream f = File.Create(Path + "devices\\" + folder_name + "\\config.xml");
                 f.Close();
-                File.WriteAllLines("devices\\" + folder_name + "\\config.xml", std_config);
+                File.WriteAllLines(Path + "devices\\" + folder_name + "\\config.xml", std_config);
             }
 
 
-            if (!File.Exists("devices\\" + folder_name + "\\optlist.xml"))
+            if (!File.Exists(Path + "devices\\" + folder_name + "\\optlist.xml"))
             {
-                FileStream f = File.Create("devices\\" + folder_name + "\\optlist.xml");
+                FileStream f = File.Create(Path + "devices\\" + folder_name + "\\optlist.xml");
                 f.Close();
-                File.WriteAllLines("devices\\" + folder_name + "\\optlist.xml", std_optlist);
+                File.WriteAllLines(Path + "devices\\" + folder_name + "\\optlist.xml", std_optlist);
             }
 
             return device;
@@ -307,23 +366,23 @@ namespace Device_Control_2
         {
             Device device = new Device();
 
-            if (!Directory.Exists("devices\\" + folder_name))
-                Directory.CreateDirectory("devices\\" + folder_name);
+            if (!Directory.Exists(Path + "devices\\" + folder_name))
+                Directory.CreateDirectory(Path + "devices\\" + folder_name);
             device.FolderName = folder_name;
 
-            if (!File.Exists("devices\\" + folder_name + "\\config.xml"))
+            if (!File.Exists(Path + "devices\\" + folder_name + "\\config.xml"))
             {
-                FileStream f = File.Create("devices\\" + folder_name + "\\config.xml");
+                FileStream f = File.Create(Path + "devices\\" + folder_name + "\\config.xml");
                 f.Close();
-                File.WriteAllLines("devices\\" + folder_name + "\\config.xml", std_config);
+                File.WriteAllLines(Path + "devices\\" + folder_name + "\\config.xml", std_config);
             }
 
 
-            if (!File.Exists("devices\\" + folder_name + "\\optlist.xml"))
+            if (!File.Exists(Path + "devices\\" + folder_name + "\\optlist.xml"))
             {
-                FileStream f = File.Create("devices\\" + folder_name + "\\optlist.xml");
+                FileStream f = File.Create(Path + "devices\\" + folder_name + "\\optlist.xml");
                 f.Close();
-                File.WriteAllLines("devices\\" + folder_name + "\\optlist.xml", std_optlist);
+                File.WriteAllLines(Path + "devices\\" + folder_name + "\\optlist.xml", std_optlist);
             }
         }
 
@@ -333,16 +392,16 @@ namespace Device_Control_2
             date += (DateTime.Now.Month < 10) ? "0" + DateTime.Now.Month : DateTime.Now.Month.ToString();
             date += (DateTime.Now.Day < 10) ? "0" + DateTime.Now.Day : DateTime.Now.Day.ToString();
 
-            if (!Directory.Exists("log"))
+            if (!Directory.Exists(Path + "log"))
             {
-                Directory.CreateDirectory("log");
+                Directory.CreateDirectory(Path + "log");
 
-                FileStream f = File.Create("log\\" + date + ".txt");
+                FileStream f = File.Create(Path + "log\\" + date + ".txt");
                 f.Close();
             }
-            else if(!File.Exists("log\\" + date + ".txt"))
+            else if(!File.Exists(Path + "log\\" + date + ".txt"))
             {
-                FileStream f = File.Create("log\\" + date + ".txt");
+                FileStream f = File.Create(Path + "log\\" + date + ".txt");
                 f.Close();
             }
         }
@@ -352,16 +411,16 @@ namespace Device_Control_2
             string date = DateTime.Now.Year.ToString();
             date += (DateTime.Now.Month < 10) ? "0" + DateTime.Now.Month : DateTime.Now.Month.ToString();
 
-            if (!Directory.Exists("event log"))
+            if (!Directory.Exists(Path + "event log"))
             {
-                Directory.CreateDirectory("event log");
+                Directory.CreateDirectory(Path + "event log");
 
-                FileStream f = File.Create("event log\\" + date + ".txt");
+                FileStream f = File.Create(Path + "event log\\" + date + ".txt");
                 f.Close();
             }
-            else if (!File.Exists("event log\\" + date + ".txt"))
+            else if (!File.Exists(Path + "event log\\" + date + ".txt"))
             {
-                FileStream f = File.Create("event log\\" + date + ".txt");
+                FileStream f = File.Create(Path + "event log\\" + date + ".txt");
                 f.Close();
             }
         }
@@ -375,9 +434,9 @@ namespace Device_Control_2
             date += (DateTime.Now.Day < 10) ? "0" + DateTime.Now.Day : DateTime.Now.Day.ToString();
 
             if(WithClient)
-                File.AppendAllText("log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] <" + cl[client_f].Name + " / " + cl[client_f].Ip + "> " + text);
+                File.AppendAllText(Path + "log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] <" + cl[client_f].Name + " / " + cl[client_f].Ip + "> " + text);
             else
-                File.AppendAllText("log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] " + text);
+                File.AppendAllText(Path + "log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] " + text);
         }
         private void WriteLog(bool WithClient, string[] text)
         {
@@ -389,10 +448,10 @@ namespace Device_Control_2
 
             if (WithClient)
                 for(int i = 0; i < text.Count(); i++)
-                    File.AppendAllText("log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] <" + cl[client_f].Name + " / " + cl[client_f].Ip + "> " + text[i]);
+                    File.AppendAllText(Path + "log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] <" + cl[client_f].Name + " / " + cl[client_f].Ip + "> " + text[i]);
             else
                 for (int i = 0; i < text.Count(); i++)
-                    File.AppendAllText("log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] " + text[i]);
+                    File.AppendAllText(Path + "log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] " + text[i]);
         }
         
         private void WriteEvent(bool WithClient, string text)
@@ -403,9 +462,9 @@ namespace Device_Control_2
             date += (DateTime.Now.Month < 10) ? "0" + DateTime.Now.Month : DateTime.Now.Month.ToString();
 
             if (WithClient)
-                File.AppendAllText("event log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] <" + cl[client_f].Name + " / " + cl[client_f].Ip + "> " + text);
+                File.AppendAllText(Path + "event log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] <" + cl[client_f].Name + " / " + cl[client_f].Ip + "> " + text);
             else
-                File.AppendAllText("event log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] " + text);
+                File.AppendAllText(Path + "event log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] " + text);
         }
 
         private void Survey()
@@ -425,7 +484,8 @@ namespace Device_Control_2
                 Console.WriteLine("Network is unavailable, check connection and restart program.");
 
                 WriteLog(false, "Соединение отсутствует");
-                //WriteEvent(false, "Соединение отсутствует");
+
+                CheckPingConnectionChanges(connection[client_f], 0);
 
                 Change_SNMP_Status(4);
             }
@@ -444,21 +504,45 @@ namespace Device_Control_2
 
             if (e.Reply.Status == IPStatus.Success)
             {
+                CheckPingConnectionChanges(connection[client_f], 2);
+
                 Change_Ping_Status(1);
                 Change_SNMP_Status(0);
 
-                WriteLog(true, "Связь присутствует");
+                connection[client_f] = 2;
+
+                //WriteLog(true, "Связь присутствует");
 
                 Fill_main();
             }
             else
             {
+                CheckPingConnectionChanges(connection[client_f], 1);
+
                 Change_Ping_Status(3);
 
-                WriteLog(true, "Связь отсутствует");
+                connection[client_f] = 1;
+
+                //WriteLog(true, "Связь отсутствует");
             }
 
             SurveyUpdate();
+        }
+
+        private void CheckPingConnectionChanges(int original, int status)
+        {
+            string connection = "";
+
+            if (status != original)
+            {
+                if (original == 0)
+                    connection = (status == 2) ? "присутствует" : "отсутствует";
+                else
+                    connection = (status == 2) ? "восстановлена" : "утеряна";
+
+                WriteLog(true, "Связь с устройством: [Ping]= " + connection);
+                WriteEvent(true, "Связь с устройством: [Ping]= " + connection);
+            }
         }
 
         private void Change_Ping_Status(int stat)
@@ -899,12 +983,9 @@ namespace Device_Control_2
         private void SurveyUpdate()
         {
             // Тернарная операция: z = (x > y) ? x : y;
-            string time = (DateTime.Now.Hour > 10) ? DateTime.Now.Hour + ":" : "0" + DateTime.Now.Hour + ":";
-            time += (DateTime.Now.Minute > 10) ? DateTime.Now.Minute.ToString() : "0" + DateTime.Now.Minute;
+            string time = (DateTime.Now.Hour < 10) ? "0" + DateTime.Now.Hour + ":" : DateTime.Now.Hour + ":";
+            time += (DateTime.Now.Minute < 10) ? "0" + DateTime.Now.Minute : DateTime.Now.Minute.ToString();
             label3.Text = "Последний раз обновлено: " + time;
-
-            if(!timer1.Enabled)
-                timer1.Start();
         }
         // Сделать
         private void Form1_Resize(object sender, EventArgs e)
@@ -925,6 +1006,118 @@ namespace Device_Control_2
         private void timer2_Tick(object sender, EventArgs e)
         {
 
+        }
+
+        static class ShellLink
+        {
+            [ComImport,
+            Guid("000214F9-0000-0000-C000-000000000046"),
+            InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+            internal interface IShellLinkW
+            {
+                [PreserveSig]
+                int GetPath(
+                    [Out, MarshalAs(UnmanagedType.LPWStr)]
+                StringBuilder pszFile,
+                    int cch, ref IntPtr pfd, uint fFlags);
+
+                [PreserveSig]
+                int GetIDList(out IntPtr ppidl);
+
+                [PreserveSig]
+                int SetIDList(IntPtr pidl);
+
+                [PreserveSig]
+                int GetDescription(
+                    [Out, MarshalAs(UnmanagedType.LPWStr)]
+                StringBuilder pszName, int cch);
+
+                [PreserveSig]
+                int SetDescription(
+                    [MarshalAs(UnmanagedType.LPWStr)]
+                string pszName);
+
+                [PreserveSig]
+                int GetWorkingDirectory(
+                    [Out, MarshalAs(UnmanagedType.LPWStr)]
+                StringBuilder pszDir, int cch);
+
+                [PreserveSig]
+                int SetWorkingDirectory(
+                    [MarshalAs(UnmanagedType.LPWStr)]
+                string pszDir);
+
+                [PreserveSig]
+                int GetArguments(
+                    [Out, MarshalAs(UnmanagedType.LPWStr)]
+                StringBuilder pszArgs, int cch);
+
+                [PreserveSig]
+                int SetArguments(
+                    [MarshalAs(UnmanagedType.LPWStr)]
+                string pszArgs);
+
+                [PreserveSig]
+                int GetHotkey(out ushort pwHotkey);
+
+                [PreserveSig]
+                int SetHotkey(ushort wHotkey);
+
+                [PreserveSig]
+                int GetShowCmd(out int piShowCmd);
+
+                [PreserveSig]
+                int SetShowCmd(int iShowCmd);
+
+                [PreserveSig]
+                int GetIconLocation(
+                    [Out, MarshalAs(UnmanagedType.LPWStr)]
+                StringBuilder pszIconPath, int cch, out int piIcon);
+
+                [PreserveSig]
+                int SetIconLocation(
+                    [MarshalAs(UnmanagedType.LPWStr)]
+                string pszIconPath, int iIcon);
+
+                [PreserveSig]
+                int SetRelativePath(
+                    [MarshalAs(UnmanagedType.LPWStr)]
+                string pszPathRel, uint dwReserved);
+
+                [PreserveSig]
+                int Resolve(IntPtr hwnd, uint fFlags);
+
+                [PreserveSig]
+                int SetPath(
+                    [MarshalAs(UnmanagedType.LPWStr)]
+                string pszFile);
+            }
+
+            [ComImport,
+            Guid("00021401-0000-0000-C000-000000000046"),
+            ClassInterface(ClassInterfaceType.None)]
+            private class shl_link { }
+
+            internal static IShellLinkW CreateShellLink()
+            {
+                return (IShellLinkW)(new shl_link());
+            }
+        }
+
+        public static class ShortCut
+        {
+            public static void Create(
+                string PathToFile, string PathToLink,
+                string Arguments, string Description)
+            {
+                ShellLink.IShellLinkW shlLink = ShellLink.CreateShellLink();
+
+                Marshal.ThrowExceptionForHR(shlLink.SetDescription(Description));
+                Marshal.ThrowExceptionForHR(shlLink.SetPath(PathToFile));
+                Marshal.ThrowExceptionForHR(shlLink.SetArguments(Arguments));
+
+                ((System.Runtime.InteropServices.ComTypes.IPersistFile)shlLink).Save(PathToLink, false);
+            }
         }
     }
 }
