@@ -27,14 +27,14 @@ namespace Device_Control_2
         #region Переменные
         int client_f = 2;
 
-        int[] connection = new int[1024];
+        int[,] connection = new int[1024, 2];
 
         string ExePath = Application.ExecutablePath, Path; // Путь в котором находится .exe файл приложения
 
         string[] stdclients = { "folder names: hm_mach4002, octopus, bkm, fs1" };
 
-        string[] std_oids = { "1.3.6.1.2.1.1.1.0", "1.3.6.1.2.1.1.2.0", "1.3.6.1.2.1.1.3.0", "1.3.6.1.2.1.1.4.0", "1.3.6.1.2.1.1.5.0", "1.3.6.1.2.1.1.6.0", "1.3.6.1.2.1.2.1.0", "1.3.6.1.2.1.2.2.1."};
-                            // sysDescr          // sysObjectID       // sysUpTime         // sysContact        // sysName           // sysLocation       // ifNumber          // ifTable
+        string[] std_oids = { "1.3.6.1.2.1.1.1.0", "1.3.6.1.2.1.1.2.0", "1.3.6.1.2.1.1.3.0", "1.3.6.1.2.1.1.4.0", "1.3.6.1.2.1.1.5.0", "1.3.6.1.2.1.1.6.0", "1.3.6.1.2.1.2.1.0", "1.3.6.1.2.1.2.2.1." };
+        // sysDescr          // sysObjectID       // sysUpTime         // sysContact        // sysName           // sysLocation       // ifNumber          // ifTable
 
         string[] std_config = { "Имя: ", "ip: ", "Autoconnect: 1" };
 
@@ -95,7 +95,7 @@ namespace Device_Control_2
         Pdu list18 = new Pdu(PduType.Get);
         Pdu list19 = new Pdu(PduType.Get);
 
-        struct Client
+        private struct Client
         {
             public string Name { get; set; }
             public string Ip { get; set; }
@@ -105,14 +105,24 @@ namespace Device_Control_2
         Client[] cl;
         // список клиентов (не более 1024 клиентов)
 
-        struct Device
+        private struct Device
         {
             public string FolderName { get; set; }
             public string[] Config { get; set; }
             public string[] OptList { get; set; }
         }
 
-        Notification notify;
+        public struct Notification_message
+        {
+            public int Criticality { get; set; }
+            public bool State { get; set; }
+            public string Text { get; set; }
+            public string Time { get; set; }
+        }
+
+        Notification_message[] notifications/* = new Message[10240]*/;
+
+        Notification notify = new Notification();
         #endregion
 
         public Form1()
@@ -136,8 +146,6 @@ namespace Device_Control_2
 
             if (!timer2.Enabled)
                 timer2.Start();
-            
-            notify = new Notification(0, 2, "", cl[client_f].Name, DateTime.Now.ToString());
 
             Survey();
         }
@@ -163,7 +171,7 @@ namespace Device_Control_2
             }
             catch
             {
-                
+
             }
         }
 
@@ -187,8 +195,6 @@ namespace Device_Control_2
             Change_Ping_Status(4);
 
             FillConstants();
-
-            cl = std_cl;
             Check_clients();
 
             WriteLog(false, "Программа запущена");
@@ -289,12 +295,62 @@ namespace Device_Control_2
             }*/
 
             // if()
-                cl = std_cl;
+            cl = std_cl;
+            notifications = new Notification_message[cl.Count() * 10];
             // else
+
+            for (int i = 0; i < notifications.Count(); i++)
+            {
+                int n_id = i % 10;
+
+                switch (n_id)
+                {
+                    case 0:
+                        notifications[i].Text = "Связь с устройством " + cl[(i / 10) + 0].Name + " прервана";
+                        notifications[i].Criticality = 2;
+                        break;
+                    case 1:
+                        notifications[i].Text = "Нештатное состояние системы питания устройства " + cl[(i / 10) + 0].Name;
+                        notifications[i].Criticality = 2;
+                        break;
+                    case 2:
+                        notifications[i].Text = "Нештатное значение температуры устройства " + cl[(i / 10) + 0].Name;
+                        notifications[i].Criticality = 2;
+                        break;
+                    case 3:
+                        notifications[i].Text = "Нештатное состояние вентилятора устройства " + cl[(i / 10) + 0].Name;
+                        notifications[i].Criticality = 2;
+                        break;
+                    case 4:
+                        notifications[i].Text = "Порог температуры устройства " + cl[(i / 10) + 0].Name + " был изменён";
+                        notifications[i].Criticality = 1;
+                        break;
+                        /*case 5:
+                            notifications[i].Text = "Связь с устройством " + cl[i / 10].Name + " прервана";
+                            notifications[i].Criticality = 2;
+                            break;
+                        case 6:
+                            notifications[i].Text = "Связь с устройством " + cl[i / 10].Name + " прервана";
+                            notifications[i].Criticality = 2;
+                            break;
+                        case 7:
+                            notifications[i].Text = "Связь с устройством " + cl[i / 10].Name + " прервана";
+                            notifications[i].Criticality = 2;
+                            break;
+                        case 8:
+                            notifications[i].Text = "Связь с устройством " + cl[i / 10].Name + " прервана";
+                            notifications[i].Criticality = 2;
+                            break;
+                        case 9:
+                            notifications[i].Text = "Связь с устройством " + cl[i / 10].Name + " прервана";
+                            notifications[i].Criticality = 2;
+                            break;*/
+                }
+            }
 
             for (int i = 0; i < 7; i++)
                 list0.VbList.Add(std_oids[i]);
-            
+
             for (int i = 10; i < 20; i++)
                 if (mib[i, 0] != null)
                     list1.VbList.Add(mib[i, 0]);
@@ -399,13 +455,13 @@ namespace Device_Control_2
                 FileStream f = File.Create(Path + "log\\" + date + ".txt");
                 f.Close();
             }
-            else if(!File.Exists(Path + "log\\" + date + ".txt"))
+            else if (!File.Exists(Path + "log\\" + date + ".txt"))
             {
                 FileStream f = File.Create(Path + "log\\" + date + ".txt");
                 f.Close();
             }
         }
-        
+
         private void CheckEventLog()
         {
             string date = DateTime.Now.Year.ToString();
@@ -433,7 +489,7 @@ namespace Device_Control_2
             date += (DateTime.Now.Month < 10) ? "0" + DateTime.Now.Month : DateTime.Now.Month.ToString();
             date += (DateTime.Now.Day < 10) ? "0" + DateTime.Now.Day : DateTime.Now.Day.ToString();
 
-            if(WithClient)
+            if (WithClient)
                 File.AppendAllText(Path + "log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] <" + cl[client_f].Name + " / " + cl[client_f].Ip + "> " + text);
             else
                 File.AppendAllText(Path + "log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] " + text);
@@ -447,13 +503,13 @@ namespace Device_Control_2
             date += (DateTime.Now.Day < 10) ? "0" + DateTime.Now.Day : DateTime.Now.Day.ToString();
 
             if (WithClient)
-                for(int i = 0; i < text.Count(); i++)
+                for (int i = 0; i < text.Count(); i++)
                     File.AppendAllText(Path + "log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] <" + cl[client_f].Name + " / " + cl[client_f].Ip + "> " + text[i]);
             else
                 for (int i = 0; i < text.Count(); i++)
                     File.AppendAllText(Path + "log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] " + text[i]);
         }
-        
+
         private void WriteEvent(bool WithClient, string text)
         {
             CheckEventLog();
@@ -485,7 +541,7 @@ namespace Device_Control_2
 
                 WriteLog(false, "Соединение отсутствует");
 
-                CheckPingConnectionChanges(connection[client_f], 0);
+                CheckPingConnectionChanges(connection[client_f, 0], 0);
 
                 Change_SNMP_Status(4);
             }
@@ -504,12 +560,12 @@ namespace Device_Control_2
 
             if (e.Reply.Status == IPStatus.Success)
             {
-                CheckPingConnectionChanges(connection[client_f], 2);
+                CheckPingConnectionChanges(connection[client_f, 0], 2);
 
                 Change_Ping_Status(1);
                 Change_SNMP_Status(0);
 
-                connection[client_f] = 2;
+                connection[client_f, 0] = 2;
 
                 //WriteLog(true, "Связь присутствует");
 
@@ -517,11 +573,11 @@ namespace Device_Control_2
             }
             else
             {
-                CheckPingConnectionChanges(connection[client_f], 1);
+                CheckPingConnectionChanges(connection[client_f, 0], 1);
 
                 Change_Ping_Status(3);
 
-                connection[client_f] = 1;
+                connection[client_f, 0] = 1;
 
                 //WriteLog(true, "Связь отсутствует");
             }
@@ -621,6 +677,10 @@ namespace Device_Control_2
             long convertedTime = Convert.ToInt64(time); //сконвертированное в long время из string
             label15.Text = DateTimeOffset.FromUnixTimeSeconds(convertedTime).ToString().Substring(0, 19);
 
+            CheckTemperature(Convert.ToInt32(result.Pdu.VbList[1].Value.ToString()), Convert.ToInt32(result.Pdu.VbList[2].Value.ToString()), Convert.ToInt32(result.Pdu.VbList[3].Value.ToString()));
+            //CheckPower();
+            //CheckFan();
+
             CheckModOIDChanges(label21.Text, 1, result.Pdu.VbList[1].Value.ToString());
             label21.Text = result.Pdu.VbList[1].Value.ToString();
             CheckModOIDChanges(label22.Text, 2, result.Pdu.VbList[2].Value.ToString());
@@ -630,7 +690,7 @@ namespace Device_Control_2
             CheckModOIDChanges(label24.Text, 5, result.Pdu.VbList[5].Value.ToString());
             label24.Text = result.Pdu.VbList[5].Value.ToString();
 
-            if(client_f == 1)
+            if (client_f == 1)
             {
                 CheckModOIDChanges(label25.Text, 7, result.Pdu.VbList[7].Value.ToString());
                 label25.Text = result.Pdu.VbList[7].Value.ToString();
@@ -640,14 +700,51 @@ namespace Device_Control_2
 
             Change_SNMP_Status(1);
 
-            int curt = Convert.ToInt32(result.Pdu.VbList[1].Value.ToString());
-            int maxt = Convert.ToInt32(result.Pdu.VbList[2].Value.ToString());
-            int mint = Convert.ToInt32(result.Pdu.VbList[3].Value.ToString());
-
-            //if (curt >= maxt || curt <= mint)
-                //notify.Show();
-
             Survey_grid(ifNumber);
+        }
+
+        private void CheckTemperature(int cur_t, int max_t, int min_t)
+        {
+            if (cur_t >= max_t || cur_t <= min_t)
+            {
+                notifications[(client_f * 10) + 2].State = true;
+                if(notifications[(client_f * 10) + 2].Time == "" || notifications[(client_f * 10) + 2].Time == null)
+                {
+                    notifications[(client_f * 10) + 2].Time = DateTime.Now.ToString();
+
+                    WriteEvent(true, "Нештатное значение температуры: [" + mib[(client_f * 10) + 2, 1] + "]= " + max_t + " / [" + mib[(client_f * 10) + 1, 1] + "]= " + cur_t);
+                }
+            }
+            else
+            {
+                notifications[(client_f * 10) + 2].State = false;
+                if (notifications[(client_f * 10) + 2].Time != "" && notifications[(client_f * 10) + 2].Time != null)
+                {
+                    notifications[(client_f * 10) + 2].Time = "";
+
+                    WriteEvent(true, "Возврат температуры к норме: [" + mib[(client_f * 10) + 2, 1] + "]= " + max_t + " / [" + mib[(client_f * 10) + 1, 1] + "]= " + cur_t);
+                }
+            }
+
+            Notify();
+        }
+
+        private void Notify()
+        {
+            bool state = false;
+
+            for (int i = 0; i < notifications.Count(); i++)
+                if (notifications[i].State)
+                    state = true;
+
+            notify.Update_list(notifications);
+
+            if (state && !notify.State)
+                notify.Show();
+            else if (!state && notify.State)
+                notify.Hide();
+
+            notify.State = state;
         }
 
         private string Decrypt_Time(string value)

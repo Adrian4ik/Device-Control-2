@@ -93,10 +93,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="icon64.png" />
-    <None Include="Resources\~stop.png" />
-    <None Include="Resources\~info.png" />
-    <None Include="Resources\~error.png" />
     <None Include="Resources\arrows-loader.gif" />
     <None Include="Resources\orange24.png" />
     <None Include="Resources\green24.png" />
@@ -104,6 +100,15 @@
     <None Include="Resources\red24.png" />
     <None Include="Resources\ajax-loader.gif" />
     <None Include="Resources\big-snake-loader.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\error32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\info32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\stop32.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
