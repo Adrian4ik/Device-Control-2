@@ -646,9 +646,11 @@ namespace Device_Control_2
                     break;
                 case 3:
                     pictureBox2.Image = Properties.Resources.red24;
+                    Change_SNMP_Status(3);
                     break;
                 case 4:
                     pictureBox2.Image = Properties.Resources.gray24;
+                    Change_SNMP_Status(4);
                     break;
             }
         }
