@@ -321,30 +321,30 @@ namespace Device_Control_2
                         notifications[i].Text = "Нештатное состояние вентилятора устройства " + cl[(i / 10) + 0].Name;
                         notifications[i].Criticality = 2;
                         break;
-                    case 4:
+                    /*case 4:
                         notifications[i].Text = "Порог температуры устройства " + cl[(i / 10) + 0].Name + " был изменён";
                         notifications[i].Criticality = 1;
                         break;
-                        /*case 5:
-                            notifications[i].Text = "Связь с устройством " + cl[i / 10].Name + " прервана";
-                            notifications[i].Criticality = 2;
-                            break;
-                        case 6:
-                            notifications[i].Text = "Связь с устройством " + cl[i / 10].Name + " прервана";
-                            notifications[i].Criticality = 2;
-                            break;
-                        case 7:
-                            notifications[i].Text = "Связь с устройством " + cl[i / 10].Name + " прервана";
-                            notifications[i].Criticality = 2;
-                            break;
-                        case 8:
-                            notifications[i].Text = "Связь с устройством " + cl[i / 10].Name + " прервана";
-                            notifications[i].Criticality = 2;
-                            break;
-                        case 9:
-                            notifications[i].Text = "Связь с устройством " + cl[i / 10].Name + " прервана";
-                            notifications[i].Criticality = 2;
-                            break;*/
+                    case 5:
+                        notifications[i].Text = "Связь с устройством " + cl[i / 10].Name + " прервана";
+                        notifications[i].Criticality = 2;
+                        break;
+                    case 6:
+                        notifications[i].Text = "Связь с устройством " + cl[i / 10].Name + " прервана";
+                        notifications[i].Criticality = 2;
+                        break;
+                    case 7:
+                        notifications[i].Text = "Связь с устройством " + cl[i / 10].Name + " прервана";
+                        notifications[i].Criticality = 2;
+                        break;
+                    case 8:
+                        notifications[i].Text = "Связь с устройством " + cl[i / 10].Name + " прервана";
+                        notifications[i].Criticality = 2;
+                        break;
+                    case 9:
+                        notifications[i].Text = "Связь с устройством " + cl[i / 10].Name + " прервана";
+                        notifications[i].Criticality = 2;
+                        break;*/
                 }
             }
 
@@ -490,9 +490,9 @@ namespace Device_Control_2
             date += (DateTime.Now.Day < 10) ? "0" + DateTime.Now.Day : DateTime.Now.Day.ToString();
 
             if (WithClient)
-                File.AppendAllText(Path + "log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] <" + cl[client_f].Name + " / " + cl[client_f].Ip + "> " + text);
+                File.AppendAllText(Path + "log\\" + date + ".txt", "[" + DateTime.Now + "] <" + cl[client_f].Name + " / " + cl[client_f].Ip + "> " + text + "\n");
             else
-                File.AppendAllText(Path + "log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] " + text);
+                File.AppendAllText(Path + "log\\" + date + ".txt", "[" + DateTime.Now + "] " + text + "\n");
         }
         private void WriteLog(bool WithClient, string[] text)
         {
@@ -504,10 +504,10 @@ namespace Device_Control_2
 
             if (WithClient)
                 for (int i = 0; i < text.Count(); i++)
-                    File.AppendAllText(Path + "log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] <" + cl[client_f].Name + " / " + cl[client_f].Ip + "> " + text[i]);
+                    File.AppendAllText(Path + "log\\" + date + ".txt", "[" + DateTime.Now + "] <" + cl[client_f].Name + " / " + cl[client_f].Ip + "> " + text[i] + "\n");
             else
                 for (int i = 0; i < text.Count(); i++)
-                    File.AppendAllText(Path + "log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] " + text[i]);
+                    File.AppendAllText(Path + "log\\" + date + ".txt", "[" + DateTime.Now + "] " + text[i] + "\n");
         }
 
         private void WriteEvent(bool WithClient, string text)
@@ -518,9 +518,9 @@ namespace Device_Control_2
             date += (DateTime.Now.Month < 10) ? "0" + DateTime.Now.Month : DateTime.Now.Month.ToString();
 
             if (WithClient)
-                File.AppendAllText(Path + "event log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] <" + cl[client_f].Name + " / " + cl[client_f].Ip + "> " + text);
+                File.AppendAllText(Path + "event log\\" + date + ".txt", "[" + DateTime.Now + "] <" + cl[client_f].Name + " / " + cl[client_f].Ip + "> " + text + "\n");
             else
-                File.AppendAllText(Path + "event log\\" + date + ".txt", "\n" + "[" + DateTime.Now + "] " + text);
+                File.AppendAllText(Path + "event log\\" + date + ".txt", "[" + DateTime.Now + "] " + text + "\n");
         }
 
         private void Survey()
@@ -592,9 +592,39 @@ namespace Device_Control_2
             if (status != original)
             {
                 if (original == 0)
-                    connection = (status == 2) ? "присутствует" : "отсутствует";
+                {
+                    if (status == 2)
+                        connection = "присутствует";
+                    else
+                    {
+                        connection = "отсутствует";
+
+                        notifications[(client_f * 10) + 0].State = true;
+                        if (notifications[(client_f * 10) + 0].Time == "" || notifications[(client_f * 10) + 0].Time == null)
+                            notifications[(client_f * 10) + 0].Time = DateTime.Now.ToString();
+                    }
+                }
                 else
-                    connection = (status == 2) ? "восстановлена" : "утеряна";
+                {
+                    if (status == 2)
+                    {
+                        connection = "восстановлена";
+
+                        notifications[(client_f * 10) + 0].State = false;
+                        if (notifications[(client_f * 10) + 0].Time != "" && notifications[(client_f * 10) + 0].Time != null)
+                            notifications[(client_f * 10) + 0].Time = "";
+                    }
+                    else
+                    {
+                        connection = "утеряна";
+
+                        notifications[(client_f * 10) + 0].State = true;
+                        if (notifications[(client_f * 10) + 0].Time == "" || notifications[(client_f * 10) + 0].Time == null)
+                            notifications[(client_f * 10) + 0].Time = DateTime.Now.ToString();
+                    }
+                }
+
+                notify.Update_list(notifications);
 
                 WriteLog(true, "Связь с устройством: [Ping]= " + connection);
                 WriteEvent(true, "Связь с устройством: [Ping]= " + connection);
@@ -726,25 +756,7 @@ namespace Device_Control_2
                 }
             }
 
-            Notify();
-        }
-
-        private void Notify()
-        {
-            bool state = false;
-
-            for (int i = 0; i < notifications.Count(); i++)
-                if (notifications[i].State)
-                    state = true;
-
             notify.Update_list(notifications);
-
-            if (state && !notify.State)
-                notify.Show();
-            else if (!state && notify.State)
-                notify.Hide();
-
-            notify.State = state;
         }
 
         private string Decrypt_Time(string value)
