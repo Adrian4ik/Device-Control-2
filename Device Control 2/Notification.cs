@@ -52,6 +52,8 @@ namespace Device_Control_2
                 ttl[i].Location = new Point(44, 12);
                 ttl[i].Name = "lb" + i.ToString();
                 ttl[i].Size = new Size(300, 16);
+                ttl[i].AutoSize = true;
+                //ttl[i].BorderStyle = BorderStyle.FixedSingle;
                 ttl[i].TabIndex = 20 + i;
                 ttl[i].Text = "";
                 ttl[i].Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 204);

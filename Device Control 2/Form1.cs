@@ -25,7 +25,7 @@ namespace Device_Control_2
     public partial class Form1 : Form
     {
         #region Переменные
-        int client_f = 2;
+        int client_f = 1, ping_timeout = 30;
 
         int[,] connection = new int[1024, 2];
 
@@ -34,7 +34,7 @@ namespace Device_Control_2
         string[] stdclients = { "folder names: hm_mach4002, octopus, bkm, fs1" };
 
         string[] std_oids = { "1.3.6.1.2.1.1.1.0", "1.3.6.1.2.1.1.2.0", "1.3.6.1.2.1.1.3.0", "1.3.6.1.2.1.1.4.0", "1.3.6.1.2.1.1.5.0", "1.3.6.1.2.1.1.6.0", "1.3.6.1.2.1.2.1.0", "1.3.6.1.2.1.2.2.1." };
-        // sysDescr          // sysObjectID       // sysUpTime         // sysContact        // sysName           // sysLocation       // ifNumber          // ifTable
+                            // sysDescr          // sysObjectID       // sysUpTime         // sysContact        // sysName           // sysLocation       // ifNumber          // ifTable
 
         string[] std_config = { "Имя: ", "ip: ", "Autoconnect: 1" };
 
@@ -137,9 +137,11 @@ namespace Device_Control_2
 
             Preprocessing();
 
-            Autorun(false);
+            //Autorun(false);
 
             Startup_run(true);
+
+            timer1.Interval = ping_timeout * 1000;
 
             if (!timer1.Enabled)
                 timer1.Start();
@@ -198,6 +200,7 @@ namespace Device_Control_2
             Check_clients();
 
             WriteLog(false, "Программа запущена");
+            WriteEvent(false, "Программа запущена");
         }
         // Доделать
         private void FillConstants()
@@ -206,10 +209,10 @@ namespace Device_Control_2
 
             std_cl[0].Ip = "127.0.0.1";
             std_cl[0].Name = "Loopback";
-            std_cl[1].Ip = "10.1.2.252";
+            std_cl[1].Ip = "10.1.2.251";
             std_cl[1].Name = "БКМ";
             std_cl[2].Ip = "10.1.2.254";
-            std_cl[2].Name = "БРИ-1";
+            std_cl[2].Name = "БРИ-CM";
 
 
 
@@ -306,6 +309,7 @@ namespace Device_Control_2
                 switch (n_id)
                 {
                     case 0:
+                        //notifications[i].Text = "Нештатное состояние системы питания устройства " + cl[(i / 10) + 0].Name;
                         notifications[i].Text = "Связь с устройством " + cl[(i / 10) + 0].Name + " прервана";
                         notifications[i].Criticality = 2;
                         break;
@@ -527,7 +531,7 @@ namespace Device_Control_2
         {
             label1.Text = cl[client_f].Name;
 
-            if (NetworkInterface.GetIsNetworkAvailable())
+            try // if (NetworkInterface.GetIsNetworkAvailable())
             {
                 Ping ping = new Ping();
                 ping.PingCompleted += new PingCompletedEventHandler(Received_ping_reply);
@@ -535,9 +539,11 @@ namespace Device_Control_2
 
                 Change_Ping_Status(0);
             }
-            else
+            catch // else
             {
                 Console.WriteLine("Network is unavailable, check connection and restart program.");
+
+                Console.Beep(2000, 1000);
 
                 WriteLog(false, "Соединение отсутствует");
 
@@ -578,6 +584,8 @@ namespace Device_Control_2
                 Change_Ping_Status(3);
 
                 connection[client_f, 0] = 1;
+
+                Console.Beep(2000, 1000);
 
                 //WriteLog(true, "Связь отсутствует");
             }
@@ -702,7 +710,7 @@ namespace Device_Control_2
             }
 
             string time = result.Pdu.VbList[0].Value.ToString();
-            if (result.Pdu.VbList[0].Type == 48)
+            if (result.Pdu.VbList[0].Value.Type == SnmpVariableType.TimeTicks)
                 time = Decrypt_Time(time);
 
             CheckModOIDChanges(label15.Text, 0, time);
@@ -1070,8 +1078,18 @@ namespace Device_Control_2
             // Pdu class used for all requests
             Pdu pdu = list;
 
-            // Make SNMP request
-            SnmpV1Packet result = (SnmpV1Packet)target.Request(pdu, param);
+            SnmpV1Packet result = null;
+
+            try
+            {
+                // Make SNMP request
+                result = (SnmpV1Packet)target.Request(pdu, param);
+            }
+            catch
+            {
+                //MessageBox.Show("пропадание связи по SNMP");
+                WriteEvent(true, "Связь с устройством: [SNMP]= утеряна");
+            }
 
             // If result is null then agent didn't reply or we couldn't parse the reply.
             if (result != null)
@@ -1112,11 +1130,22 @@ namespace Device_Control_2
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             WriteLog(false, "Программа завершена");
+            WriteEvent(false, "Программа завершена");
         }
 
         private void timer2_Tick(object sender, EventArgs e)
         {
 
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            client_f = 1;
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            client_f = 2;
         }
 
         static class ShellLink
