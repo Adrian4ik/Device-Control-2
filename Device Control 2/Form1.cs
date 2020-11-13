@@ -25,7 +25,7 @@ namespace Device_Control_2
     public partial class Form1 : Form
     {
         #region Переменные
-        int client_f = 1, ping_timeout = 30;
+        int client_f = 1, ping_interval = 6, snmp_interval = 1, conn_state = 0;
 
         int[,] connection = new int[1024, 2];
 
@@ -95,6 +95,8 @@ namespace Device_Control_2
         Pdu list18 = new Pdu(PduType.Get);
         Pdu list19 = new Pdu(PduType.Get);
 
+        Pdu[] lists = new Pdu[2];
+
         private struct Client
         {
             public string Name { get; set; }
@@ -137,11 +139,9 @@ namespace Device_Control_2
 
             Preprocessing();
 
-            //Autorun(false);
-
             Startup_run(true);
 
-            timer1.Interval = ping_timeout * 1000;
+            timer1.Interval = ping_interval * 1000;
 
             if (!timer1.Enabled)
                 timer1.Start();
@@ -150,31 +150,6 @@ namespace Device_Control_2
                 timer2.Start();
 
             Survey();
-        }
-
-        private static void Autorun(bool autorun)
-        {
-            string ExePath = Application.ExecutablePath;
-            string name = "";
-            FileInfo fi = new FileInfo(ExePath);
-            int k = fi.Name.IndexOf('.');
-            name = fi.Name.Substring(0, k);
-
-            RegistryKey reg;
-            reg = Registry.CurrentUser.CreateSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run\\");
-            try
-            {
-                if (autorun)
-                    reg.SetValue(name, ExePath);
-                else
-                    reg.DeleteValue(name);
-
-                reg.Close();
-            }
-            catch
-            {
-
-            }
         }
 
         private void Startup_run(bool autorun)
@@ -187,7 +162,6 @@ namespace Device_Control_2
 
             if (autorun)
                 ShortCut.Create(ExePath, Startup_folder + "\\" + name.Substring(0, name.Length - 4) + ".lnk", "", "");
-
         }
 
         private void Preprocessing()
@@ -198,6 +172,9 @@ namespace Device_Control_2
 
             FillConstants();
             Check_clients();
+
+            button2.Text = std_cl[1].Name;
+            button3.Text = std_cl[2].Name;
 
             WriteLog(false, "Программа запущена");
             WriteEvent(false, "Программа запущена");
@@ -237,7 +214,7 @@ namespace Device_Control_2
             std_mib[19, 0] = "1.2.643.2.92.1.3.1.3.6.0";
             std_mib[19, 1] = "fan 3 speed";
 
-            std_mib[100, 0] = "1.2.643.2.92.1.1.11.1.9.1.";        // abonent ifname
+            std_mib[110, 0] = "1.2.643.2.92.1.1.11.1.9.1.";        // abonent ifname
 
             std_mib[20, 0] = "1.3.6.1.4.1.248.14.1.1.30.0";
             std_mib[20, 1] = "hmSystemTime";
@@ -254,7 +231,7 @@ namespace Device_Control_2
             std_mib[26, 0] = "1.3.6.1.4.1.248.14.1.3.1.3.1.1";
             std_mib[26, 1] = "hmFanState:1";
 
-            std_mib[200, 0] = "1.3.6.1.4.1.248.14.1.1.11.1.9.1."; // hmIfaceName
+            std_mib[120, 0] = "1.3.6.1.4.1.248.14.1.1.11.1.9.1."; // hmIfaceName
 
             mib = std_mib;
         }
@@ -396,6 +373,19 @@ namespace Device_Control_2
                     list9.VbList.Add(mib[i, 0]);
         }
 
+        private Pdu FillClients(int id, Pdu list)
+        {
+            for (int i = id * 10; i < id * 10 + 10; i++)
+                if (mib[i, 0] != null)
+                    list.VbList.Add(mib[i, 0]);
+
+            for (int i = id * 10 + 100; i < id * 10 + 110; i++)
+                if (mib[i, 0] != null)
+                    list.VbList.Add(mib[i, 0]);
+
+            return list;
+        }
+
         private Device CheckDevice(string folder_name)
         {
             Device device = new Device();
@@ -527,6 +517,18 @@ namespace Device_Control_2
                 File.AppendAllText(Path + "event log\\" + date + ".txt", "[" + DateTime.Now + "] " + text + "\n");
         }
 
+        private void SimpleSurvey()
+        {
+
+
+
+
+            if (client_f == 1)
+                button2.Image = Properties.Resources.device_ok48;
+            else
+                button3.Image = Properties.Resources.device_ok48;
+        }
+
         private void Survey()
         {
             label1.Text = cl[client_f].Name;
@@ -551,6 +553,24 @@ namespace Device_Control_2
 
                 Change_SNMP_Status(4);
             }
+
+            //TryPing(cl[client_f].Ip);
+        }
+
+        private void TryPing(string ip)
+        {
+            try // if (NetworkInterface.GetIsNetworkAvailable())
+            {
+                Ping ping = new Ping();
+                //ping.PingCompleted += new PingCompletedEventHandler(Received_simple_reply);
+                ping.SendAsync(ip, 3000, waiter);
+            }
+            catch // else
+            {
+                Console.Beep(2000, 1000);
+
+                Connection(false);
+            }
         }
 
         private void Received_ping_reply(object sender, PingCompletedEventArgs e)
@@ -563,6 +583,8 @@ namespace Device_Control_2
 
             // Let the main thread resume.
             ((AutoResetEvent)e.UserState).Set();
+
+            Connection(true);
 
             if (e.Reply.Status == IPStatus.Success)
             {
@@ -583,6 +605,15 @@ namespace Device_Control_2
 
                 Change_Ping_Status(3);
 
+
+
+                if (client_f == 1)
+                    button2.Image = Properties.Resources.device_red48;
+                else
+                    button3.Image = Properties.Resources.device_red48;
+
+
+
                 connection[client_f, 0] = 1;
 
                 Console.Beep(2000, 1000);
@@ -591,6 +622,89 @@ namespace Device_Control_2
             }
 
             SurveyUpdate();
+        }
+
+        private void Received_simple_reply(object sender, PingCompletedEventArgs e)
+        {
+            if (e.Cancelled)
+                ((AutoResetEvent)e.UserState).Set();
+
+            if (e.Error != null)
+                ((AutoResetEvent)e.UserState).Set();
+
+            // Let the main thread resume.
+            ((AutoResetEvent)e.UserState).Set();
+
+            Connection(true);
+
+            if (e.Reply.Status == IPStatus.Success)
+            {
+                CheckPingConnectionChanges(connection[client_f, 0], 2);
+
+                Change_Ping_Status(1);
+                Change_SNMP_Status(0);
+
+                connection[client_f, 0] = 2;
+
+                //WriteLog(true, "Связь присутствует");
+
+                Fill_main();
+            }
+            else
+            {
+                CheckPingConnectionChanges(connection[client_f, 0], 1);
+
+                Change_Ping_Status(3);
+
+
+
+                if (client_f == 1)
+                    button2.Image = Properties.Resources.device_red48;
+                else
+                    button3.Image = Properties.Resources.device_red48;
+
+
+
+                connection[client_f, 0] = 1;
+
+                Console.Beep(2000, 1000);
+
+                //WriteLog(true, "Связь отсутствует");
+            }
+        }
+
+        private void Connection(bool success)
+        {
+            if (success)
+            {
+                if (conn_state == 0)
+                {
+                    WriteLog(false, "Соединение присутствует");
+                    WriteEvent(false, "Соединение присутствует");
+                    conn_state = 2;
+                }
+                else if (conn_state == 1)
+                {
+                    WriteLog(false, "Соединение восстановлено");
+                    WriteEvent(false, "Соединение восстановлено");
+                    conn_state = 2;
+                }
+            }
+            else
+            {
+                if (conn_state == 0)
+                {
+                    WriteLog(false, "Соединение отсутствует");
+                    WriteEvent(false, "Соединение отсутствует");
+                    conn_state = 1;
+                }
+                else if (conn_state == 2)
+                {
+                    WriteLog(false, "Соединение утеряно");
+                    WriteEvent(false, "Соединение утеряно");
+                    conn_state = 1;
+                }
+            }
         }
 
         private void CheckPingConnectionChanges(int original, int status)
@@ -709,7 +823,17 @@ namespace Device_Control_2
                     break;
             }
 
-            string time = result.Pdu.VbList[0].Value.ToString();
+            string time = "0";
+
+            try
+            {
+                time = result.Pdu.VbList[0].Value.ToString();
+            }
+            catch
+            {
+                Console.WriteLine("time = " + time);
+            }
+
             if (result.Pdu.VbList[0].Value.Type == SnmpVariableType.TimeTicks)
                 time = Decrypt_Time(time);
 
@@ -1000,7 +1124,7 @@ namespace Device_Control_2
                 Pdu list = new Pdu(PduType.Get);
 
                 if (client_f == 1)
-                    list.VbList.Add(mib[100, 0] + i++);  // 3 столбец
+                    list.VbList.Add(mib[100 + (client_f * 10), 0] + i++);  // 3 столбец
                 else
                     list.VbList.Add(mib[200, 0] + i++);  // 3 столбец
 
@@ -1146,6 +1270,17 @@ namespace Device_Control_2
         private void button3_Click(object sender, EventArgs e)
         {
             client_f = 2;
+        }
+
+        private int WhatGroup(object sender, object[] compare_with)
+        {
+            int result;
+
+            for (result = 0; result < client_f; result++)
+                if (sender.Equals(compare_with[result]))
+                    break;
+
+            return result;
         }
 
         static class ShellLink

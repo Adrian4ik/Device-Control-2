@@ -73,6 +73,16 @@ namespace Device_Control_2.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap ajax_loader1 {
+            get {
+                object obj = ResourceManager.GetObject("ajax-loader1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap arrows_loader {
             get {
                 object obj = ResourceManager.GetObject("arrows-loader", resourceCulture);
@@ -86,6 +96,86 @@ namespace Device_Control_2.Properties {
         internal static System.Drawing.Bitmap big_snake_loader {
             get {
                 object obj = ResourceManager.GetObject("big-snake-loader", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap device_fail48 {
+            get {
+                object obj = ResourceManager.GetObject("device_fail48", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap device_green48 {
+            get {
+                object obj = ResourceManager.GetObject("device_green48", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap device_no_connect_e48 {
+            get {
+                object obj = ResourceManager.GetObject("device_no_connect_e48", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap device_no_connect48 {
+            get {
+                object obj = ResourceManager.GetObject("device_no_connect48", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap device_ok48 {
+            get {
+                object obj = ResourceManager.GetObject("device_ok48", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap device_red48 {
+            get {
+                object obj = ResourceManager.GetObject("device_red48", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap device_warning48 {
+            get {
+                object obj = ResourceManager.GetObject("device_warning48", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap device48 {
+            get {
+                object obj = ResourceManager.GetObject("device48", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -136,6 +226,16 @@ namespace Device_Control_2.Properties {
         internal static System.Drawing.Bitmap orange24 {
             get {
                 object obj = ResourceManager.GetObject("orange24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap PM {
+            get {
+                object obj = ResourceManager.GetObject("PM", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

@@ -110,5 +110,35 @@
   <ItemGroup>
     <None Include="Resources\stop32.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\device_fail48.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\device_green48.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\device_no_connect_e48.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\device_no_connect48.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\device_ok48.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\device_red48.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\device_warning48.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\device48.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ajax-loader1.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\PM.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

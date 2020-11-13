@@ -376,6 +376,7 @@
             this.label8.Size = new System.Drawing.Size(31, 13);
             this.label8.TabIndex = 4;
             this.label8.Text = "Ping:";
+            this.label8.Visible = false;
             // 
             // pictureBox2
             // 
@@ -386,6 +387,7 @@
             this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox2.TabIndex = 3;
             this.pictureBox2.TabStop = false;
+            this.pictureBox2.Visible = false;
             // 
             // pictureBox1
             // 
@@ -430,22 +432,31 @@
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(11, 98);
+            this.button3.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.button3.Image = global::Device_Control_2.Properties.Resources.device_red48;
+            this.button3.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.button3.Location = new System.Drawing.Point(11, 106);
             this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(75, 23);
+            this.button3.Size = new System.Drawing.Size(149, 54);
             this.button3.TabIndex = 7;
             this.button3.Text = "Client 3";
-            this.button3.UseVisualStyleBackColor = true;
+            this.button3.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.button3.UseVisualStyleBackColor = false;
             this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(11, 68);
+            this.button2.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.button2.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.button2.Image = global::Device_Control_2.Properties.Resources.device48;
+            this.button2.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.button2.Location = new System.Drawing.Point(11, 46);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
+            this.button2.Size = new System.Drawing.Size(149, 54);
             this.button2.TabIndex = 6;
             this.button2.Text = "Client 2";
-            this.button2.UseVisualStyleBackColor = true;
+            this.button2.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.button2.UseVisualStyleBackColor = false;
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // label5
