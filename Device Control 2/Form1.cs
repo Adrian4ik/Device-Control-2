@@ -65,7 +65,7 @@ namespace Device_Control_2
         string[] example_optlist = { "Важные", "",
                                      "Температура текущая, °С (temperature): 1.2.3.4.5.6.7.8.9.0",
                                      "Температура максимально\r\nдопустимая, °С (max temperature): 1.2.3.4.5.6.7.8.9.0",
-                                     "Температура минимально\r\nдопустимая, °С(min temperature): 1.2.3.4.5.6.7.8.9.0",
+                                     "Температура минимально\r\nдопустимая, °С (min temperature): 1.2.3.4.5.6.7.8.9.0",
                                      "Питание #1 (power state 1): 1.2.3.4.5.6.7.8.9.0",
                                      "Питание #2 (power state 2): 1.2.3.4.5.6.7.8.9.0",
                                      "Питание #3 (power state 3): 1.2.3.4.5.6.7.8.9.0",
@@ -79,7 +79,7 @@ namespace Device_Control_2
                                      "", "Описание устройства", "",
                                      "Системное время (system time): 1.2.3.4.5.6.7.8.9.0",
                                      "", "Интерфейсы", "",
-                                     "Таблица интерфейсов (ifTable): 1.2.3.4.5.6.7.8.9.0.ifIndex" };
+                                     "Имена интерфейсов (ifNames): 1.2.3.4.5.6.7.8.9.0.ifIndex" };
 
         string[,] std_mib = new string[1024, 2]; // каждый клиент может занимать не более 10 позиций обычных мибов, определение клиента идёт по десяткам либо сотням (сотни нужны как доп. мибы)
         // т.е. мибы клиента 1: 11, 12, 13, ... // 101, 102, 103... // 121, 122, 123, ... (10 - 19 и 100 - 199); мибы клиента 2: 21, 22, 23, ... // 201, 202, 203, 204 (20 - 29 и 200 - 299) и т.д.
@@ -120,8 +120,9 @@ namespace Device_Control_2
         {
             public string Name { get; set; }
             public string Ip { get; set; }
-            public bool Modified { get; set; }
-            public bool Renamed { get; set; }
+            public string[,] Addition { get; set; }
+            public string[,] Modified { get; set; }
+            public string IfName { get; set; }
         }
 
         Client[] std_cl = new Client[3];
@@ -207,18 +208,14 @@ namespace Device_Control_2
 
             std_cl[0].Ip = "127.0.0.1";
             std_cl[0].Name = "Loopback";
-            std_cl[0].Modified = false;
-            std_cl[0].Renamed = false;
 
             std_cl[1].Ip = "10.1.2.251";
             std_cl[1].Name = "БКМ";
-            std_cl[1].Modified = true;
-            std_cl[1].Renamed = true;
+            std_cl[1].IfName = "1.2.643.2.92.1.1.11.1.9.1.";
 
             std_cl[2].Ip = "10.1.2.254";
             std_cl[2].Name = "БРИ-CM";
-            std_cl[2].Modified = true;
-            std_cl[2].Renamed = false;
+            std_cl[2].IfName = "1.3.6.1.4.1.248.14.1.1.11.1.9.1.";
 
 
 
@@ -243,8 +240,6 @@ namespace Device_Control_2
             std_mib[19, 0] = "1.2.643.2.92.1.3.1.3.6.0";
             std_mib[19, 1] = "fan 3 speed";
 
-            std_mib[110, 0] = "1.2.643.2.92.1.1.11.1.9.1.";        // abonent ifname
-
             std_mib[20, 0] = "1.3.6.1.4.1.248.14.1.1.30.0";
             std_mib[20, 1] = "hmSystemTime";
             std_mib[21, 0] = "1.3.6.1.4.1.248.14.2.5.1.0";
@@ -259,8 +254,6 @@ namespace Device_Control_2
             std_mib[25, 1] = "hmPSState:2";
             std_mib[26, 0] = "1.3.6.1.4.1.248.14.1.3.1.3.1.1";
             std_mib[26, 1] = "hmFanState:1";
-
-            std_mib[120, 0] = "1.3.6.1.4.1.248.14.1.1.11.1.9.1."; // hmIfaceName
 
             mib = std_mib;
         }
@@ -852,7 +845,7 @@ namespace Device_Control_2
                     break;
             }
 
-            if(cl[client_f].Modified)
+            if(cl[client_f].Modified.Length > 0)
             {
                 string time = "0";
 
@@ -886,7 +879,7 @@ namespace Device_Control_2
                 label24.Text = result.Pdu.VbList[5].Value.ToString();
             }
 
-            if (cl[client_f].Renamed)
+            if (cl[client_f].IfName != null)
             {
                 CheckModOIDChanges(label25.Text, 7, result.Pdu.VbList[7].Value.ToString());
                 label25.Text = result.Pdu.VbList[7].Value.ToString();
@@ -1148,7 +1141,7 @@ namespace Device_Control_2
                 i++;
             }
 
-            if(cl[client_f].Renamed)
+            if (cl[client_f].IfName != null)
             {
                 int ilimit = i;
 
