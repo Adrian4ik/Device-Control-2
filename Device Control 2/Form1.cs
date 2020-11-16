@@ -25,7 +25,7 @@ namespace Device_Control_2
     public partial class Form1 : Form
     {
         #region Переменные
-        int client_f = 1, ping_interval = 6, snmp_interval = 1, conn_state = 0;
+        int client_f = 0, ping_interval = 6, snmp_interval = 1, conn_state = 0;
 
         int[,] connection = new int[1024, 2];
 
@@ -101,6 +101,8 @@ namespace Device_Control_2
         {
             public string Name { get; set; }
             public string Ip { get; set; }
+            public bool Modified { get; set; }
+            public bool Renamed { get; set; }
         }
 
         Client[] std_cl = new Client[3];
@@ -186,10 +188,18 @@ namespace Device_Control_2
 
             std_cl[0].Ip = "127.0.0.1";
             std_cl[0].Name = "Loopback";
+            std_cl[0].Modified = false;
+            std_cl[0].Renamed = false;
+
             std_cl[1].Ip = "10.1.2.251";
             std_cl[1].Name = "БКМ";
+            std_cl[1].Modified = true;
+            std_cl[1].Renamed = true;
+
             std_cl[2].Ip = "10.1.2.254";
             std_cl[2].Name = "БРИ-CM";
+            std_cl[2].Modified = true;
+            std_cl[2].Renamed = false;
 
 
 
@@ -823,38 +833,41 @@ namespace Device_Control_2
                     break;
             }
 
-            string time = "0";
-
-            try
+            if(cl[client_f].Modified)
             {
-                time = result.Pdu.VbList[0].Value.ToString();
+                string time = "0";
+
+                try
+                {
+                    time = result.Pdu.VbList[0].Value.ToString();
+                }
+                catch
+                {
+                    Console.WriteLine("time = " + time);
+                }
+
+                if (result.Pdu.VbList[0].Value.Type == SnmpVariableType.TimeTicks)
+                    time = Decrypt_Time(time);
+
+                CheckModOIDChanges(label15.Text, 0, time);
+                long convertedTime = Convert.ToInt64(time); //сконвертированное в long время из string
+                label15.Text = DateTimeOffset.FromUnixTimeSeconds(convertedTime).ToString().Substring(0, 19);
+
+                CheckTemperature(Convert.ToInt32(result.Pdu.VbList[1].Value.ToString()), Convert.ToInt32(result.Pdu.VbList[2].Value.ToString()), Convert.ToInt32(result.Pdu.VbList[3].Value.ToString()));
+                //CheckPower();
+                //CheckFan();
+
+                CheckModOIDChanges(label21.Text, 1, result.Pdu.VbList[1].Value.ToString());
+                label21.Text = result.Pdu.VbList[1].Value.ToString();
+                CheckModOIDChanges(label22.Text, 2, result.Pdu.VbList[2].Value.ToString());
+                label22.Text = result.Pdu.VbList[2].Value.ToString();
+                CheckModOIDChanges(label23.Text, 3, result.Pdu.VbList[3].Value.ToString());
+                label23.Text = result.Pdu.VbList[3].Value.ToString();
+                CheckModOIDChanges(label24.Text, 5, result.Pdu.VbList[5].Value.ToString());
+                label24.Text = result.Pdu.VbList[5].Value.ToString();
             }
-            catch
-            {
-                Console.WriteLine("time = " + time);
-            }
 
-            if (result.Pdu.VbList[0].Value.Type == SnmpVariableType.TimeTicks)
-                time = Decrypt_Time(time);
-
-            CheckModOIDChanges(label15.Text, 0, time);
-            long convertedTime = Convert.ToInt64(time); //сконвертированное в long время из string
-            label15.Text = DateTimeOffset.FromUnixTimeSeconds(convertedTime).ToString().Substring(0, 19);
-
-            CheckTemperature(Convert.ToInt32(result.Pdu.VbList[1].Value.ToString()), Convert.ToInt32(result.Pdu.VbList[2].Value.ToString()), Convert.ToInt32(result.Pdu.VbList[3].Value.ToString()));
-            //CheckPower();
-            //CheckFan();
-
-            CheckModOIDChanges(label21.Text, 1, result.Pdu.VbList[1].Value.ToString());
-            label21.Text = result.Pdu.VbList[1].Value.ToString();
-            CheckModOIDChanges(label22.Text, 2, result.Pdu.VbList[2].Value.ToString());
-            label22.Text = result.Pdu.VbList[2].Value.ToString();
-            CheckModOIDChanges(label23.Text, 3, result.Pdu.VbList[3].Value.ToString());
-            label23.Text = result.Pdu.VbList[3].Value.ToString();
-            CheckModOIDChanges(label24.Text, 5, result.Pdu.VbList[5].Value.ToString());
-            label24.Text = result.Pdu.VbList[5].Value.ToString();
-
-            if (client_f == 1)
+            if (cl[client_f].Renamed)
             {
                 CheckModOIDChanges(label25.Text, 7, result.Pdu.VbList[7].Value.ToString());
                 label25.Text = result.Pdu.VbList[7].Value.ToString();
@@ -1028,7 +1041,7 @@ namespace Device_Control_2
         // Доделать
         private void Survey_grid(int ifNum)
         {
-            int fi = 0;
+            int fi = 0, ri = 0;
 
             // Изменить под пропуски ifIndex
             //for (int i = 1; i <= ifNum; i++) // строки
@@ -1103,41 +1116,46 @@ namespace Device_Control_2
                     interfaces[k, 5] = type;
 
                     k++;
+                    ri++;
 
-                    if (k == ifNum)
+                    if (k == ifNum || ri == ifNum)
                         break;
                 }
-                else
-                    if (result.Pdu.VbList[2].Value.ToString() == "1" || result.Pdu.VbList[2].Value.ToString() == "135" || result.Pdu.VbList[2].Value.ToString() == "161")
-                        break;
+                else if (result.Pdu.VbList[2].Value.ToString() == "1" || result.Pdu.VbList[2].Value.ToString() == "135" || result.Pdu.VbList[2].Value.ToString() == "161")
+                    break;
+                else if (result.Pdu.VbList[2].Value.ToString() != "Null")
+                    ri++;
                 
                 i++;
             }
 
-            int ilimit = i;
-
-            i = 1;
-            k = 0;
-            
-            while (true)
+            if(cl[client_f].Renamed)
             {
-                Pdu list = new Pdu(PduType.Get);
+                int ilimit = i;
 
-                if (client_f == 1)
-                    list.VbList.Add(mib[100 + (client_f * 10), 0] + i++);  // 3 столбец
-                else
-                    list.VbList.Add(mib[200, 0] + i++);  // 3 столбец
+                i = 1;
+                k = 0;
 
-                SnmpV1Packet result = SurveyList(0, cl[client_f].Ip, list);
-
-                if (result.Pdu.VbList[0].Value.ToString() != "Null")
+                while (true)
                 {
-                    CheckINamesChanges(interfaces[k, 2], k, result.Pdu.VbList[0].Value.ToString());
-                    interfaces[k++, 2] = result.Pdu.VbList[0].Value.ToString();
-                }
+                    Pdu list = new Pdu(PduType.Get);
 
-                if (i == ilimit || k == ifNum)
-                    break;
+                    if (client_f == 1)
+                        list.VbList.Add(mib[100 + (client_f * 10), 0] + i++);  // 3 столбец
+                    else
+                        list.VbList.Add(mib[200, 0] + i++);  // 3 столбец
+
+                    SnmpV1Packet result = SurveyList(0, cl[client_f].Ip, list);
+
+                    if (result.Pdu.VbList[0].Value.ToString() != "Null")
+                    {
+                        CheckINamesChanges(interfaces[k, 2], k, result.Pdu.VbList[0].Value.ToString());
+                        interfaces[k++, 2] = result.Pdu.VbList[0].Value.ToString();
+                    }
+
+                    if (i == ilimit || k == ifNum)
+                        break;
+                }
             }
 
             Fill_grid(ifNum);
