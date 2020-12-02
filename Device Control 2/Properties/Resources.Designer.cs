@@ -65,17 +65,7 @@ namespace Device_Control_2.Properties {
         /// </summary>
         internal static System.Drawing.Bitmap ajax_loader {
             get {
-                object obj = ResourceManager.GetObject("ajax-loader", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap ajax_loader1 {
-            get {
-                object obj = ResourceManager.GetObject("ajax-loader1", resourceCulture);
+                object obj = ResourceManager.GetObject("ajax_loader", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -85,7 +75,7 @@ namespace Device_Control_2.Properties {
         /// </summary>
         internal static System.Drawing.Bitmap arrows_loader {
             get {
-                object obj = ResourceManager.GetObject("arrows-loader", resourceCulture);
+                object obj = ResourceManager.GetObject("arrows_loader", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -95,7 +85,7 @@ namespace Device_Control_2.Properties {
         /// </summary>
         internal static System.Drawing.Bitmap big_snake_loader {
             get {
-                object obj = ResourceManager.GetObject("big-snake-loader", resourceCulture);
+                object obj = ResourceManager.GetObject("big_snake_loader", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -226,16 +216,6 @@ namespace Device_Control_2.Properties {
         internal static System.Drawing.Bitmap orange24 {
             get {
                 object obj = ResourceManager.GetObject("orange24", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap PM {
-            get {
-                object obj = ResourceManager.GetObject("PM", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

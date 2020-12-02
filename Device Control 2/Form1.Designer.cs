@@ -380,7 +380,6 @@
             // 
             // pictureBox2
             // 
-            this.pictureBox2.Image = global::Device_Control_2.Properties.Resources.gray24;
             this.pictureBox2.Location = new System.Drawing.Point(581, 7);
             this.pictureBox2.Name = "pictureBox2";
             this.pictureBox2.Size = new System.Drawing.Size(30, 30);
@@ -391,7 +390,6 @@
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Image = global::Device_Control_2.Properties.Resources.gray24;
             this.pictureBox1.Location = new System.Drawing.Point(4, 6);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(30, 30);
@@ -433,7 +431,6 @@
             // button3
             // 
             this.button3.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.button3.Image = global::Device_Control_2.Properties.Resources.device_red48;
             this.button3.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.button3.Location = new System.Drawing.Point(11, 106);
             this.button3.Name = "button3";
@@ -448,7 +445,6 @@
             // 
             this.button2.BackColor = System.Drawing.SystemColors.ControlLightLight;
             this.button2.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.button2.Image = global::Device_Control_2.Properties.Resources.device48;
             this.button2.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.button2.Location = new System.Drawing.Point(11, 46);
             this.button2.Name = "button2";
