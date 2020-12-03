@@ -25,7 +25,8 @@ namespace Device_Control_2
     public partial class Form1 : Form
     {
         #region Переменные
-        int current_client = 0, // выбранный клиент
+        int current_client = 0,
+            selected_client = 0, // выбранный клиент
             ping_interval = 6, // периодичность быстрого (1 пакет ICMP и 1 пакет SNMP) опроса устройств (сек)
             snmp_interval = 1, // периодичность полного опроса всех устройств (мин)
             conn_state = 0; // текущее состояние связи по кабелю Ethernet:
@@ -35,23 +36,16 @@ namespace Device_Control_2
 
         int[,] connection = new int[1024, 2]; // связь с каждым устройством: 0 - ICMP, 1 - SNMP
 
-        string[,] std_mib = new string[1024, 2]; // каждый клиент может занимать не более 10 позиций обычных мибов, определение клиента идёт по десяткам либо сотням (сотни нужны как доп. мибы)
-        // т.е. мибы клиента 1: 11, 12, 13, ... // 101, 102, 103... // 121, 122, 123, ... (10 - 19 и 100 - 199); мибы клиента 2: 21, 22, 23, ... // 201, 202, 203, 204 (20 - 29 и 200 - 299) и т.д.
-        string[,] mib = new string[1024, 2];
-        // mib'ы клиентов (не более 1024 mib'ов на клиента)
-        // mibs[клиент, mib]
-        // все mib диапазона 0-23 - стандартные, которые относятся ко всем устройствам
-        // локальные mib устройств прописаны в диапазоне 24-1024
-
         string[,] interfaces = new string[1024, 6];
 
         AutoResetEvent waiter = new AutoResetEvent(false);
 
         Pdu std = new Pdu(PduType.Get);
 
-        //Devices.Client[] std_cl = new Devices.Client[3];
         Devices.Client[] cl;
         // список клиентов (не более 1024 клиентов)
+
+        Button[] buttons;
 
         public struct Notification_message
         {
@@ -77,6 +71,8 @@ namespace Device_Control_2
         private void Form1_Load(object sender, EventArgs e)
         {
             Preprocessing();
+
+            SimpleSurvey();
 
             Survey();
         }
@@ -130,6 +126,42 @@ namespace Device_Control_2
                 }
             }
 
+            buttons = new Button[cl.Length];
+
+            int e = -1;
+
+            for(int i = 0; i < cl.Length; i++)
+            {
+                buttons[i] = new Button();
+
+                buttons[i].BackColor = SystemColors.ControlLightLight;
+                buttons[i].ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+                buttons[i].Name = "button" + i;
+
+                if (cl[i].Connect)
+                {
+                    buttons[i].Location = new Point(5, i * 54 + 46);
+                    ++e;
+                }
+
+                buttons[i].Size = new Size(149, 54);
+                buttons[i].Text = cl[i].Name;
+                buttons[i].TextImageRelation = TextImageRelation.ImageBeforeText;
+                buttons[i].UseVisualStyleBackColor = false;
+                buttons[i].Image = Properties.Resources.device48;
+                buttons[i].Click += new EventHandler(button_Click);
+            }
+
+            label5.Location = new Point(5, buttons[e].Location.Y + 54);
+
+            for (int i = 0; i < cl.Length; i++)
+            {
+                panel2.Controls.Add(buttons[i]);
+
+                if (!cl[i].Connect)
+                    buttons[i].Location = new Point(5, i * 54 + buttons[e].Location.Y + 90);
+            }
+
             timer1.Interval = ping_interval * 1000;
             timer2.Interval = snmp_interval * 60000;
 
@@ -140,39 +172,14 @@ namespace Device_Control_2
                 timer2.Start();
         }
 
-        private Pdu FillClients(int id, Pdu list)
-        {
-            for (int i = id * 10; i < id * 10 + 10; i++)
-                if (mib[i, 0] != null)
-                    list.VbList.Add(mib[i, 0]);
-
-            for (int i = id * 10 + 100; i < id * 10 + 110; i++)
-                if (mib[i, 0] != null)
-                    list.VbList.Add(mib[i, 0]);
-
-            return list;
-        }
-
         private void SimpleSurvey()
         {
+            label1.Text = cl[selected_client].Name;
 
-
-
-
-            if (current_client == 1)
-                button2.Image = Properties.Resources.device_ok48;
-            else
-                button3.Image = Properties.Resources.device_ok48;
-        }
-
-        private void Survey()
-        {
-            label1.Text = cl[current_client].Name;
-
-            try // if (NetworkInterface.GetIsNetworkAvailable())
+            /*try // if (NetworkInterface.GetIsNetworkAvailable())
             {
                 Ping ping = new Ping();
-                ping.PingCompleted += new PingCompletedEventHandler(Received_ping_reply);
+                ping.PingCompleted += new PingCompletedEventHandler(Received_simple_reply);
                 ping.SendAsync(cl[current_client].Ip, 3000, waiter);
 
                 Change_Ping_Status(0);
@@ -185,12 +192,41 @@ namespace Device_Control_2
 
                 log.Write("Соединение отсутствует");
 
-                CheckPingConnectionChanges(connection[current_client, 0], 0);
+                CheckPingConnectionChanges(connection[current_client, 0], 0, current_client);
 
                 Change_SNMP_Status(4);
-            }
+            }*/
+
+            Survey_grid(Fill_main());
 
             //TryPing(cl[choosed_client].Ip);
+        }
+
+        private void Survey()
+        {
+            if (timer1.Enabled)
+                timer1.Stop();
+
+            try
+            {
+                Ping ping = new Ping();
+                ping.PingCompleted += new PingCompletedEventHandler(Received_ping_reply);
+                ping.SendAsync(cl[current_client].Ip, 3000, waiter);
+
+                buttons[current_client].Image = Properties.Resources.big_snake_loader;
+            }
+            catch
+            {
+                Console.WriteLine("Network is unavailable, check connection and restart program.");
+
+                Console.Beep(2000, 1000);
+
+                log.Write("Соединение отсутствует");
+
+                CheckPingConnectionChanges(connection[current_client, 0], 0, current_client);
+            }
+
+
         }
 
         private void TryPing(string ip)
@@ -224,40 +260,34 @@ namespace Device_Control_2
 
             if (e.Reply.Status == IPStatus.Success)
             {
-                CheckPingConnectionChanges(connection[current_client, 0], 2);
-
-                Change_Ping_Status(1);
-                Change_SNMP_Status(0);
+                //CheckPingConnectionChanges(connection[result, 0], 2, result);
 
                 connection[current_client, 0] = 2;
 
-                //WriteLog(true, "Связь присутствует");
-
-                Survey_grid(Fill_main());
+                buttons[current_client].Image = Properties.Resources.device_ok48;
             }
             else
             {
-                CheckPingConnectionChanges(connection[current_client, 0], 1);
+                //CheckPingConnectionChanges(connection[result, 0], 1, result);
 
-                Change_Ping_Status(3);
-
-
-
-                if (current_client == 1)
-                    button2.Image = Properties.Resources.device_red48;
-                else
-                    button3.Image = Properties.Resources.device_red48;
-
-
+                buttons[current_client].Image = Properties.Resources.device_red48;
 
                 connection[current_client, 0] = 1;
 
                 Console.Beep(2000, 1000);
-
-                //WriteLog(true, "Связь отсутствует");
             }
 
             SurveyUpdate();
+
+            if (++current_client == cl.Length)
+            {
+                current_client = 0;
+
+                if (!timer1.Enabled)
+                    timer1.Start();
+            }
+            else
+                Survey();
         }
 
         private void Received_simple_reply(object sender, PingCompletedEventArgs e)
@@ -275,38 +305,35 @@ namespace Device_Control_2
 
             if (e.Reply.Status == IPStatus.Success)
             {
-                CheckPingConnectionChanges(connection[current_client, 0], 2);
+                CheckPingConnectionChanges(connection[selected_client, 0], 2, selected_client);
 
                 Change_Ping_Status(1);
                 Change_SNMP_Status(0);
 
-                connection[current_client, 0] = 2;
+                connection[selected_client, 0] = 2;
+
+                buttons[selected_client].Image = Properties.Resources.device_ok48;
 
                 //WriteLog(true, "Связь присутствует");
 
-                Fill_main();
+                Survey_grid(Fill_main());
             }
             else
             {
-                CheckPingConnectionChanges(connection[current_client, 0], 1);
+                CheckPingConnectionChanges(connection[selected_client, 0], 1, selected_client);
 
                 Change_Ping_Status(3);
 
+                buttons[selected_client].Image = Properties.Resources.device_red48;
 
-
-                if (current_client == 1)
-                    button2.Image = Properties.Resources.device_red48;
-                else
-                    button3.Image = Properties.Resources.device_red48;
-
-
-
-                connection[current_client, 0] = 1;
+                connection[selected_client, 0] = 1;
 
                 Console.Beep(2000, 1000);
 
                 //WriteLog(true, "Связь отсутствует");
             }
+
+            SurveyUpdate();
         }
 
         private void Connection(bool success)
@@ -339,7 +366,7 @@ namespace Device_Control_2
             }
         }
 
-        private void CheckPingConnectionChanges(int original, int status)
+        private void CheckPingConnectionChanges(int original, int status, int client)
         {
             string connection = "";
 
@@ -353,9 +380,9 @@ namespace Device_Control_2
                     {
                         connection = "отсутствует";
 
-                        notifications[(current_client * 10) + 0].State = true;
-                        if (notifications[(current_client * 10) + 0].Time == "" || notifications[(current_client * 10) + 0].Time == null)
-                            notifications[(current_client * 10) + 0].Time = DateTime.Now.ToString();
+                        notifications[(client * 10) + 0].State = true;
+                        if (notifications[(client * 10) + 0].Time == "" || notifications[(client * 10) + 0].Time == null)
+                            notifications[(client * 10) + 0].Time = DateTime.Now.ToString();
                     }
                 }
                 else
@@ -364,23 +391,23 @@ namespace Device_Control_2
                     {
                         connection = "восстановлена";
 
-                        notifications[(current_client * 10) + 0].State = false;
-                        if (notifications[(current_client * 10) + 0].Time != "" && notifications[(current_client * 10) + 0].Time != null)
-                            notifications[(current_client * 10) + 0].Time = "";
+                        notifications[(client * 10) + 0].State = false;
+                        if (notifications[(client * 10) + 0].Time != "" && notifications[(client * 10) + 0].Time != null)
+                            notifications[(client * 10) + 0].Time = "";
                     }
                     else
                     {
                         connection = "утеряна";
 
-                        notifications[(current_client * 10) + 0].State = true;
-                        if (notifications[(current_client * 10) + 0].Time == "" || notifications[(current_client * 10) + 0].Time == null)
-                            notifications[(current_client * 10) + 0].Time = DateTime.Now.ToString();
+                        notifications[(client * 10) + 0].State = true;
+                        if (notifications[(client * 10) + 0].Time == "" || notifications[(client * 10) + 0].Time == null)
+                            notifications[(client * 10) + 0].Time = DateTime.Now.ToString();
                     }
                 }
 
                 notify.Update_list(notifications);
 
-                log.WriteEvent(cl[current_client].Name + " / " + cl[current_client].Ip, "Связь с устройством: [Ping]= " + connection);
+                log.WriteEvent(cl[client].Name + " / " + cl[client].Ip, "Связь с устройством: [Ping]= " + connection);
             }
         }
 
@@ -410,7 +437,7 @@ namespace Device_Control_2
 
         private int Fill_main()
         {
-            SnmpV1Packet result = SurveyList(cl[current_client].Ip, std);
+            SnmpV1Packet result = SurveyList(cl[selected_client].Ip, std);
 
             CheckStdOIDChanges(label11.Text, 0, result.Pdu.VbList[0].Value.ToString());
             label11.Text = result.Pdu.VbList[0].Value.ToString();
@@ -439,45 +466,45 @@ namespace Device_Control_2
                     switch (oid_id)
                     {
                         case 0:
-                            log.Write(cl[current_client].Name + " / " + cl[current_client].Ip, "Значение переменной: [sysDescr]=" + oid_result);
+                            log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной: [sysDescr]=" + oid_result);
                             break;
                         case 1:
-                            log.Write(cl[current_client].Name + " / " + cl[current_client].Ip, "Значение переменной: [sysUpTime]=" + oid_result);
+                            log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной: [sysUpTime]=" + oid_result);
                             break;
                         case 2:
-                            log.Write(cl[current_client].Name + " / " + cl[current_client].Ip, "Значение переменной: [sysName]=" + oid_result);
+                            log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной: [sysName]=" + oid_result);
                             break;
                         case 3:
-                            log.Write(cl[current_client].Name + " / " + cl[current_client].Ip, "Значение переменной: [sysLocation]=" + oid_result);
+                            log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной: [sysLocation]=" + oid_result);
                             break;
                     }
                 else
                     switch (oid_id)
                     {
                         case 0:
-                            log.Write(cl[current_client].Name + " / " + cl[current_client].Ip, "Значение переменной было изменено: [sysDescr]=" + oid_result);
+                            log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной было изменено: [sysDescr]=" + oid_result);
                             break;
                         case 1:
-                            log.Write(cl[current_client].Name + " / " + cl[current_client].Ip, "Значение переменной было изменено: [sysUpTime]=" + oid_result);
+                            log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной было изменено: [sysUpTime]=" + oid_result);
                             break;
                         case 2:
-                            log.Write(cl[current_client].Name + " / " + cl[current_client].Ip, "Значение переменной было изменено: [sysName]=" + oid_result);
+                            log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной было изменено: [sysName]=" + oid_result);
                             break;
                         case 3:
-                            log.Write(cl[current_client].Name + " / " + cl[current_client].Ip, "Значение переменной было изменено: [sysLocation]=" + oid_result);
+                            log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной было изменено: [sysLocation]=" + oid_result);
                             break;
                     }
         }
 
         private void GetTime()
         {
-            if (cl[current_client].SysTime != null)
+            if (cl[selected_client].SysTime != null)
             {
                 Pdu systime = new Pdu(PduType.Get);
 
-                systime.VbList.Add(cl[current_client].SysTime);
+                systime.VbList.Add(cl[selected_client].SysTime);
 
-                SnmpV1Packet result = SurveyList(cl[current_client].Ip, systime);
+                SnmpV1Packet result = SurveyList(cl[selected_client].Ip, systime);
 
                 string time = "0";
 
@@ -487,7 +514,7 @@ namespace Device_Control_2
                 if (result.Pdu.VbList[0].Value.Type == SnmpVariableType.TimeTicks)
                     time = Decrypt_Time(time);
 
-                CheckModOIDChanges(label15.Text, 0, time);
+                CheckModOIDChanges(label15.Text, 0, time, selected_client);
                 long convertedTime = Convert.ToInt64(time); //сконвертированное в long время из string
                 label15.Text = DateTimeOffset.FromUnixTimeSeconds(convertedTime).ToString().Substring(0, 19);
             }
@@ -547,26 +574,26 @@ namespace Device_Control_2
 
         private void GetMod()
         {
-            if (cl[current_client].Modified != null)
+            if (cl[selected_client].Modified != null)
             {
                 Pdu modified = new Pdu(PduType.Get);
 
-                for(int i = 0; i < cl[current_client].Modified.Length / 3; i++)
-                    modified.VbList.Add(cl[current_client].Modified[i, 0]);
+                for(int i = 0; i < cl[selected_client].Modified.Length / 3; i++)
+                    modified.VbList.Add(cl[selected_client].Modified[i, 0]);
 
-                SnmpV1Packet result = SurveyList(cl[current_client].Ip, modified);
+                SnmpV1Packet result = SurveyList(cl[selected_client].Ip, modified);
 
                 CheckTemperature(Convert.ToInt32(result.Pdu.VbList[0].Value.ToString()), Convert.ToInt32(result.Pdu.VbList[1].Value.ToString()), Convert.ToInt32(result.Pdu.VbList[2].Value.ToString()));
                 //CheckPower();
                 //CheckFan();
 
-                CheckModOIDChanges(label21.Text, 0, result.Pdu.VbList[0].Value.ToString());
+                CheckModOIDChanges(label21.Text, 0, result.Pdu.VbList[0].Value.ToString(), selected_client);
                 label21.Text = result.Pdu.VbList[0].Value.ToString();
-                CheckModOIDChanges(label22.Text, 1, result.Pdu.VbList[1].Value.ToString());
+                CheckModOIDChanges(label22.Text, 1, result.Pdu.VbList[1].Value.ToString(), selected_client);
                 label22.Text = result.Pdu.VbList[1].Value.ToString();
-                CheckModOIDChanges(label23.Text, 2, result.Pdu.VbList[2].Value.ToString());
+                CheckModOIDChanges(label23.Text, 2, result.Pdu.VbList[2].Value.ToString(), selected_client);
                 label23.Text = result.Pdu.VbList[2].Value.ToString();
-                CheckModOIDChanges(label24.Text, 3, result.Pdu.VbList[3].Value.ToString());
+                CheckModOIDChanges(label24.Text, 3, result.Pdu.VbList[3].Value.ToString(), selected_client);
                 label24.Text = result.Pdu.VbList[3].Value.ToString();
             }
         }
@@ -575,22 +602,22 @@ namespace Device_Control_2
         {
             if (cur_t >= max_t || cur_t <= min_t)
             {
-                notifications[(current_client * 10) + 2].State = true;
-                if (notifications[(current_client * 10) + 2].Time == "" || notifications[(current_client * 10) + 2].Time == null)
+                notifications[(selected_client * 10) + 2].State = true;
+                if (notifications[(selected_client * 10) + 2].Time == "" || notifications[(selected_client * 10) + 2].Time == null)
                 {
-                    notifications[(current_client * 10) + 2].Time = DateTime.Now.ToString();
+                    notifications[(selected_client * 10) + 2].Time = DateTime.Now.ToString();
 
-                    log.WriteEvent(cl[current_client].Name + " / " + cl[current_client].Ip, "Нештатное значение температуры: [" + mib[(current_client * 10) + 2, 1] + "]= " + max_t + " / [" + mib[(current_client * 10) + 1, 1] + "]= " + cur_t);
+                    log.WriteEvent(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Нештатное значение температуры: [max temperature]= " + max_t + " / [temperature]= " + cur_t);
                 }
             }
             else
             {
-                notifications[(current_client * 10) + 2].State = false;
-                if (notifications[(current_client * 10) + 2].Time != "" && notifications[(current_client * 10) + 2].Time != null)
+                notifications[(selected_client * 10) + 2].State = false;
+                if (notifications[(selected_client * 10) + 2].Time != "" && notifications[(selected_client * 10) + 2].Time != null)
                 {
-                    notifications[(current_client * 10) + 2].Time = "";
+                    notifications[(selected_client * 10) + 2].Time = "";
 
-                    log.WriteEvent(cl[current_client].Name + " / " + cl[current_client].Ip, "Возврат температуры к норме: [" + mib[(current_client * 10) + 2, 1] + "]= " + max_t + " / [" + mib[(current_client * 10) + 1, 1] + "]= " + cur_t);
+                    log.WriteEvent(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Возврат температуры к норме: [max temperature]= " + max_t + " / [temperature]= " + cur_t);
                 }
             }
 
@@ -599,14 +626,14 @@ namespace Device_Control_2
 
         private void GetAdd()
         {
-            if (cl[current_client].Addition != null)
+            if (cl[selected_client].Addition != null)
             {
                 Pdu addition = new Pdu(PduType.Get);
 
-                for (int i = 0; i < cl[current_client].Addition.Length / 3; i++)
-                    addition.VbList.Add(cl[current_client].Modified[i, 0]);
+                for (int i = 0; i < cl[selected_client].Addition.Length / 3; i++)
+                    addition.VbList.Add(cl[selected_client].Modified[i, 0]);
 
-                SnmpV1Packet result = SurveyList(cl[current_client].Ip, addition);
+                SnmpV1Packet result = SurveyList(cl[selected_client].Ip, addition);
 
                 /*CheckModOIDChanges(label25.Text, 7, result.Pdu.VbList[7].Value.ToString());
                 label25.Text = result.Pdu.VbList[7].Value.ToString();
@@ -615,17 +642,19 @@ namespace Device_Control_2
             }
         }
 
-        private void CheckModOIDChanges(string original, int oid_id, string oid_result)
+        private void CheckModOIDChanges(string original, int oid_id, string oid_result, int client)
         {
-            oid_id = (current_client * 10) + oid_id;
+            //oid_id = (selected_client * 10) + oid_id;
+            //oid_id += 2;
+
             if (oid_result != original)
                 if (original == "" || original == null)
                 {
-                    string jopa = mib[oid_id, 1];
-                    log.Write(cl[current_client].Name + " / " + cl[current_client].Ip, "Значение переменной: [" + mib[oid_id, 1] + "]=" + oid_result);
+                    string jopa = cl[client].Modified[oid_id, 1];
+                    log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной: [" + cl[client].Modified[oid_id, 1] + "]=" + oid_result);
                 }
                 else
-                    log.Write(cl[current_client].Name + " / " + cl[current_client].Ip, "Значение переменной было изменено: [" + mib[oid_id, 1] + "]=" + oid_result);
+                    log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной было изменено: [" + cl[client].Modified[oid_id, 1] + "]=" + oid_result);
         }
 
         private void Change_SNMP_Status(int stat)
@@ -678,7 +707,7 @@ namespace Device_Control_2
                 list.VbList.Add("1.3.6.1.2.1.2.2.1.5." + i); // 5 столбец
                 list.VbList.Add("1.3.6.1.2.1.2.2.1.8." + i); // 4 столбец
 
-                SnmpV1Packet result = SurveyList(cl[current_client].Ip, list);
+                SnmpV1Packet result = SurveyList(cl[selected_client].Ip, list);
 
                 string type = "";
 
@@ -768,7 +797,7 @@ namespace Device_Control_2
                 i++;
             }
 
-            if (cl[current_client].IfName != null)
+            if (cl[selected_client].IfName != null)
             {
                 int ilimit = i;
 
@@ -779,9 +808,9 @@ namespace Device_Control_2
                 {
                     Pdu list = new Pdu(PduType.Get);
 
-                    list.VbList.Add(cl[current_client].IfName + i++); // 3 столбец
+                    list.VbList.Add(cl[selected_client].IfName + i++); // 3 столбец
 
-                    SnmpV1Packet result = SurveyList(cl[current_client].Ip, list);
+                    SnmpV1Packet result = SurveyList(cl[selected_client].Ip, list);
 
                     if (result.Pdu.VbList[0].Value.ToString() != "Null")
                     {
@@ -801,18 +830,18 @@ namespace Device_Control_2
         {
             if (oid_result != original)
                 if (original == "" || original == null)
-                    log.Write(cl[current_client].Name + " / " + cl[current_client].Ip, "Значение переменной: [" + oid_name + ":" + ++ifindex + "]=" + oid_result);
+                    log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной: [" + oid_name + ":" + ++ifindex + "]=" + oid_result);
                 else
-                    log.Write(cl[current_client].Name + " / " + cl[current_client].Ip, "Значение переменной было изменено: [" + oid_name + ":" + ++ifindex + "]=" + oid_result);
+                    log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной было изменено: [" + oid_name + ":" + ++ifindex + "]=" + oid_result);
         }
 
         private void CheckINamesChanges(string original, int oid_id, string oid_result)
         {
             if (oid_result != original)
                 if (original == "" || original == null)
-                    log.Write(cl[current_client].Name + " / " + cl[current_client].Ip, "Значение переменной: [ifname:" + ++oid_id + "]=" + oid_result);
+                    log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной: [ifname:" + ++oid_id + "]=" + oid_result);
                 else
-                    log.Write(cl[current_client].Name + " / " + cl[current_client].Ip, "Значение переменной было изменено: [ifname:" + ++oid_id + "]=" + oid_result);
+                    log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной было изменено: [ifname:" + ++oid_id + "]=" + oid_result);
         }
 
         private void Fill_grid(int rows_count)
@@ -866,7 +895,7 @@ namespace Device_Control_2
             catch
             {
                 //MessageBox.Show("пропадание связи по SNMP");
-                log.WriteEvent(cl[current_client].Name + " / " + cl[current_client].Ip, "Связь с устройством: [SNMP]= утеряна");
+                log.WriteEvent(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Связь с устройством: [SNMP]= утеряна");
             }
 
             // If result is null then agent didn't reply or we couldn't parse the reply.
@@ -894,10 +923,28 @@ namespace Device_Control_2
             time += (DateTime.Now.Minute < 10) ? "0" + DateTime.Now.Minute : DateTime.Now.Minute.ToString();
             label3.Text = "Последний раз обновлено: " + time;
         }
-        // Сделать
+        
         private void Form1_Resize(object sender, EventArgs e)
         {
+            Resize_form();
+        }
 
+        private void Resize_form()
+        {
+            panel1.Width = ClientSize.Width - 155;
+            panel2.Height = ClientSize.Height + 4;
+            label3.Location = new Point(157, ClientSize.Height - 21);
+            tabControl1.Size = new Size(ClientSize.Width - 163, ClientSize.Height - 77);
+            dataGridView1.Size = new Size(ClientSize.Width - 183, ClientSize.Height - 117);
+
+            if (ClientSize.Width > 777)
+            {
+                int width = (ClientSize.Width - 564) / 2;
+                Column2.Width = width;
+                Column3.Width = width;
+            }
+
+            //label3.Text = ClientSize.Width + ":" + ClientSize.Height; // 539 / 276
         }
 
         private void timer1_Tick(object sender, EventArgs e)
@@ -912,17 +959,22 @@ namespace Device_Control_2
 
         private void timer2_Tick(object sender, EventArgs e)
         {
-
+            SimpleSurvey();
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void Form1_ClientSizeChanged(object sender, EventArgs e)
         {
-            current_client = 1;
+            Resize_form();
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        private void button_Click(object sender, EventArgs e)
         {
-            current_client = 2;
+            int button = WhatGroup(sender, buttons);
+
+            if (cl[button].Connect)
+                selected_client = button;
+
+            SimpleSurvey();
         }
 
         private void button_client_Click(object sender, EventArgs e)
@@ -934,7 +986,7 @@ namespace Device_Control_2
         {
             int result;
 
-            for (result = 0; result < current_client; result++)
+            for (result = 0; result < cl.Length; result++)
                 if (sender.Equals(compare_with[result]))
                     break;
 
