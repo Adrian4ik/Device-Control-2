@@ -260,7 +260,7 @@ namespace Device_Control_2
 
             if (e.Reply.Status == IPStatus.Success)
             {
-                //CheckPingConnectionChanges(connection[result, 0], 2, result);
+                CheckPingConnectionChanges(connection[current_client, 0], 2, current_client);
 
                 connection[current_client, 0] = 2;
 
@@ -268,7 +268,7 @@ namespace Device_Control_2
             }
             else
             {
-                //CheckPingConnectionChanges(connection[result, 0], 1, result);
+                CheckPingConnectionChanges(connection[current_client, 0], 1, current_client);
 
                 buttons[current_client].Image = Properties.Resources.device_red48;
 
