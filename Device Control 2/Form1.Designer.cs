@@ -68,6 +68,14 @@
             this.label4 = new System.Windows.Forms.Label();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.timer2 = new System.Windows.Forms.Timer(this.components);
+            this.TrayIcon = new System.Windows.Forms.NotifyIcon(this.components);
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.openTSM = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.commentTSM = new System.Windows.Forms.ToolStripMenuItem();
+            this.aboutTSM = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.exitTSM = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -77,6 +85,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel2.SuspendLayout();
+            this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // dataGridView1
@@ -460,6 +469,61 @@
             this.timer2.Interval = 10000;
             this.timer2.Tick += new System.EventHandler(this.timer2_Tick);
             // 
+            // TrayIcon
+            // 
+            this.TrayIcon.ContextMenuStrip = this.contextMenuStrip1;
+            this.TrayIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("TrayIcon.Icon")));
+            this.TrayIcon.Text = "DeviceControl";
+            this.TrayIcon.Visible = true;
+            // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.openTSM,
+            this.toolStripSeparator2,
+            this.commentTSM,
+            this.aboutTSM,
+            this.toolStripSeparator1,
+            this.exitTSM});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(160, 104);
+            // 
+            // openTSM
+            // 
+            this.openTSM.Name = "openTSM";
+            this.openTSM.Size = new System.Drawing.Size(159, 22);
+            this.openTSM.Text = "Открыть";
+            this.openTSM.Click += new System.EventHandler(this.openTSM_Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(156, 6);
+            // 
+            // commentTSM
+            // 
+            this.commentTSM.Name = "commentTSM";
+            this.commentTSM.Size = new System.Drawing.Size(159, 22);
+            this.commentTSM.Text = "Оставить отзыв";
+            // 
+            // aboutTSM
+            // 
+            this.aboutTSM.Name = "aboutTSM";
+            this.aboutTSM.Size = new System.Drawing.Size(159, 22);
+            this.aboutTSM.Text = "О программе";
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(156, 6);
+            // 
+            // exitTSM
+            // 
+            this.exitTSM.Name = "exitTSM";
+            this.exitTSM.Size = new System.Drawing.Size(159, 22);
+            this.exitTSM.Text = "Выход";
+            this.exitTSM.Click += new System.EventHandler(this.exitTSM_Click);
+            // 
             // Form1
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
@@ -489,6 +553,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
+            this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -531,6 +596,14 @@
         private System.Windows.Forms.PictureBox pictureBox2;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Timer timer2;
+        private System.Windows.Forms.NotifyIcon TrayIcon;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem openTSM;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripMenuItem commentTSM;
+        private System.Windows.Forms.ToolStripMenuItem aboutTSM;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem exitTSM;
     }
 }
 

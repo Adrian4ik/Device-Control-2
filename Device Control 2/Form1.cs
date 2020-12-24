@@ -70,16 +70,17 @@ namespace Device_Control_2
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            Preprocessing();
+            Preprocessing(true);
 
             SimpleSurvey();
 
             Survey();
         }
 
-        private void Preprocessing()
+        private void Preprocessing(bool startup_icon)
         {
-            _ = new Startup_run();
+            if (startup_icon)
+                _ = new Startup_run();
 
             dataGridView1.Rows.Add(128);
             Change_SNMP_Status(4);
@@ -954,7 +955,26 @@ namespace Device_Control_2
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            log.WriteEvent("Программа завершена");
+            if(TrayIcon.Visible)
+            {
+                e.Cancel = true;
+
+                Hide();
+            }
+            else
+                log.WriteEvent("Программа завершена");
+        }
+
+        private void openTSM_Click(object sender, EventArgs e)
+        {
+            Show();
+        }
+
+        private void exitTSM_Click(object sender, EventArgs e)
+        {
+            TrayIcon.Visible = false;
+
+            Application.Exit();
         }
 
         private void timer2_Tick(object sender, EventArgs e)
