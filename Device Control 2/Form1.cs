@@ -63,6 +63,25 @@ namespace Device_Control_2
         Notification notify = new Notification();
         #endregion Переменные
 
+        /// <summary>
+        /// ////////////////////////////////////////////////////////////////////////////////////
+        /// </summary>
+
+        private const uint WM_SYSCOMMAND = 0x0112;
+
+        private const int SC_MONITORPOWER = 0xF170;
+        private const int HWND_BROADCAST = 0xFFFF;
+        private const int MONITOR_ON = -1;
+        private const int MONITOR_OFF = 2;
+        private const int MONITOR_STANDBY = 1;
+
+        [DllImport("user32.dll")]
+        static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr IParam);
+
+        /// <summary>
+        /// ////////////////////////////////////////////////////////////////////////////////////
+        /// </summary>
+
         public Form1()
         {
             InitializeComponent();
@@ -220,6 +239,8 @@ namespace Device_Control_2
             {
                 Console.WriteLine("Network is unavailable, check connection and restart program.");
 
+                SendMessage((IntPtr)HWND_BROADCAST, WM_SYSCOMMAND, (IntPtr)SC_MONITORPOWER, (IntPtr)MONITOR_ON);
+
                 Console.Beep(2000, 1000);
 
                 log.Write("Соединение отсутствует");
@@ -240,6 +261,8 @@ namespace Device_Control_2
             }
             catch // else
             {
+                SendMessage((IntPtr)HWND_BROADCAST, WM_SYSCOMMAND, (IntPtr)SC_MONITORPOWER, (IntPtr)MONITOR_ON);
+
                 Console.Beep(2000, 1000);
 
                 Connection(false);
@@ -274,6 +297,8 @@ namespace Device_Control_2
                 buttons[current_client].Image = Properties.Resources.device_red48;
 
                 connection[current_client, 0] = 1;
+
+                SendMessage((IntPtr)HWND_BROADCAST, WM_SYSCOMMAND, (IntPtr)SC_MONITORPOWER, (IntPtr)MONITOR_ON);
 
                 Console.Beep(2000, 1000);
             }
@@ -328,6 +353,8 @@ namespace Device_Control_2
                 buttons[selected_client].Image = Properties.Resources.device_red48;
 
                 connection[selected_client, 0] = 1;
+
+                SendMessage((IntPtr)HWND_BROADCAST, WM_SYSCOMMAND, (IntPtr)SC_MONITORPOWER, (IntPtr)MONITOR_ON);
 
                 Console.Beep(2000, 1000);
 
