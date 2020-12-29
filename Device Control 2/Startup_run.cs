@@ -9,127 +9,180 @@ using System.Windows.Forms;
 
 namespace Device_Control_2
 {
-    class Startup_run
-    {
-        public Startup_run()
-        {
-            FileInfo fi = new FileInfo(Application.ExecutablePath);
-            string name = fi.Name;
-            string Startup_folder = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
+	class Startup_run
+	{
+		FileInfo fi = new FileInfo(Application.ExecutablePath);
+		string name;
 
-            ShortCut.Create(Application.ExecutablePath, Startup_folder + "\\" + name.Substring(0, name.Length - 4) + ".lnk", "", "");
-        }
+		public bool minimized { get; set; }
 
-        static class ShellLink
-        {
-            [ComImport,
-            Guid("000214F9-0000-0000-C000-000000000046"),
-            InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-            internal interface IShellLinkW
-            {
-                [PreserveSig]
-                int GetPath(
-                    [Out, MarshalAs(UnmanagedType.LPWStr)]
-                StringBuilder pszFile,
-                    int cch, ref IntPtr pfd, uint fFlags);
+		public Startup_run()
+		{
+			name = fi.Name;
 
-                [PreserveSig]
-                int GetIDList(out IntPtr ppidl);
+			SetConfigs(ReadConfig());
+		}
 
-                [PreserveSig]
-                int SetIDList(IntPtr pidl);
+		private bool[] ReadConfig()
+		{
+			bool[] cfgs = new bool[2];
 
-                [PreserveSig]
-                int GetDescription(
-                    [Out, MarshalAs(UnmanagedType.LPWStr)]
-                StringBuilder pszName, int cch);
+			string path = Application.ExecutablePath.Substring(0, Application.ExecutablePath.Length - fi.Name.Length);
 
-                [PreserveSig]
-                int SetDescription(
-                    [MarshalAs(UnmanagedType.LPWStr)]
-                string pszName);
+			if (!File.Exists(path + "config.xml"))
+			{
+				string[] example = { "run from system start: yes", "run minimized: no" };
 
-                [PreserveSig]
-                int GetWorkingDirectory(
-                    [Out, MarshalAs(UnmanagedType.LPWStr)]
-                StringBuilder pszDir, int cch);
+				File.WriteAllLines(path + "config.xml", example);
 
-                [PreserveSig]
-                int SetWorkingDirectory(
-                    [MarshalAs(UnmanagedType.LPWStr)]
-                string pszDir);
+				cfgs[0] = true;
+				cfgs[1] = false;
+			}
+			else
+			{
+				string[] config = File.ReadAllLines(path + "config.xml");
 
-                [PreserveSig]
-                int GetArguments(
-                    [Out, MarshalAs(UnmanagedType.LPWStr)]
-                StringBuilder pszArgs, int cch);
+				for (int i = 0; i < config.Length; i++)
+				{
+					if (config[i].Length > 23 && config[i][4] == 'f')
+						cfgs[0] = GetBoolFromString(config[i].Substring(config[i].IndexOf(": ") + 2));
 
-                [PreserveSig]
-                int SetArguments(
-                    [MarshalAs(UnmanagedType.LPWStr)]
-                string pszArgs);
+					if (config[i].Length > 15 && config[i][4] == 'm')
+						cfgs[1] = GetBoolFromString(config[i].Substring(config[i].IndexOf(": ") + 2));
+				}
+			}
 
-                [PreserveSig]
-                int GetHotkey(out ushort pwHotkey);
+			return cfgs;
+		}
 
-                [PreserveSig]
-                int SetHotkey(ushort wHotkey);
+		private void SetConfigs(bool[] configs)
+		{
+			string Startup_folder = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
 
-                [PreserveSig]
-                int GetShowCmd(out int piShowCmd);
+			if (configs[0])
+				ShortCut.Create(Application.ExecutablePath, Startup_folder + "\\" + name.Substring(0, name.Length - 4) + ".lnk", "", "");
 
-                [PreserveSig]
-                int SetShowCmd(int iShowCmd);
+			minimized = configs[1];
+		}
 
-                [PreserveSig]
-                int GetIconLocation(
-                    [Out, MarshalAs(UnmanagedType.LPWStr)]
-                StringBuilder pszIconPath, int cch, out int piIcon);
+		private bool GetBoolFromString(string text)
+		{
+			if (text == "true" || text == "1" || text == "yes" || text == "y")
+				return true;
+			else
+				return false;
+		}
 
-                [PreserveSig]
-                int SetIconLocation(
-                    [MarshalAs(UnmanagedType.LPWStr)]
-                string pszIconPath, int iIcon);
+		private static class ShellLink
+		{
+			[ComImport,
+			Guid("000214F9-0000-0000-C000-000000000046"),
+			InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+			internal interface IShellLinkW
+			{
+				[PreserveSig]
+				int GetPath(
+					[Out, MarshalAs(UnmanagedType.LPWStr)]
+				StringBuilder pszFile,
+					int cch, ref IntPtr pfd, uint fFlags);
 
-                [PreserveSig]
-                int SetRelativePath(
-                    [MarshalAs(UnmanagedType.LPWStr)]
-                string pszPathRel, uint dwReserved);
+				[PreserveSig]
+				int GetIDList(out IntPtr ppidl);
 
-                [PreserveSig]
-                int Resolve(IntPtr hwnd, uint fFlags);
+				[PreserveSig]
+				int SetIDList(IntPtr pidl);
 
-                [PreserveSig]
-                int SetPath(
-                    [MarshalAs(UnmanagedType.LPWStr)]
-                string pszFile);
-            }
+				[PreserveSig]
+				int GetDescription(
+					[Out, MarshalAs(UnmanagedType.LPWStr)]
+				StringBuilder pszName, int cch);
 
-            [ComImport,
-            Guid("00021401-0000-0000-C000-000000000046"),
-            ClassInterface(ClassInterfaceType.None)]
-            private class shl_link { }
+				[PreserveSig]
+				int SetDescription(
+					[MarshalAs(UnmanagedType.LPWStr)]
+				string pszName);
 
-            internal static IShellLinkW CreateShellLink()
-            {
-                return (IShellLinkW)(new shl_link());
-            }
-        }
+				[PreserveSig]
+				int GetWorkingDirectory(
+					[Out, MarshalAs(UnmanagedType.LPWStr)]
+				StringBuilder pszDir, int cch);
 
-        public static class ShortCut
-        {
-            public static void Create(
-                string PathToFile, string PathToLink,
-                string Arguments, string Description)
-            {
-                ShellLink.IShellLinkW shlLink = ShellLink.CreateShellLink();
+				[PreserveSig]
+				int SetWorkingDirectory(
+					[MarshalAs(UnmanagedType.LPWStr)]
+				string pszDir);
 
-                Marshal.ThrowExceptionForHR(shlLink.SetDescription(Description));
-                Marshal.ThrowExceptionForHR(shlLink.SetPath(PathToFile));
-                Marshal.ThrowExceptionForHR(shlLink.SetArguments(Arguments));
+				[PreserveSig]
+				int GetArguments(
+					[Out, MarshalAs(UnmanagedType.LPWStr)]
+				StringBuilder pszArgs, int cch);
 
-                ((System.Runtime.InteropServices.ComTypes.IPersistFile)shlLink).Save(PathToLink, false);
-            }
-        }
-    }
+				[PreserveSig]
+				int SetArguments(
+					[MarshalAs(UnmanagedType.LPWStr)]
+				string pszArgs);
+
+				[PreserveSig]
+				int GetHotkey(out ushort pwHotkey);
+
+				[PreserveSig]
+				int SetHotkey(ushort wHotkey);
+
+				[PreserveSig]
+				int GetShowCmd(out int piShowCmd);
+
+				[PreserveSig]
+				int SetShowCmd(int iShowCmd);
+
+				[PreserveSig]
+				int GetIconLocation(
+					[Out, MarshalAs(UnmanagedType.LPWStr)]
+				StringBuilder pszIconPath, int cch, out int piIcon);
+
+				[PreserveSig]
+				int SetIconLocation(
+					[MarshalAs(UnmanagedType.LPWStr)]
+				string pszIconPath, int iIcon);
+
+				[PreserveSig]
+				int SetRelativePath(
+					[MarshalAs(UnmanagedType.LPWStr)]
+				string pszPathRel, uint dwReserved);
+
+				[PreserveSig]
+				int Resolve(IntPtr hwnd, uint fFlags);
+
+				[PreserveSig]
+				int SetPath(
+					[MarshalAs(UnmanagedType.LPWStr)]
+				string pszFile);
+			}
+
+			[ComImport,
+			Guid("00021401-0000-0000-C000-000000000046"),
+			ClassInterface(ClassInterfaceType.None)]
+			private class shl_link { }
+
+			internal static IShellLinkW CreateShellLink()
+			{
+				return (IShellLinkW)(new shl_link());
+			}
+		}
+
+		private static class ShortCut
+		{
+			public static void Create(
+				string PathToFile, string PathToLink,
+				string Arguments, string Description)
+			{
+				ShellLink.IShellLinkW shlLink = ShellLink.CreateShellLink();
+
+				Marshal.ThrowExceptionForHR(shlLink.SetDescription(Description));
+				Marshal.ThrowExceptionForHR(shlLink.SetPath(PathToFile));
+				Marshal.ThrowExceptionForHR(shlLink.SetArguments(Arguments));
+
+				((System.Runtime.InteropServices.ComTypes.IPersistFile)shlLink).Save(PathToLink, false);
+			}
+		}
+	}
 }
