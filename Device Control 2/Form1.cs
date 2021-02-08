@@ -70,11 +70,11 @@ namespace Device_Control_2
 
 		private const uint WM_SYSCOMMAND = 0x0112;
 
-		private const int SC_MONITORPOWER = 0xF170;
+		private const int SC_DISPLAYPOWER = 0xF170;
 		private const int HWND_BROADCAST = 0xFFFF;
-		private const int MONITOR_ON = -1;
-		private const int MONITOR_OFF = 2;
-		private const int MONITOR_STANDBY = 1;
+		private const int DISPLAY_ON = -1;
+		private const int DISPLAY_OFF = 2;
+		private const int DISPLAY_STANDBY = 1;
 
 		[DllImport("user32.dll")]
 		static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr IParam);
@@ -90,6 +90,8 @@ namespace Device_Control_2
 
 		private void Form1_Load(object sender, EventArgs e)
 		{
+			label9.Text = "v2.1.3.3";
+
 			if (sr.minimized)
 				WindowState = FormWindowState.Minimized;
 
@@ -147,11 +149,25 @@ namespace Device_Control_2
 				}
 			}
 
+			InitInterface();
+
+			timer1.Interval = ping_interval * 1000;
+			timer2.Interval = snmp_interval * 60000;
+
+			if (!timer1.Enabled)
+				timer1.Start();
+
+			if (!timer2.Enabled)
+				timer2.Start();
+		}
+
+		private void InitInterface()
+		{
 			buttons = new Button[cl.Length];
 
 			int e = -1;
 
-			for(int i = 0; i < cl.Length; i++)
+			for (int i = 0; i < cl.Length; i++)
 			{
 				buttons[i] = new Button();
 
@@ -182,15 +198,6 @@ namespace Device_Control_2
 				if (!cl[i].Connect)
 					buttons[i].Location = new Point(5, i * 54 + buttons[e].Location.Y + 90);
 			}
-
-			timer1.Interval = ping_interval * 1000;
-			timer2.Interval = snmp_interval * 60000;
-
-			if (!timer1.Enabled)
-				timer1.Start();
-
-			if (!timer2.Enabled)
-				timer2.Start();
 		}
 
 		private void SimpleSurvey()
@@ -240,7 +247,7 @@ namespace Device_Control_2
 			{
 				Console.WriteLine("Network is unavailable, check connection and restart program.");
 
-				SendMessage((IntPtr)HWND_BROADCAST, WM_SYSCOMMAND, (IntPtr)SC_MONITORPOWER, (IntPtr)MONITOR_ON);
+				SendMessage((IntPtr)HWND_BROADCAST, WM_SYSCOMMAND, (IntPtr)SC_DISPLAYPOWER, (IntPtr)DISPLAY_ON);
 
 				Console.Beep(2000, 1000);
 
@@ -262,7 +269,7 @@ namespace Device_Control_2
 			}
 			catch // else
 			{
-				SendMessage((IntPtr)HWND_BROADCAST, WM_SYSCOMMAND, (IntPtr)SC_MONITORPOWER, (IntPtr)MONITOR_ON);
+				SendMessage((IntPtr)HWND_BROADCAST, WM_SYSCOMMAND, (IntPtr)SC_DISPLAYPOWER, (IntPtr)DISPLAY_ON);
 
 				Console.Beep(2000, 1000);
 
@@ -287,9 +294,9 @@ namespace Device_Control_2
 			{
 				CheckPingConnectionChanges(connection[current_client, 0], 2, current_client);
 
-				connection[current_client, 0] = 2;
-
 				buttons[current_client].Image = Properties.Resources.device_ok48;
+
+				connection[current_client, 0] = 2;
 			}
 			else
 			{
@@ -299,7 +306,7 @@ namespace Device_Control_2
 
 				connection[current_client, 0] = 1;
 
-				SendMessage((IntPtr)HWND_BROADCAST, WM_SYSCOMMAND, (IntPtr)SC_MONITORPOWER, (IntPtr)MONITOR_ON);
+				SendMessage((IntPtr)HWND_BROADCAST, WM_SYSCOMMAND, (IntPtr)SC_DISPLAYPOWER, (IntPtr)DISPLAY_ON);
 
 				Console.Beep(2000, 1000);
 			}
@@ -355,7 +362,7 @@ namespace Device_Control_2
 
 				connection[selected_client, 0] = 1;
 
-				SendMessage((IntPtr)HWND_BROADCAST, WM_SYSCOMMAND, (IntPtr)SC_MONITORPOWER, (IntPtr)MONITOR_ON);
+				SendMessage((IntPtr)HWND_BROADCAST, WM_SYSCOMMAND, (IntPtr)SC_DISPLAYPOWER, (IntPtr)DISPLAY_ON);
 
 				Console.Beep(2000, 1000);
 
@@ -370,28 +377,20 @@ namespace Device_Control_2
 			if (success)
 			{
 				if (conn_state == 0)
-				{
 					log.WriteEvent("Соединение присутствует");
-					conn_state = 2;
-				}
 				else if (conn_state == 1)
-				{
 					log.WriteEvent("Соединение восстановлено");
-					conn_state = 2;
-				}
+
+				conn_state = 2;
 			}
 			else
 			{
 				if (conn_state == 0)
-				{
 					log.WriteEvent("Соединение отсутствует");
-					conn_state = 1;
-				}
 				else if (conn_state == 2)
-				{
 					log.WriteEvent("Соединение утеряно");
-					conn_state = 1;
-				}
+
+				conn_state = 1;
 			}
 		}
 
@@ -490,39 +489,16 @@ namespace Device_Control_2
 
 		private void CheckStdOIDChanges(string original, int oid_id, string oid_result)
 		{
+			string was_changed = "";
+			string[] std_oid_names = { "sysDescr", "sysUpTime", "sysName", "sysLocation" };
+
 			if (oid_result != original)
-				if (original == "" || original == null)
-					switch (oid_id)
-					{
-						case 0:
-							log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной: [sysDescr]=" + oid_result);
-							break;
-						case 1:
-							log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной: [sysUpTime]=" + oid_result);
-							break;
-						case 2:
-							log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной: [sysName]=" + oid_result);
-							break;
-						case 3:
-							log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной: [sysLocation]=" + oid_result);
-							break;
-					}
-				else
-					switch (oid_id)
-					{
-						case 0:
-							log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной было изменено: [sysDescr]=" + oid_result);
-							break;
-						case 1:
-							log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной было изменено: [sysUpTime]=" + oid_result);
-							break;
-						case 2:
-							log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной было изменено: [sysName]=" + oid_result);
-							break;
-						case 3:
-							log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной было изменено: [sysLocation]=" + oid_result);
-							break;
-					}
+			{
+				if (original != "" && original != null)
+					was_changed = " было изменено";
+
+				log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной" + was_changed + ": [" + std_oid_names[oid_id] + "]=" + oid_result);
+			}
 		}
 
 		private void GetTime()
@@ -719,6 +695,8 @@ namespace Device_Control_2
 		// Доделать
 		private void Survey_grid(int ifNum)
 		{
+			//Clear_grid();
+
 			int fi = 0, ri = 0;
 
 			// Изменить под пропуски ifIndex
@@ -855,6 +833,17 @@ namespace Device_Control_2
 			Fill_grid(ifNum);
 		}
 
+		private void Clear_grid()
+		{
+			for (int i = 0; i < 64; i++)
+				for (int j = 0; j < 6; j++)
+					dataGridView1[j, i].Value = "";
+
+			for (int i = 0; i < 1024; i++)
+				for (int j = 0; j < 6; j++)
+					interfaces[i, j] = "";
+        }
+
 		private void CheckITableChanges(string original, int ifindex, string oid_result, string oid_name)
 		{
 			if (oid_result != original)
@@ -963,6 +952,7 @@ namespace Device_Control_2
 			panel1.Width = ClientSize.Width - 155;
 			panel2.Height = ClientSize.Height + 4;
 			label3.Location = new Point(157, ClientSize.Height - 21);
+			label9.Location = new Point(ClientSize.Width - 55, ClientSize.Height - 21);
 			tabControl1.Size = new Size(ClientSize.Width - 163, ClientSize.Height - 77);
 			dataGridView1.Size = new Size(ClientSize.Width - 183, ClientSize.Height - 117);
 
