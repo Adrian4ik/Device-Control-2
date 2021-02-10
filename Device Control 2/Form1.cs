@@ -47,6 +47,13 @@ namespace Device_Control_2
 
 		Button[] buttons;
 
+		public struct message
+        {
+			public bool State { get; set; }
+			public int DeviceId { get; set; }
+			public int MessageId { get; set; }
+        }
+
 		public struct Notification_message
 		{
 			public int Criticality { get; set; }
@@ -55,13 +62,15 @@ namespace Device_Control_2
 			public string Time { get; set; }
 		}
 
+		message[] note;
+
 		Notification_message[] notifications/* = new Message[10240]*/;
 
 		Logs log = new Logs();
 		Devices devs = new Devices();
 		Startup_run sr = new Startup_run();
 
-		Notification notify = new Notification();
+		Notification notify;
 		#endregion Переменные
 
 		/// <summary>
@@ -110,7 +119,19 @@ namespace Device_Control_2
 
 			cl = devs.ScanDevices;
 
+			InitNotifier();
+
 			FillConstants();
+		}
+
+		private void InitNotifier()
+		{
+			string[] devlist = new string[cl.Length];
+
+			for (int i = 0; i < cl.Length; i++)
+				devlist[i] = cl[i].Name;
+
+			notify = new Notification(devlist);
 		}
 		// Доделать
 		private void FillConstants()

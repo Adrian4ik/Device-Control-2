@@ -13,15 +13,53 @@ namespace Device_Control_2
 {
 	public partial class Notification : Form
 	{
+		bool[] states;
+		string[] devlist;
+
 		GroupBox[] gb;
 		PictureBox[] pbx;
 		Label[] ttl;
 		Label[] txt;
 
-		public Notification()
+		private struct Notification_message
+		{
+			public bool State { get; set; }
+			public bool Criticality { get; set; }
+			public string Time { get; set; }
+			public string[] Text { get; set; }
+		}
+
+		private Notification_message[] note;
+
+		public Notification(string[] device_list)
 		{
 			InitializeComponent();
+
+			devlist = device_list;
+
+			states = new bool[device_list.Length * 4];
+
+			for (int i = 0; i < device_list.Length; i++)
+				states[i] = false;
 		}
+
+		public void InitMessages(int count)
+        {
+			note = new Notification_message[count];
+
+			for(int i = 0; i < count; i++)
+            {
+				note[i].State = false;
+				note[i].Criticality = true;
+				note[i].Time = "Ситуация возникла: ";
+				
+				note[i].Text = new string[4];
+				note[i].Text[0] = "Прервана связь с устройством ";
+				note[i].Text[1] = "Нештатное состояние системы питания устройства ";
+				note[i].Text[2] = "Нештатное значение температуры устройства ";
+				note[i].Text[3] = "Нештатное состояние вентилятора устройства ";
+			}
+        }
 
 		private void InitControls(int count)
 		{
@@ -78,20 +116,20 @@ namespace Device_Control_2
 			}
 		}
 
-		public void Update_list(Form1.Notification_message[] message)
+		public void Update_list(Form1.message info) //Form1.Notification_message[] message)
 		{
-			int states = 0;
+			int states_count = 0;
 
 			for (int i = 0; i < message.Count(); i++)
 				if(message[i].State)
-					states++;
+					states_count++;
 
-			int[] notifies = new int[states];
-			states = 0;
+			int[] notifies = new int[states_count];
+			states_count = 0;
 
 			for (int i = 0; i < message.Count(); i++)
 				if (message[i].State)
-					notifies[states++] = i;
+					notifies[states_count++] = i;
 
 			InitControls(notifies.Count());
 
@@ -114,7 +152,7 @@ namespace Device_Control_2
 				txt[i].Text = "Ситуация возникла: " + message[notifies[i]].Time;
 			}
 
-			if (states > 0)
+			if (states_count > 0)
 				Show();
 			else
 			{
