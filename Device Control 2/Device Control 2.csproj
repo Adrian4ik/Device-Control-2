@@ -72,6 +72,7 @@
     </Compile>
     <Compile Include="Startup_run.cs" />
     <Compile Include="Survey.cs" />
+    <Compile Include="Traps.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
