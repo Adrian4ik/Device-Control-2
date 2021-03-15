@@ -95,23 +95,20 @@ namespace Device_Control_2
 		public Form1()
 		{
 			InitializeComponent();
-		}
 
-		private void Form1_Load(object sender, EventArgs e)
-		{
 			label9.Text = "v2.1.3.3";
 
 			if (sr.minimized)
 				WindowState = FormWindowState.Minimized;
 
-			Preprocessing();
+			Preprocess();
 
 			SimpleSurvey();
 
 			Survey();
 		}
 
-		private void Preprocessing()
+		private void Preprocess()
 		{
 			dataGridView1.Rows.Add(128);
 			Change_SNMP_Status(4);
