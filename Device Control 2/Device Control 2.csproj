@@ -49,7 +49,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Features\Devices.cs" />
+    <Compile Include="SNMP\Devices.cs" />
+    <Compile Include="Features\Display.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -57,10 +58,10 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="Features\Logs.cs" />
-    <Compile Include="Features\Notification.cs">
+    <Compile Include="Notification.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Features\Notification.Designer.cs">
+    <Compile Include="Notification.Designer.cs">
       <DependentUpon>Notification.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
@@ -76,7 +77,7 @@
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Features\Notification.resx">
+    <EmbeddedResource Include="Notification.resx">
       <DependentUpon>Notification.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">

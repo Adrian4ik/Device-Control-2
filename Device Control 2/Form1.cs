@@ -17,6 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
+using Device_Control_2.Features;
 using Microsoft.Win32;
 using SnmpSharpNet;
 
@@ -24,6 +25,14 @@ namespace Device_Control_2
 {
 	public partial class Form1 : Form
 	{
+		#region Версия
+		// Version: 2.1.3.3.5
+		const string vCore = "v2";
+		const string vInterface = ".1";
+		const string vUpdate = ".3";
+		const string vPatch = ".3";
+		#endregion
+
 		#region Переменные
 		int current_client = 0,
 			selected_client = 0, // выбранный клиент
@@ -69,39 +78,20 @@ namespace Device_Control_2
 		Logs log = new Logs();
 		Devices devs = new Devices();
 		Startup_run sr = new Startup_run();
+		Display display = new Display();
 
 		Notification notify;
-		#endregion Переменные
-
-		/// <summary>
-		/// ////////////////////////////////////////////////////////////////////////////////////
-		/// </summary>
-
-		private const uint WM_SYSCOMMAND = 0x0112;
-
-		private const int SC_DISPLAYPOWER = 0xF170;
-		private const int HWND_BROADCAST = 0xFFFF;
-		private const int DISPLAY_ON = -1;
-		private const int DISPLAY_OFF = 2;
-		private const int DISPLAY_STANDBY = 1;
-
-		[DllImport("user32.dll")]
-		static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr IParam);
-
-		/// <summary>
-		/// ////////////////////////////////////////////////////////////////////////////////////
-		/// </summary>
+        #endregion Переменные
 
 		public Form1()
 		{
 			InitializeComponent();
 
-			label9.Text = "v2.1.3.3";
-
-			if (sr.minimized)
-				WindowState = FormWindowState.Minimized;
-
 			Preprocess();
+
+			InitNotifier();
+
+			FillConstants();
 
 			SimpleSurvey();
 
@@ -110,15 +100,16 @@ namespace Device_Control_2
 
 		private void Preprocess()
 		{
+			label9.Text = vCore + vInterface + vUpdate + vPatch;
+
+			if (sr.minimized)
+				WindowState = FormWindowState.Minimized;
+
 			dataGridView1.Rows.Add(128);
 			Change_SNMP_Status(4);
 			Change_Ping_Status(4);
 
 			cl = devs.ScanDevices;
-
-			InitNotifier();
-
-			FillConstants();
 		}
 
 		private void InitNotifier()
@@ -265,7 +256,7 @@ namespace Device_Control_2
 			{
 				Console.WriteLine("Network is unavailable, check connection and restart program.");
 
-				SendMessage((IntPtr)HWND_BROADCAST, WM_SYSCOMMAND, (IntPtr)SC_DISPLAYPOWER, (IntPtr)DISPLAY_ON);
+				display.On();
 
 				Console.Beep(2000, 1000);
 
@@ -287,7 +278,7 @@ namespace Device_Control_2
 			}
 			catch // else
 			{
-				SendMessage((IntPtr)HWND_BROADCAST, WM_SYSCOMMAND, (IntPtr)SC_DISPLAYPOWER, (IntPtr)DISPLAY_ON);
+				display.On();
 
 				Console.Beep(2000, 1000);
 
@@ -324,7 +315,7 @@ namespace Device_Control_2
 
 				connection[current_client, 0] = 1;
 
-				SendMessage((IntPtr)HWND_BROADCAST, WM_SYSCOMMAND, (IntPtr)SC_DISPLAYPOWER, (IntPtr)DISPLAY_ON);
+				display.On();
 
 				Console.Beep(2000, 1000);
 			}
@@ -380,7 +371,7 @@ namespace Device_Control_2
 
 				connection[selected_client, 0] = 1;
 
-				SendMessage((IntPtr)HWND_BROADCAST, WM_SYSCOMMAND, (IntPtr)SC_DISPLAYPOWER, (IntPtr)DISPLAY_ON);
+				display.On();
 
 				Console.Beep(2000, 1000);
 

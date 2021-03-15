@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Device_Control_2
+namespace Device_Control_2.Features
 {
     class Logs
     {
@@ -31,7 +27,7 @@ namespace Device_Control_2
             File.AppendAllText(path + "log\\" + date + ".txt", "[" + DateTime.Now + "] " + text + "\n");
         }
 
-        public void Write(string client, string text) // "<" + cl[current_client].Name + " / " + cl[current_client].Ip + "> "
+        public void Write(string client, string text)
         {
             CheckLog();
 
