@@ -25,12 +25,13 @@ namespace Device_Control_2
 {
 	public partial class Form1 : Form
 	{
+		// Version: 2.1.3
+		// Patch: 3.7
+
 		#region Версия
-		// Version: 2.1.3.3.6
 		const string vCore = "v2";
 		const string vInterface = ".1";
 		const string vUpdate = ".3";
-		const string vPatch = ".3";
 		#endregion
 
 		#region Переменные
@@ -100,7 +101,7 @@ namespace Device_Control_2
 
 		private void Preprocess()
 		{
-			label9.Text = vCore + vInterface + vUpdate + vPatch;
+			label9.Text = vCore + vInterface + vUpdate;
 
 			if (sr.minimized)
 				WindowState = FormWindowState.Minimized;
@@ -442,7 +443,7 @@ namespace Device_Control_2
 					}
 				}
 
-				notify.Update_list(notifications);
+				//notify.Update_list(notifications);
 
 				log.WriteEvent(cl[client].Name + " / " + cl[client].Ip, "Связь с устройством: [Ping]= " + connection);
 			}
@@ -635,7 +636,7 @@ namespace Device_Control_2
 				}
 			}
 
-			notify.Update_list(notifications);
+			//notify.Update_list(notifications);
 		}
 
 		private void GetAdd()
@@ -958,13 +959,6 @@ namespace Device_Control_2
 
 		private void Resize_form()
 		{
-			panel1.Width = ClientSize.Width - 155;
-			panel2.Height = ClientSize.Height + 4;
-			label3.Location = new Point(157, ClientSize.Height - 21);
-			label9.Location = new Point(ClientSize.Width - 55, ClientSize.Height - 21);
-			tabControl1.Size = new Size(ClientSize.Width - 163, ClientSize.Height - 77);
-			dataGridView1.Size = new Size(ClientSize.Width - 183, ClientSize.Height - 117);
-
 			if (ClientSize.Width > 777)
 			{
 				int width = (ClientSize.Width - 564) / 2;

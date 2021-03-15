@@ -116,7 +116,7 @@ namespace Device_Control_2
 			}
 		}
 
-		public void Update_list(Form1.message info) //Form1.Notification_message[] message)
+		/*public void Update_list(Form1.message info) //Form1.Notification_message[] message)
 		{
 			int states_count = 0;
 
@@ -167,6 +167,6 @@ namespace Device_Control_2
 
 				Hide();
 			}
-		}
+		}*/
 	}
 }
