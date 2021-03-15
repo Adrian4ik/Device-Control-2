@@ -16,7 +16,7 @@ namespace Device_Control_2.Features
             WriteEvent("Программа запущена");
         }
 
-        public void Write(string text)
+        public void Write(string description)
         {
             CheckLog();
 
@@ -24,10 +24,10 @@ namespace Device_Control_2.Features
             date += (DateTime.Now.Month < 10) ? "0" + DateTime.Now.Month : DateTime.Now.Month.ToString();
             date += (DateTime.Now.Day < 10) ? "0" + DateTime.Now.Day : DateTime.Now.Day.ToString();
 
-            File.AppendAllText(path + "log\\" + date + ".txt", "[" + DateTime.Now + "] " + text + "\n");
+            File.AppendAllText(path + "log\\" + date + ".txt", "[" + DateTime.Now + "] " + description + "\n");
         }
 
-        public void Write(string client, string text)
+        public void Write(string name, string description)
         {
             CheckLog();
 
@@ -35,7 +35,7 @@ namespace Device_Control_2.Features
             date += (DateTime.Now.Month < 10) ? "0" + DateTime.Now.Month : DateTime.Now.Month.ToString();
             date += (DateTime.Now.Day < 10) ? "0" + DateTime.Now.Day : DateTime.Now.Day.ToString();
 
-            File.AppendAllText(path + "log\\" + date + ".txt", "[" + DateTime.Now + "] <" + client + "> " + text + "\n");
+            File.AppendAllText(path + "log\\" + date + ".txt", "[" + DateTime.Now + "] <" + name + "> " + description + "\n");
         }
 
         private void CheckLog()
@@ -58,28 +58,28 @@ namespace Device_Control_2.Features
             }
         }
 
-        public void WriteEvent(string text)
+        public void WriteEvent(string description)
         {
-            Write(text);
+            Write(description);
 
             CheckEventLog();
 
             string date = DateTime.Now.Year.ToString();
             date += (DateTime.Now.Month < 10) ? "0" + DateTime.Now.Month : DateTime.Now.Month.ToString();
 
-            File.AppendAllText(path + "event log\\" + date + ".txt", "[" + DateTime.Now + "] " + text + "\n");
+            File.AppendAllText(path + "event log\\" + date + ".txt", "[" + DateTime.Now + "] " + description + "\n");
         }
 
-        public void WriteEvent(string client, string text)
+        public void WriteEvent(string name, string description)
         {
-            Write(client, text);
+            Write(name, description);
 
             CheckEventLog();
 
             string date = DateTime.Now.Year.ToString();
             date += (DateTime.Now.Month < 10) ? "0" + DateTime.Now.Month : DateTime.Now.Month.ToString();
 
-            File.AppendAllText(path + "event log\\" + date + ".txt", "[" + DateTime.Now + "] <" + client + "> " + text + "\n");
+            File.AppendAllText(path + "event log\\" + date + ".txt", "[" + DateTime.Now + "] <" + name + "> " + description + "\n");
         }
 
         private void CheckEventLog()

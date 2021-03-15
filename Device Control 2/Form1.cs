@@ -26,7 +26,7 @@ namespace Device_Control_2
 	public partial class Form1 : Form
 	{
 		#region Версия
-		// Version: 2.1.3.3.5
+		// Version: 2.1.3.3.6
 		const string vCore = "v2";
 		const string vInterface = ".1";
 		const string vUpdate = ".3";
