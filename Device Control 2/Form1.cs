@@ -26,13 +26,11 @@ namespace Device_Control_2
 	public partial class Form1 : Form
 	{
 		// Version: 2.1.3
-		// Patch: 3.7
+		// Patch: 3.8
 
-		#region Версия
-		const string vCore = "v2";
-		const string vInterface = ".1";
-		const string vUpdate = ".3";
-		#endregion
+		const string vCore = "2";
+		const string vInterface = "1";
+		const string vUpdate = "3";
 
 		#region Переменные
 		int current_client = 0,
@@ -47,22 +45,15 @@ namespace Device_Control_2
 		int[,] connection = new int[1024, 2]; // связь с каждым устройством: 0 - ICMP, 1 - SNMP
 
 		string[,] interfaces = new string[1024, 6];
+		#endregion Переменные
 
-		AutoResetEvent waiter = new AutoResetEvent(false);
-
-		Pdu std = new Pdu(PduType.Get);
-
-		Devices.Client[] cl;
-		// список клиентов (не более 1024 клиентов)
-
-		Button[] buttons;
-
+		#region Структуры
 		public struct message
-        {
+		{
 			public bool State { get; set; }
 			public int DeviceId { get; set; }
 			public int MessageId { get; set; }
-        }
+		}
 
 		public struct Notification_message
 		{
@@ -71,20 +62,35 @@ namespace Device_Control_2
 			public string Text { get; set; }
 			public string Time { get; set; }
 		}
+		#endregion
 
+		#region Структурные объекты
 		message[] note;
 
 		Notification_message[] notifications/* = new Message[10240]*/;
 
+		Devices.Client[] cl; // список клиентов (не более 1024 клиентов)
+		#endregion
+
+		#region Неструктурные объекты
+		AutoResetEvent waiter = new AutoResetEvent(false);
+
+		Pdu std = new Pdu(PduType.Get);
+
+		Button[] buttons;
+
+		Notification notify;
+		#endregion
+
+		#region Классы
 		Logs log = new Logs();
 		Devices devs = new Devices();
 		Startup_run sr = new Startup_run();
 		Display display = new Display();
+        #endregion
 
-		Notification notify;
-        #endregion Переменные
-
-		public Form1()
+        #region Методы
+        public Form1()
 		{
 			InitializeComponent();
 
@@ -101,7 +107,7 @@ namespace Device_Control_2
 
 		private void Preprocess()
 		{
-			label9.Text = vCore + vInterface + vUpdate;
+			label9.Text = "v" + vCore + "." + vInterface + "." + vUpdate;
 
 			if (sr.minimized)
 				WindowState = FormWindowState.Minimized;
@@ -443,7 +449,7 @@ namespace Device_Control_2
 					}
 				}
 
-				//notify.Update_list(notifications);
+				notify.Update_list(notifications);
 
 				log.WriteEvent(cl[client].Name + " / " + cl[client].Ip, "Связь с устройством: [Ping]= " + connection);
 			}
@@ -636,7 +642,7 @@ namespace Device_Control_2
 				}
 			}
 
-			//notify.Update_list(notifications);
+			notify.Update_list(notifications);
 		}
 
 		private void GetAdd()
@@ -951,8 +957,10 @@ namespace Device_Control_2
 			time += (DateTime.Now.Minute < 10) ? "0" + DateTime.Now.Minute : DateTime.Now.Minute.ToString();
 			label3.Text = "Последний раз обновлено: " + time;
 		}
-		
-		private void Form1_Resize(object sender, EventArgs e)
+        #endregion
+
+        #region События
+        private void Form1_Resize(object sender, EventArgs e)
 		{
 			Resize_form();
 		}
@@ -1035,5 +1043,6 @@ namespace Device_Control_2
 
 			return result;
 		}
-	}
+        #endregion
+    }
 }
