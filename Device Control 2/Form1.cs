@@ -26,7 +26,7 @@ namespace Device_Control_2
 	public partial class Form1 : Form
 	{
 		// Version: 2.1.3
-		// Patch: 3.8
+		// Patch: 3.9
 
 		const string vCore = "2";
 		const string vInterface = "1";
@@ -44,7 +44,7 @@ namespace Device_Control_2
 
 		int[,] connection = new int[1024, 2]; // связь с каждым устройством: 0 - ICMP, 1 - SNMP
 
-		string[,] interfaces = new string[1024, 6];
+		string[,] interfaces; // = new string[1024, 6];
 		#endregion Переменные
 
 		#region Структуры
@@ -72,7 +72,7 @@ namespace Device_Control_2
 		Devices.Client[] cl; // список клиентов (не более 1024 клиентов)
 		#endregion
 
-		#region Неструктурные объекты
+		#region Классовые объекты
 		AutoResetEvent waiter = new AutoResetEvent(false);
 
 		Pdu std = new Pdu(PduType.Get);
@@ -82,7 +82,7 @@ namespace Device_Control_2
 		Notification notify;
 		#endregion
 
-		#region Классы
+		#region Внешние классы
 		Logs log = new Logs();
 		Devices devs = new Devices();
 		Startup_run sr = new Startup_run();
@@ -107,12 +107,11 @@ namespace Device_Control_2
 
 		private void Preprocess()
 		{
-			label9.Text = "v" + vCore + "." + vInterface + "." + vUpdate;
+			label9.Text = "v2.1.3";
 
 			if (sr.minimized)
 				WindowState = FormWindowState.Minimized;
 
-			dataGridView1.Rows.Add(128);
 			Change_SNMP_Status(4);
 			Change_Ping_Status(4);
 
@@ -711,14 +710,14 @@ namespace Device_Control_2
 		// Доделать
 		private void Survey_grid(int ifNum)
 		{
-			//Clear_grid();
-
 			int fi = 0, ri = 0;
 
 			// Изменить под пропуски ifIndex
 			//for (int i = 1; i <= ifNum; i++) // строки
 
 			int i = 1, k = 0, empty = 0;
+
+			interfaces = new string[ifNum, 6];
 
 			while (/*flag == */true) // бред, но работает только в том случае, если оиды из одной подсетки (из разных запрещено делать запросы)
 			{
@@ -789,12 +788,17 @@ namespace Device_Control_2
 						state_to_log = "2";
 
 					interfaces[k, 0] = (k + 1).ToString(); // result.Pdu.VbList[0].Value.ToString();
-					CheckITableChanges(interfaces[k, 1], k, result.Pdu.VbList[1].Value.ToString(), "ifDescr");
+					
+						CheckITableChanges(interfaces[k, 1], k, result.Pdu.VbList[1].Value.ToString(), "ifDescr");
+					
 					interfaces[k, 1] = result.Pdu.VbList[1].Value.ToString();
 
-					CheckITableChanges(state_to_log, k, result.Pdu.VbList[4].Value.ToString(), "ifOperStatus");
+						CheckITableChanges(state_to_log, k, result.Pdu.VbList[4].Value.ToString(), "ifOperStatus");
+					
 					interfaces[k, 3] = state;
-					CheckITableChanges(Convert.ToInt32(interfaces[k, 4]) * 1000000 + "", k, result.Pdu.VbList[3].Value.ToString(), "ifSpeed");
+					
+						CheckITableChanges(Convert.ToInt32(interfaces[k, 4]) * 1000000 + "", k, result.Pdu.VbList[3].Value.ToString(), "ifSpeed");
+					
 					interfaces[k, 4] = Convert.ToInt32(result.Pdu.VbList[3].Value.ToString()) / 1000000 + "";
 					interfaces[k, 5] = type;
 
@@ -846,19 +850,8 @@ namespace Device_Control_2
 				}
 			}
 
-			Fill_grid(ifNum);
+			Fill_grid(fi);
 		}
-
-		private void Clear_grid()
-		{
-			for (int i = 0; i < 64; i++)
-				for (int j = 0; j < 6; j++)
-					dataGridView1[j, i].Value = "";
-
-			for (int i = 0; i < 1024; i++)
-				for (int j = 0; j < 6; j++)
-					interfaces[i, j] = "";
-        }
 
 		private void CheckITableChanges(string original, int ifindex, string oid_result, string oid_name)
 		{
@@ -880,14 +873,14 @@ namespace Device_Control_2
 
 		private void Fill_grid(int rows_count)
 		{
-			//dataGridView1 = new DataGridView();
-			//dataGridView1.Rows.Add(rows_count);
+			dataGridView1.Rows.Clear();
+			dataGridView1.Rows.Add(rows_count);
 
-			for (int i = 0; i < 64; i++)
+			for (int i = 0; i < rows_count; i++)
 				for(int j = 0; j < 6; j++)
 					dataGridView1[j, i].Value = interfaces[i, j];
 
-			for (int i = 0; i < 64; i++)
+			for (int i = 0; i < rows_count; i++)
 				if (interfaces[i, 3] == "Отключен")
 					for (int j = 0; j < 6; j++)
 						dataGridView1[j, i].Style.BackColor = Color.FromArgb(223, 223, 223);
