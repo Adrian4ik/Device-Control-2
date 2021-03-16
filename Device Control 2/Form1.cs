@@ -26,7 +26,7 @@ namespace Device_Control_2
 	public partial class Form1 : Form
 	{
 		// Version: 2.1.3
-		// Patch: 3.9
+		// Patch: 4.0
 
 		const string vCore = "2";
 		const string vInterface = "1";
@@ -100,6 +100,8 @@ namespace Device_Control_2
 
 			FillConstants();
 
+			InitInterface();
+
 			SimpleSurvey();
 
 			Survey();
@@ -107,13 +109,8 @@ namespace Device_Control_2
 
 		private void Preprocess()
 		{
-			label9.Text = "v2.1.3";
-
 			if (sr.minimized)
 				WindowState = FormWindowState.Minimized;
-
-			Change_SNMP_Status(4);
-			Change_Ping_Status(4);
 
 			cl = devs.ScanDevices;
 		}
@@ -164,8 +161,6 @@ namespace Device_Control_2
 				}
 			}
 
-			InitInterface();
-
 			timer1.Interval = ping_interval * 1000;
 			timer2.Interval = snmp_interval * 60000;
 
@@ -201,7 +196,7 @@ namespace Device_Control_2
 				buttons[i].TextImageRelation = TextImageRelation.ImageBeforeText;
 				buttons[i].UseVisualStyleBackColor = false;
 				buttons[i].Image = Properties.Resources.device48;
-				buttons[i].Click += new EventHandler(button_Click);
+				//buttons[i].Click += new EventHandler(button_Click);
 			}
 
 			label5.Location = new Point(5, buttons[e].Location.Y + 54);
@@ -311,6 +306,8 @@ namespace Device_Control_2
 
 				buttons[current_client].Image = Properties.Resources.device_ok48;
 
+				buttons[current_client].Click += new EventHandler(button_Click);
+
 				connection[current_client, 0] = 2;
 			}
 			else
@@ -318,6 +315,8 @@ namespace Device_Control_2
 				CheckPingConnectionChanges(connection[current_client, 0], 1, current_client);
 
 				buttons[current_client].Image = Properties.Resources.device_red48;
+
+				buttons[current_client].Click -= button_Click;
 
 				connection[current_client, 0] = 1;
 
@@ -362,6 +361,8 @@ namespace Device_Control_2
 				connection[selected_client, 0] = 2;
 
 				buttons[selected_client].Image = Properties.Resources.device_ok48;
+				
+				buttons[current_client].Click += new EventHandler(button_Click);
 
 				//WriteLog(true, "Связь присутствует");
 
@@ -374,6 +375,8 @@ namespace Device_Control_2
 				Change_Ping_Status(3);
 
 				buttons[selected_client].Image = Properties.Resources.device_red48;
+
+				buttons[current_client].Click -= button_Click;
 
 				connection[selected_client, 0] = 1;
 
@@ -520,6 +523,8 @@ namespace Device_Control_2
 		{
 			if (cl[selected_client].SysTime != null)
 			{
+				label10.Visible = true;
+
 				Pdu systime = new Pdu(PduType.Get);
 
 				systime.VbList.Add(cl[selected_client].SysTime);
@@ -537,6 +542,11 @@ namespace Device_Control_2
 				CheckModOIDChanges(label15.Text, 0, time, selected_client);
 				long convertedTime = Convert.ToInt64(time); //сконвертированное в long время из string
 				label15.Text = DateTimeOffset.FromUnixTimeSeconds(convertedTime).ToString().Substring(0, 19);
+			}
+			else
+            {
+				label10.Visible = false;
+				label15.Text = "";
 			}
 		}
 
@@ -596,6 +606,10 @@ namespace Device_Control_2
 		{
 			if (cl[selected_client].Modified != null)
 			{
+				label7.Visible = true;
+				//label16.Visible = true;
+				//label17.Visible = true;
+
 				Pdu modified = new Pdu(PduType.Get);
 
 				for(int i = 0; i < cl[selected_client].Modified.Length / 3; i++)
@@ -613,8 +627,26 @@ namespace Device_Control_2
 				label22.Text = result.Pdu.VbList[1].Value.ToString();
 				CheckModOIDChanges(label23.Text, 2, result.Pdu.VbList[2].Value.ToString(), selected_client);
 				label23.Text = result.Pdu.VbList[2].Value.ToString();
-				CheckModOIDChanges(label24.Text, 3, result.Pdu.VbList[3].Value.ToString(), selected_client);
-				label24.Text = result.Pdu.VbList[3].Value.ToString();
+				//CheckModOIDChanges(label24.Text, 3, result.Pdu.VbList[3].Value.ToString(), selected_client);
+				//label24.Text = result.Pdu.VbList[3].Value.ToString();
+
+				label16.Visible = label24.Text != "";
+				label17.Visible = label25.Text != "";
+				label18.Visible = label26.Text != "";
+			}
+			else
+			{
+				label7.Visible = false;
+				label16.Visible = false;
+				label17.Visible = false;
+				label18.Text = "";
+
+				label21.Text = "";
+				label22.Text = "";
+				label23.Text = "";
+				label24.Text = "";
+				label25.Text = "";
+				label26.Text = "";
 			}
 		}
 
@@ -1017,6 +1049,8 @@ namespace Device_Control_2
 
 			if (cl[button].Connect)
 				selected_client = button;
+
+
 
 			SimpleSurvey();
 		}

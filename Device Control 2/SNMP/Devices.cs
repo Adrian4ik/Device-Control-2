@@ -181,9 +181,6 @@ namespace Device_Control_2
 			try { IPAddress ip = IPAddress.Parse(config[1]); }
 			catch { accept = false; }
 
-			if (optlist.Length == 0)
-				accept = false;
-
 			return accept;
 		}
 
@@ -194,31 +191,34 @@ namespace Device_Control_2
 			string[] config = ConfigParse(folder_name);
 			string[,] optlist = OptlistParse(folder_name);
 
-			int mod = int.Parse(optlist[0, 1]),
-				add = int.Parse(optlist[0, 2]);
-
 			client.Name = config[0];
 			client.Ip = IPAddress.Parse(config[1]);
 			client.Connect = GetBoolFromString(config[2]);
 
-			client.SysTime = optlist[0, 0];
-			client.IfName = optlist[1, 0];
-
-			client.Modified = new string[mod - 2, 3];
-			client.Addition = new string[add, 3];
-
-			for (int i = 2; i < mod; i++)
+			if (optlist.Length > 0)
 			{
-				client.Modified[i - 2, 0] = optlist[i, 0];
-				client.Modified[i - 2, 1] = optlist[i, 1];
-				client.Modified[i - 2, 2] = optlist[i, 2];
-			}
+				int mod = int.Parse(optlist[0, 1]),
+				add = int.Parse(optlist[0, 2]);
 
-			for (int i = 2 + mod; i < mod + add; i++)
-			{
-				client.Addition[i - 2, 0] = optlist[i, 0];
-				client.Addition[i - 2, 1] = optlist[i, 1];
-				client.Addition[1 - 2, 2] = optlist[i, 2];
+				client.SysTime = optlist[0, 0];
+				client.IfName = optlist[1, 0];
+
+				client.Modified = new string[mod - 2, 3];
+				client.Addition = new string[add, 3];
+
+				for (int i = 2; i < mod; i++)
+				{
+					client.Modified[i - 2, 0] = optlist[i, 0];
+					client.Modified[i - 2, 1] = optlist[i, 1];
+					client.Modified[i - 2, 2] = optlist[i, 2];
+				}
+
+				for (int i = 2 + mod; i < mod + add; i++)
+				{
+					client.Addition[i - 2, 0] = optlist[i, 0];
+					client.Addition[i - 2, 1] = optlist[i, 1];
+					client.Addition[1 - 2, 2] = optlist[i, 2];
+				}
 			}
 
 			return client;

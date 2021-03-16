@@ -42,6 +42,7 @@
             this.Column6 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.label10 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
@@ -77,6 +78,10 @@
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitTSM = new System.Windows.Forms.ToolStripMenuItem();
             this.label9 = new System.Windows.Forms.Label();
+            this.label16 = new System.Windows.Forms.Label();
+            this.label17 = new System.Windows.Forms.Label();
+            this.label18 = new System.Windows.Forms.Label();
+            this.label26 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -211,6 +216,7 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.label10);
             this.tabPage1.Controls.Add(this.label15);
             this.tabPage1.Controls.Add(this.label14);
             this.tabPage1.Controls.Add(this.label13);
@@ -224,6 +230,16 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Общие";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(20, 135);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(112, 15);
+            this.label10.TabIndex = 6;
+            this.label10.Text = "Cистемное время";
+            this.label10.Visible = false;
             // 
             // label15
             // 
@@ -280,10 +296,9 @@
             this.label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.label6.Location = new System.Drawing.Point(20, 15);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(128, 135);
+            this.label6.Size = new System.Drawing.Size(128, 105);
             this.label6.TabIndex = 0;
-            this.label6.Text = "Тип устройства\r\n\r\nВремя от включения\r\n\r\nСистемное имя\r\n\r\nМестоположение\r\n\r\nСистем" +
-    "ное время";
+            this.label6.Text = "Тип устройства\r\n\r\nВремя от включения\r\n\r\nСистемное имя\r\n\r\nМестоположение";
             // 
             // tabPage2
             // 
@@ -298,6 +313,10 @@
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.label26);
+            this.tabPage3.Controls.Add(this.label18);
+            this.tabPage3.Controls.Add(this.label17);
+            this.tabPage3.Controls.Add(this.label16);
             this.tabPage3.Controls.Add(this.label25);
             this.tabPage3.Controls.Add(this.label24);
             this.tabPage3.Controls.Add(this.label23);
@@ -356,10 +375,10 @@
             this.label7.AutoSize = true;
             this.label7.Location = new System.Drawing.Point(20, 15);
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(166, 135);
+            this.label7.Size = new System.Drawing.Size(166, 90);
             this.label7.TabIndex = 0;
             this.label7.Text = "Температура текущая, °С\r\n\r\nТемпература максимально\r\nдопустимая, °С\r\nТемпература м" +
-    "инимально\r\nдопустимая, °С\r\nПитание\r\n\r\nСкорость вентилятора";
+    "инимально\r\nдопустимая, °С";
             // 
             // label3
             // 
@@ -547,8 +566,42 @@
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(42, 16);
             this.label9.TabIndex = 5;
-            this.label9.Text = "v2.0.0";
+            this.label9.Text = "v2.1.3";
             this.label9.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(20, 105);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(58, 15);
+            this.label16.TabIndex = 6;
+            this.label16.Text = "Питание";
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(20, 135);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(142, 15);
+            this.label17.TabIndex = 7;
+            this.label17.Text = "Скорость вентилятора";
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Location = new System.Drawing.Point(20, 165);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(0, 15);
+            this.label18.TabIndex = 8;
+            // 
+            // label26
+            // 
+            this.label26.AutoSize = true;
+            this.label26.Location = new System.Drawing.Point(190, 165);
+            this.label26.Name = "label26";
+            this.label26.Size = new System.Drawing.Size(0, 15);
+            this.label26.TabIndex = 9;
             // 
             // Form1
             // 
@@ -631,6 +684,11 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem exitTSM;
         private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.Label label26;
+        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.Label label16;
     }
 }
 
