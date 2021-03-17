@@ -5,11 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using SnmpSharpNet;
 
-namespace Device_Control_2
+namespace Device_Control_2.snmp
 {
     class Survey
     {
-        Pdu std = new Pdu(PduType.Get);
+        Pdu std = new Pdu(PduType.GetBulk);
 
 		private void FillConstants()
 		{

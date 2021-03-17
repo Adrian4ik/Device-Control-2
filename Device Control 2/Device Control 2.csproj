@@ -49,7 +49,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SNMP\Devices.cs" />
+    <Compile Include="snmp\DeviceInfo.cs" />
+    <Compile Include="snmp\RawDeviceList.cs" />
     <Compile Include="Features\Display.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
@@ -72,8 +73,8 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Features\Startup_run.cs" />
-    <Compile Include="SNMP\Survey.cs" />
-    <Compile Include="SNMP\Traps.cs" />
+    <Compile Include="snmp\Survey.cs" />
+    <Compile Include="snmp\Traps.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>

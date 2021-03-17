@@ -8,9 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Device_Control_2
+namespace Device_Control_2.snmp
 {
-	class Devices
+	class RawDeviceList
 	{
 		private readonly string path;
 
@@ -29,7 +29,7 @@ namespace Device_Control_2
 
 		Client[] actual_list = new Client[1];
 
-		public Devices()
+		public RawDeviceList()
 		{
 			FileInfo fi = new FileInfo(Application.ExecutablePath);
 			path = Application.ExecutablePath.Substring(0, Application.ExecutablePath.Length - fi.Name.Length);
@@ -59,17 +59,13 @@ namespace Device_Control_2
 							j++;
 						}
 
-					actual_list = new Client[j + 1];
-					j = 1;
+					actual_list = new Client[j];
+					j = 0;
 
 					for (int i = 0; i < devices.Length; i++)
 						if(actuals[i])
 							actual_list[j++] = GetClient(devices[i]);
 				}
-
-				actual_list[0].Name = "Localhost";
-				actual_list[0].Ip = IPAddress.Loopback;
-				actual_list[0].Connect = true;
 
 				return actual_list;
 			}

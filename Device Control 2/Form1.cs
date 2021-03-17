@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
 using Device_Control_2.Features;
+using Device_Control_2.snmp;
 using Microsoft.Win32;
 using SnmpSharpNet;
 
@@ -26,7 +27,7 @@ namespace Device_Control_2
 	public partial class Form1 : Form
 	{
 		// Version: 2.1.3
-		// Patch: 4.0
+		// Patch: 4.1
 
 		const string vCore = "2";
 		const string vInterface = "1";
@@ -66,41 +67,37 @@ namespace Device_Control_2
 
 		#region Структурные объекты
 		message[] note;
-
 		Notification_message[] notifications/* = new Message[10240]*/;
-
-		Devices.Client[] cl; // список клиентов (не более 1024 клиентов)
+		RawDeviceList.Client[] cl; // список клиентов (не более 1024 клиентов)
 		#endregion
 
 		#region Классовые объекты
 		AutoResetEvent waiter = new AutoResetEvent(false);
 
 		Pdu std = new Pdu(PduType.Get);
-
-		Button[] buttons;
-
-		Notification notify;
 		#endregion
 
 		#region Внешние классы
 		Logs log = new Logs();
-		Devices devs = new Devices();
+		RawDeviceList devs = new RawDeviceList();
 		Startup_run sr = new Startup_run();
 		Display display = new Display();
-        #endregion
+		#endregion
 
-        #region Методы
-        public Form1()
+		#region Нереализованные объекты
+		Button[] buttons;
+
+		Notification notify;
+
+		DeviceInfo[] deviceInfo;
+		#endregion
+
+		#region Методы
+		public Form1()
 		{
 			InitializeComponent();
 
 			Preprocess();
-
-			InitNotifier();
-
-			FillConstants();
-
-			InitInterface();
 
 			SimpleSurvey();
 
@@ -109,10 +106,26 @@ namespace Device_Control_2
 
 		private void Preprocess()
 		{
-			if (sr.minimized)
-				WindowState = FormWindowState.Minimized;
+			WindowState = sr.WindowState();
 
+			InitClientList();
+
+			InitNotifier();
+
+			FillConstants();
+
+			InitInterface();
+		}
+
+		private void InitClientList()
+		{
 			cl = devs.ScanDevices;
+			deviceInfo = new DeviceInfo[cl.Length];
+
+			for (int i = 0; i < cl.Length; i++)
+			{
+				deviceInfo[i] = new DeviceInfo(cl[i]);
+			}
 		}
 
 		private void InitNotifier()
@@ -196,7 +209,7 @@ namespace Device_Control_2
 				buttons[i].TextImageRelation = TextImageRelation.ImageBeforeText;
 				buttons[i].UseVisualStyleBackColor = false;
 				buttons[i].Image = Properties.Resources.device48;
-				//buttons[i].Click += new EventHandler(button_Click);
+				buttons[i].Click += new EventHandler(button_Click);
 			}
 
 			label5.Location = new Point(5, buttons[e].Location.Y + 54);
@@ -306,8 +319,6 @@ namespace Device_Control_2
 
 				buttons[current_client].Image = Properties.Resources.device_ok48;
 
-				buttons[current_client].Click += new EventHandler(button_Click);
-
 				connection[current_client, 0] = 2;
 			}
 			else
@@ -315,8 +326,6 @@ namespace Device_Control_2
 				CheckPingConnectionChanges(connection[current_client, 0], 1, current_client);
 
 				buttons[current_client].Image = Properties.Resources.device_red48;
-
-				buttons[current_client].Click -= button_Click;
 
 				connection[current_client, 0] = 1;
 
@@ -361,8 +370,6 @@ namespace Device_Control_2
 				connection[selected_client, 0] = 2;
 
 				buttons[selected_client].Image = Properties.Resources.device_ok48;
-				
-				buttons[current_client].Click += new EventHandler(button_Click);
 
 				//WriteLog(true, "Связь присутствует");
 
@@ -375,8 +382,6 @@ namespace Device_Control_2
 				Change_Ping_Status(3);
 
 				buttons[selected_client].Image = Properties.Resources.device_red48;
-
-				buttons[current_client].Click -= button_Click;
 
 				connection[selected_client, 0] = 1;
 
@@ -1047,12 +1052,14 @@ namespace Device_Control_2
 		{
 			int button = WhatGroup(sender, buttons);
 
-			if (cl[button].Connect)
-				selected_client = button;
+			//if (cl[button].Connect)
+				//selected_client = button;
+
+			label1.Text = cl[button].Name;
 
 
 
-			SimpleSurvey();
+			//SimpleSurvey();
 		}
 
 		private void button_client_Click(object sender, EventArgs e)

@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SnmpSharpNet;
 
-namespace Device_Control_2
+namespace Device_Control_2.snmp
 {
     class Traps
     {

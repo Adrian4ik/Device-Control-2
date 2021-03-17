@@ -11,7 +11,7 @@ namespace Device_Control_2.Features
 		FileInfo fi = new FileInfo(Application.ExecutablePath);
 		string name;
 
-		public bool minimized { get; set; }
+		private bool minimized = false;
 
 		public Startup_run()
 		{
@@ -68,6 +68,14 @@ namespace Device_Control_2.Features
 				return true;
 			else
 				return false;
+		}
+
+		public FormWindowState WindowState()
+		{
+			if (minimized)
+				return FormWindowState.Minimized;
+			else
+				return FormWindowState.Normal;
 		}
 
 		private static class ShellLink
