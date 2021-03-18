@@ -27,7 +27,7 @@ namespace Device_Control_2
 	public partial class Form1 : Form
 	{
 		// Version: 2.1.3
-		// Patch: 5.2
+		// Patch: 5.3
 
 		const string vCore = "2";
 		const string vInterface = "1";
@@ -129,6 +129,8 @@ namespace Device_Control_2
 				label13.Text = "";
 				label14.Text = "";
 				label19.Visible = true;
+
+				log.WriteEvent("Список устройств пуст");
 			}
 		}
 
@@ -248,7 +250,7 @@ namespace Device_Control_2
 			}
 			else
 			{
-				MessageBox.Show("Пожалуйста добавьте список устройств в файл:\n\n" + Environment.CurrentDirectory + "\\devlist.xml", "Устройства не найдены");
+				MessageBox.Show("Пожалуйста добавьте список устройств в файл:\n\n" + Environment.CurrentDirectory + "\\devlist.xml, и перезапустите программу.", "Устройства не найдены");
 			}
 		}
 
@@ -1043,14 +1045,18 @@ namespace Device_Control_2
 
 		private void Form1_FormClosing(object sender, FormClosingEventArgs e)
 		{
-			if(TrayIcon.Visible)
+			if (TrayIcon.Visible && cl.Length > 0)
 			{
 				e.Cancel = true;
 
 				Hide();
 			}
 			else
+			{
+				TrayIcon.Visible = false;
+
 				log.WriteEvent("Программа завершена");
+			}
 		}
 
 		private void openTSM_Click(object sender, EventArgs e)
@@ -1072,7 +1078,17 @@ namespace Device_Control_2
 			SimpleSurvey();
 		}
 
-		private void Form1_ClientSizeChanged(object sender, EventArgs e)
+        private void commentTSM_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void aboutTSM_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Form1_ClientSizeChanged(object sender, EventArgs e)
 		{
 			Resize_form();
 		}
