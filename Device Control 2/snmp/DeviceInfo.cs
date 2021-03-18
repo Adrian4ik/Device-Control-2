@@ -27,7 +27,7 @@ namespace Device_Control_2.snmp
 
         private void UpdateInfo()
         {
-            Survey;
+            //Survey;
         }
     }
 }

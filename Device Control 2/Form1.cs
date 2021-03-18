@@ -27,7 +27,7 @@ namespace Device_Control_2
 	public partial class Form1 : Form
 	{
 		// Version: 2.1.3
-		// Patch: 4.1
+		// Patch: 5.0
 
 		const string vCore = "2";
 		const string vInterface = "1";
@@ -80,7 +80,6 @@ namespace Device_Control_2
 		#region Внешние классы
 		Logs log = new Logs();
 		RawDeviceList devs = new RawDeviceList();
-		Startup_run sr = new Startup_run();
 		Display display = new Display();
 		#endregion
 
@@ -99,22 +98,33 @@ namespace Device_Control_2
 
 			Preprocess();
 
-			SimpleSurvey();
-
-			Survey();
+			Start();
 		}
 
 		private void Preprocess()
 		{
+			Startup_run sr = new Startup_run();
 			WindowState = sr.WindowState();
 
 			InitClientList();
 
-			InitNotifier();
+			if (cl.Length > 0)
+			{
+				InitNotifier();
 
-			FillConstants();
+				FillConstants();
 
-			InitInterface();
+				InitInterface();
+			}
+            else
+            {
+				label4.Visible = false;
+				label5.Visible = false;
+				label1.Text = "Устройства отсутствуют";
+				label2.Text = "";
+				label3.Text = "";
+				label11.Visible = false;
+            }
 		}
 
 		private void InitClientList()
@@ -176,12 +186,6 @@ namespace Device_Control_2
 
 			timer1.Interval = ping_interval * 1000;
 			timer2.Interval = snmp_interval * 60000;
-
-			if (!timer1.Enabled)
-				timer1.Start();
-
-			if (!timer2.Enabled)
-				timer2.Start();
 		}
 
 		private void InitInterface()
@@ -220,6 +224,26 @@ namespace Device_Control_2
 
 				if (!cl[i].Connect)
 					buttons[i].Location = new Point(5, i * 54 + buttons[e].Location.Y + 90);
+			}
+		}
+
+		private void Start()
+		{
+			if (cl.Length > 0)
+			{
+				if (!timer1.Enabled)
+					timer1.Start();
+
+				if (!timer2.Enabled)
+					timer2.Start();
+
+				SimpleSurvey();
+
+				Survey();
+			}
+			else
+			{
+				MessageBox.Show("Пожалуйста добавьте список устройств в файл:\n\n" + Environment.CurrentDirectory + "\\devlist.xml", "Устройства не найдены");
 			}
 		}
 
