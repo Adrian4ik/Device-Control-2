@@ -26,13 +26,6 @@ namespace Device_Control_2
 {
 	public partial class Form1 : Form
 	{
-		// Version: 2.1.3
-		// Patch: 5.3
-
-		const string vCore = "2";
-		const string vInterface = "1";
-		const string vUpdate = "3";
-
 		#region Переменные
 		int current_client = 0,
 			selected_client = 0, // выбранный клиент
@@ -220,7 +213,8 @@ namespace Device_Control_2
 				buttons[i].TextImageRelation = TextImageRelation.ImageBeforeText;
 				buttons[i].UseVisualStyleBackColor = false;
 				buttons[i].Image = Properties.Resources.device48;
-				buttons[i].Click += new EventHandler(button_Click);
+				buttons[i].KeyPress += new KeyPressEventHandler(button_Click);
+				buttons[i].MouseClick += new MouseEventHandler(mouse_button_Click);
 			}
 
 			label5.Location = new Point(5, buttons[e].Location.Y + 54);
@@ -1034,8 +1028,13 @@ namespace Device_Control_2
 				Column2.Width = width;
 				Column3.Width = width;
 			}
+			else
+            {
+				Column2.Width = 110;
+				Column3.Width = 103;
+            }
 
-			//label3.Text = ClientSize.Width + ":" + ClientSize.Height; // 539 / 276
+			//label3.Text = ClientSize.Width + ":" + ClientSize.Height; // 539 (+16) / 276 (+39)
 		}
 
 		private void timer1_Tick(object sender, EventArgs e)
@@ -1095,24 +1094,25 @@ namespace Device_Control_2
 
 		private void button_Click(object sender, EventArgs e)
 		{
-			int button = WhatGroup(sender, buttons);
+			int button = FindGroup(sender, buttons);
 
 			//if (cl[button].Connect)
 				//selected_client = button;
 
 			label1.Text = cl[button].Name;
 
-
-
 			//SimpleSurvey();
 		}
 
-		private void button_client_Click(object sender, EventArgs e)
+		private void mouse_button_Click(object sender, EventArgs e)
 		{
+			MouseEventArgs mouseEvent = (MouseEventArgs)e;
 
+			if (mouseEvent.Button == MouseButtons.Right) { MessageBox.Show("Right click"); }
+			if (mouseEvent.Button == MouseButtons.Left) { MessageBox.Show("Left click"); }
 		}
 
-		private int WhatGroup(object sender, object[] compare_with)
+		private int FindGroup(object sender, object[] compare_with)
 		{
 			int result;
 
