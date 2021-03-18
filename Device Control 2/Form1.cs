@@ -27,7 +27,7 @@ namespace Device_Control_2
 	public partial class Form1 : Form
 	{
 		// Version: 2.1.3
-		// Patch: 5.0
+		// Patch: 5.1
 
 		const string vCore = "2";
 		const string vInterface = "1";
@@ -118,13 +118,17 @@ namespace Device_Control_2
 			}
             else
             {
+				label1.Text = "Устройства отсутствуют";
+				label2.Visible = false;
+				label3.Visible = false;
 				label4.Visible = false;
 				label5.Visible = false;
-				label1.Text = "Устройства отсутствуют";
-				label2.Text = "";
-				label3.Text = "";
-				label11.Visible = false;
-            }
+				label6.Visible = false;
+				label11.Text = "";
+				label12.Text = "";
+				label13.Text = "";
+				label14.Text = "";
+			}
 		}
 
 		private void InitClientList()

@@ -29,9 +29,9 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.Column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -51,6 +51,10 @@
             this.label6 = new System.Windows.Forms.Label();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.label26 = new System.Windows.Forms.Label();
+            this.label18 = new System.Windows.Forms.Label();
+            this.label17 = new System.Windows.Forms.Label();
+            this.label16 = new System.Windows.Forms.Label();
             this.label25 = new System.Windows.Forms.Label();
             this.label24 = new System.Windows.Forms.Label();
             this.label23 = new System.Windows.Forms.Label();
@@ -78,10 +82,6 @@
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitTSM = new System.Windows.Forms.ToolStripMenuItem();
             this.label9 = new System.Windows.Forms.Label();
-            this.label16 = new System.Windows.Forms.Label();
-            this.label17 = new System.Windows.Forms.Label();
-            this.label18 = new System.Windows.Forms.Label();
-            this.label26 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -99,8 +99,8 @@
             this.dataGridView1.AllowUserToAddRows = false;
             this.dataGridView1.AllowUserToResizeColumns = false;
             this.dataGridView1.AllowUserToResizeRows = false;
-            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -123,7 +123,7 @@
             this.dataGridView1.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
             this.dataGridView1.RowHeadersVisible = false;
             this.dataGridView1.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
-            this.dataGridView1.RowsDefaultCellStyle = dataGridViewCellStyle4;
+            this.dataGridView1.RowsDefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridView1.RowTemplate.Height = 28;
             this.dataGridView1.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
@@ -132,9 +132,9 @@
             // 
             // Column1
             // 
-            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.Column1.DefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.Column1.DefaultCellStyle = dataGridViewCellStyle2;
             this.Column1.Frozen = true;
             this.Column1.HeaderText = "";
             this.Column1.Name = "Column1";
@@ -145,8 +145,8 @@
             // 
             // Column2
             // 
-            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.Column2.DefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.Column2.DefaultCellStyle = dataGridViewCellStyle3;
             this.Column2.Frozen = true;
             this.Column2.HeaderText = "Тип интерфейса";
             this.Column2.Name = "Column2";
@@ -157,7 +157,7 @@
             // 
             // Column3
             // 
-            this.Column3.DefaultCellStyle = dataGridViewCellStyle6;
+            this.Column3.DefaultCellStyle = dataGridViewCellStyle3;
             this.Column3.Frozen = true;
             this.Column3.HeaderText = "Абонент";
             this.Column3.Name = "Column3";
@@ -168,7 +168,7 @@
             // 
             // Column4
             // 
-            this.Column4.DefaultCellStyle = dataGridViewCellStyle6;
+            this.Column4.DefaultCellStyle = dataGridViewCellStyle3;
             this.Column4.Frozen = true;
             this.Column4.HeaderText = "Состояние";
             this.Column4.Name = "Column4";
@@ -179,7 +179,7 @@
             // 
             // Column5
             // 
-            this.Column5.DefaultCellStyle = dataGridViewCellStyle6;
+            this.Column5.DefaultCellStyle = dataGridViewCellStyle3;
             this.Column5.Frozen = true;
             this.Column5.HeaderText = "Скорость, Мб/с";
             this.Column5.Name = "Column5";
@@ -190,7 +190,7 @@
             // 
             // Column6
             // 
-            this.Column6.DefaultCellStyle = dataGridViewCellStyle6;
+            this.Column6.DefaultCellStyle = dataGridViewCellStyle3;
             this.Column6.Frozen = true;
             this.Column6.HeaderText = "Вид";
             this.Column6.Name = "Column6";
@@ -330,6 +330,42 @@
             this.tabPage3.Text = "Важные";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
+            // label26
+            // 
+            this.label26.AutoSize = true;
+            this.label26.Location = new System.Drawing.Point(190, 165);
+            this.label26.Name = "label26";
+            this.label26.Size = new System.Drawing.Size(0, 15);
+            this.label26.TabIndex = 9;
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Location = new System.Drawing.Point(20, 165);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(0, 15);
+            this.label18.TabIndex = 8;
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(20, 135);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(142, 15);
+            this.label17.TabIndex = 7;
+            this.label17.Text = "Скорость вентилятора";
+            this.label17.Visible = false;
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(20, 105);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(58, 15);
+            this.label16.TabIndex = 6;
+            this.label16.Text = "Питание";
+            this.label16.Visible = false;
+            // 
             // label25
             // 
             this.label25.AutoSize = true;
@@ -379,6 +415,7 @@
             this.label7.TabIndex = 0;
             this.label7.Text = "Температура текущая, °С\r\n\r\nТемпература максимально\r\nдопустимая, °С\r\nТемпература м" +
     "инимально\r\nдопустимая, °С";
+            this.label7.Visible = false;
             // 
             // label3
             // 
@@ -568,40 +605,6 @@
             this.label9.TabIndex = 5;
             this.label9.Text = "v2.1.3";
             this.label9.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // label16
-            // 
-            this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(20, 105);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(58, 15);
-            this.label16.TabIndex = 6;
-            this.label16.Text = "Питание";
-            // 
-            // label17
-            // 
-            this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(20, 135);
-            this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(142, 15);
-            this.label17.TabIndex = 7;
-            this.label17.Text = "Скорость вентилятора";
-            // 
-            // label18
-            // 
-            this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(20, 165);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(0, 15);
-            this.label18.TabIndex = 8;
-            // 
-            // label26
-            // 
-            this.label26.AutoSize = true;
-            this.label26.Location = new System.Drawing.Point(190, 165);
-            this.label26.Name = "label26";
-            this.label26.Size = new System.Drawing.Size(0, 15);
-            this.label26.TabIndex = 9;
             // 
             // Form1
             // 
