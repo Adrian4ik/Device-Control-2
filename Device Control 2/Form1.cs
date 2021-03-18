@@ -27,7 +27,7 @@ namespace Device_Control_2
 	public partial class Form1 : Form
 	{
 		// Version: 2.1.3
-		// Patch: 5.1
+		// Patch: 5.2
 
 		const string vCore = "2";
 		const string vInterface = "1";
@@ -118,7 +118,7 @@ namespace Device_Control_2
 			}
             else
             {
-				label1.Text = "Устройства отсутствуют";
+				label1.Visible = false;
 				label2.Visible = false;
 				label3.Visible = false;
 				label4.Visible = false;
@@ -128,6 +128,7 @@ namespace Device_Control_2
 				label12.Text = "";
 				label13.Text = "";
 				label14.Text = "";
+				label19.Visible = true;
 			}
 		}
 
