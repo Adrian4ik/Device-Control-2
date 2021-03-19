@@ -35,8 +35,9 @@ namespace Device_Control_2
 							// 0 - отсутствие связи при запуске программы
 							// 1 - потеря связи (может появиться только после хотя бы 1 успешного опроса)
 							// 2 - присутствие связи
+		int[] enabled; // включенные и выключенные устройства для расположения кнопок
 
-		int[,] connection = new int[1024, 2]; // связь с каждым устройством: 0 - ICMP, 1 - SNMP
+		int[,] connection; // связь с каждым устройством: 0 - ICMP, 1 - SNMP
 
 		string[,] interfaces; // = new string[1024, 6];
 		#endregion Переменные
@@ -91,7 +92,7 @@ namespace Device_Control_2
 
 			Preprocess();
 
-			Start();
+			//Start();
 		}
 
 		private void Preprocess()
@@ -136,6 +137,27 @@ namespace Device_Control_2
 			{
 				deviceInfo[i] = new DeviceInfo(cl[i]);
 			}
+
+			enabled = new int[cl.Length + 1];
+			connection = new int[cl.Length, 2];
+
+			int disabled = 0;
+
+			for (int i = 0, j = 0; i < cl.Length; i++)
+            {
+				if (cl[i].Connect)
+					enabled[j++] = i;
+				else
+					disabled++;
+            }
+
+			enabled[cl.Length - disabled] = -1;
+
+			for (int i = 0, j = (cl.Length + 1) - disabled; i < cl.Length; i++)
+            {
+				if (!cl[i].Connect)
+					enabled[j++] = i + 1;
+            }
 		}
 
 		private void InitNotifier()
@@ -190,9 +212,9 @@ namespace Device_Control_2
 
 		private void InitInterface()
 		{
-			buttons = new Button[cl.Length];
+			/*buttons = new Button[cl.Length];
 
-			int e = -1;
+			bool is_firsttime = true;
 
 			for (int i = 0; i < cl.Length; i++)
 			{
@@ -201,30 +223,37 @@ namespace Device_Control_2
 				buttons[i].BackColor = SystemColors.ControlLightLight;
 				buttons[i].ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
 				buttons[i].Name = "button" + i;
-
-				if (cl[i].Connect)
-				{
-					buttons[i].Location = new Point(5, i * 54 + 46);
-					++e;
-				}
-
 				buttons[i].Size = new Size(149, 54);
 				buttons[i].Text = cl[i].Name;
 				buttons[i].TextImageRelation = TextImageRelation.ImageBeforeText;
 				buttons[i].UseVisualStyleBackColor = false;
 				buttons[i].Image = Properties.Resources.device48;
-				buttons[i].KeyPress += new KeyPressEventHandler(button_Click);
-				buttons[i].MouseClick += new MouseEventHandler(mouse_button_Click);
-			}
 
-			label5.Location = new Point(5, buttons[e].Location.Y + 54);
-
-			for (int i = 0; i < cl.Length; i++)
-			{
-				panel2.Controls.Add(buttons[i]);
+				buttons[i].Location = cl[i].Connect ? new Point(5, (enabled[i] * 54) + 46) : new Point(5, (enabled[i] * 54) + 92);
 
 				if (!cl[i].Connect)
-					buttons[i].Location = new Point(5, i * 54 + buttons[e].Location.Y + 90);
+				{
+					buttons[i].Enabled = false;
+
+					if (is_firsttime)
+					{
+						is_firsttime = false;
+						label5.Location = new Point(5, buttons[i].Location.Y - 41);
+					}
+				}
+
+				buttons[i].KeyPress += new KeyPressEventHandler(button_Click);
+				buttons[i].MouseClick += new MouseEventHandler(mouse_button_Click);
+
+				panel2.Controls.Add(buttons[i]);
+			}*/
+
+			dataGridView2.Rows.Add(cl.Length + 1);
+
+			for (int i = 0; i <= cl.Length; i++)
+            {
+				//if()
+				dataGridView2[0, i].Value = Properties.Resources.device48;
 			}
 		}
 
@@ -939,13 +968,17 @@ namespace Device_Control_2
 			dataGridView1.Rows.Add(rows_count);
 
 			for (int i = 0; i < rows_count; i++)
-				for(int j = 0; j < 6; j++)
-					dataGridView1[j, i].Value = interfaces[i, j];
+			{
+				dataGridView1.Rows[i].HeaderCell.Value = interfaces[i, 0];
 
-			for (int i = 0; i < rows_count; i++)
-				if (interfaces[i, 3] == "Отключен")
-					for (int j = 0; j < 6; j++)
-						dataGridView1[j, i].Style.BackColor = Color.FromArgb(223, 223, 223);
+				for (int j = 0; j < 5; j++)
+				{
+					dataGridView1[j, i].Value = interfaces[i, j + 1];
+
+					if (interfaces[i, 3] == "Отключен")
+						dataGridView1[j, i].Style.BackColor = Color.LightGray;
+				}
+			}
 		}
 
 		private SnmpV1Packet SurveyList(IPAddress ip, Pdu list)
@@ -1092,14 +1125,20 @@ namespace Device_Control_2
 			Resize_form();
 		}
 
-		private void button_Click(object sender, EventArgs e)
+        private void dataGridView2_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+		{
+			if (e.Button == MouseButtons.Right) { MessageBox.Show("Right click " + dataGridView2.SelectedCells[0].RowIndex); }
+			if (e.Button == MouseButtons.Left) { MessageBox.Show("Left click"); }
+		}
+
+        private void button_Click(object sender, EventArgs e)
 		{
 			int button = FindGroup(sender, buttons);
 
 			//if (cl[button].Connect)
-				//selected_client = button;
+			//selected_client = button;
 
-			label1.Text = cl[button].Name;
+			ChangeInfo(button);
 
 			//SimpleSurvey();
 		}
@@ -1122,6 +1161,11 @@ namespace Device_Control_2
 
 			return result;
 		}
+
+		private void ChangeInfo(int client)
+        {
+			label1.Text = cl[client].IfName;
+        }
         #endregion
     }
 }

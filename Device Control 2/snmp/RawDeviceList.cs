@@ -174,6 +174,9 @@ namespace Device_Control_2.snmp
 			string[] config = ConfigParse(folder_name);
 			string[,] optlist = OptlistParse(folder_name);
 
+			if (config[0] == "")
+				accept = false;
+
 			try { IPAddress ip = IPAddress.Parse(config[1]); }
 			catch { accept = false; }
 
