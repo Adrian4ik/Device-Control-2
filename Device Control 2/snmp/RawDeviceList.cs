@@ -16,6 +16,8 @@ namespace Device_Control_2.snmp
 
 		public struct Client
 		{
+			private string Folder;
+
 			public bool Connect;
 			public string Name;
 			public IPAddress Ip;

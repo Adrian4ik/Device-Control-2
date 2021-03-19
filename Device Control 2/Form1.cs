@@ -100,10 +100,12 @@ namespace Device_Control_2
 			Startup_run sr = new Startup_run();
 			WindowState = sr.WindowState();
 
-			InitClientList();
+			cl = devs.ScanDevices;
 
 			if (cl.Length > 0)
 			{
+				InitClientList();
+
 				InitNotifier();
 
 				FillConstants();
@@ -130,7 +132,6 @@ namespace Device_Control_2
 
 		private void InitClientList()
 		{
-			cl = devs.ScanDevices;
 			deviceInfo = new DeviceInfo[cl.Length];
 
 			for (int i = 0; i < cl.Length; i++)
@@ -141,23 +142,31 @@ namespace Device_Control_2
 			enabled = new int[cl.Length + 1];
 			connection = new int[cl.Length, 2];
 
+			GetConnList();
+		}
+
+		private void GetConnList()
+		{
 			int disabled = 0;
 
 			for (int i = 0, j = 0; i < cl.Length; i++)
-            {
+			{
 				if (cl[i].Connect)
 					enabled[j++] = i;
 				else
 					disabled++;
-            }
+			}
 
 			enabled[cl.Length - disabled] = -1;
 
-			for (int i = 0, j = (cl.Length + 1) - disabled; i < cl.Length; i++)
-            {
-				if (!cl[i].Connect)
-					enabled[j++] = i + 1;
-            }
+			for (int i = 0, j = cl.Length + 1 - disabled, k = 0; i < cl.Length + 1; i++)
+			{
+				if (enabled[i] == -1)
+					k = 1;
+
+				if (!cl[i - k].Connect && enabled[i] != -1)
+					enabled[j++] = i - k;
+			}
 		}
 
 		private void InitNotifier()
@@ -250,10 +259,18 @@ namespace Device_Control_2
 
 			dataGridView2.Rows.Add(cl.Length + 1);
 
-			for (int i = 0; i <= cl.Length; i++)
+			for (int i = 0, j = 0; i <= cl.Length; i++)
             {
-				//if()
-				dataGridView2[0, i].Value = Properties.Resources.device48;
+				if (enabled[i] != -1)
+				{
+					dataGridView2[0, i].Value = Properties.Resources.device48;
+					dataGridView2[1, i].Value = cl[enabled[i]].Name;
+				}
+				else
+				{
+					label5.Location = new Point(5, i * 48 + 46);
+					dataGridView2[0, i].Selected = true;
+				}
 			}
 		}
 
@@ -1125,10 +1142,22 @@ namespace Device_Control_2
 			Resize_form();
 		}
 
-        private void dataGridView2_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        private void dataGridView2_CellMouseClick(object sender, MouseEventArgs e)
 		{
-			if (e.Button == MouseButtons.Right) { MessageBox.Show("Right click " + dataGridView2.SelectedCells[0].RowIndex); }
-			if (e.Button == MouseButtons.Left) { MessageBox.Show("Left click"); }
+			DataGridView.HitTestInfo hit = dataGridView2.HitTest(e.X, e.Y);
+
+			if (e.Button == MouseButtons.Right)
+			{
+				dataGridView2.Rows[hit.RowIndex].Selected = true;
+
+				//MessageBox.Show("Right click" + dataGridView2.Rows[hit.RowIndex].Index);
+				
+				GetConnList();
+			}
+			else if (e.Button == MouseButtons.Left)
+			{
+				//MessageBox.Show("Left click" + dataGridView2.Rows[hit.RowIndex].Index);
+			}
 		}
 
         private void button_Click(object sender, EventArgs e)
