@@ -78,8 +78,6 @@ namespace Device_Control_2
 		#endregion
 
 		#region Нереализованные объекты
-		Button[] buttons;
-
 		Notification notify;
 
 		DeviceInfo[] deviceInfo;
@@ -104,6 +102,8 @@ namespace Device_Control_2
 
 			if (cl.Length > 0)
 			{
+				dataGridView2.Rows.Add(cl.Length + 1);
+
 				InitClientList();
 
 				InitNotifier();
@@ -221,55 +221,21 @@ namespace Device_Control_2
 
 		private void InitInterface()
 		{
-			/*buttons = new Button[cl.Length];
-
-			bool is_firsttime = true;
-
-			for (int i = 0; i < cl.Length; i++)
-			{
-				buttons[i] = new Button();
-
-				buttons[i].BackColor = SystemColors.ControlLightLight;
-				buttons[i].ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-				buttons[i].Name = "button" + i;
-				buttons[i].Size = new Size(149, 54);
-				buttons[i].Text = cl[i].Name;
-				buttons[i].TextImageRelation = TextImageRelation.ImageBeforeText;
-				buttons[i].UseVisualStyleBackColor = false;
-				buttons[i].Image = Properties.Resources.device48;
-
-				buttons[i].Location = cl[i].Connect ? new Point(5, (enabled[i] * 54) + 46) : new Point(5, (enabled[i] * 54) + 92);
-
-				if (!cl[i].Connect)
-				{
-					buttons[i].Enabled = false;
-
-					if (is_firsttime)
-					{
-						is_firsttime = false;
-						label5.Location = new Point(5, buttons[i].Location.Y - 41);
-					}
-				}
-
-				buttons[i].KeyPress += new KeyPressEventHandler(button_Click);
-				buttons[i].MouseClick += new MouseEventHandler(mouse_button_Click);
-
-				panel2.Controls.Add(buttons[i]);
-			}*/
-
-			dataGridView2.Rows.Add(cl.Length + 1);
-
 			for (int i = 0, j = 0; i <= cl.Length; i++)
             {
 				if (enabled[i] != -1)
 				{
-					dataGridView2[0, i].Value = Properties.Resources.device48;
+					if(dataGridView2[0, i].Value == null)
+						dataGridView2[0, i].Value = Properties.Resources.device48;
+
 					dataGridView2[1, i].Value = cl[enabled[i]].Name;
 				}
 				else
 				{
+					if(selected_client == 0)
+						dataGridView2[0, i].Selected = true;
+
 					label5.Location = new Point(5, i * 48 + 46);
-					dataGridView2[0, i].Selected = true;
 				}
 			}
 		}
@@ -335,7 +301,7 @@ namespace Device_Control_2
 				ping.PingCompleted += new PingCompletedEventHandler(Received_ping_reply);
 				ping.SendAsync(cl[current_client].Ip, 3000, waiter);
 
-				buttons[current_client].Image = Properties.Resources.big_snake_loader;
+				//buttons[current_client].Image = Properties.Resources.big_snake_loader;
 			}
 			catch
 			{
@@ -388,7 +354,7 @@ namespace Device_Control_2
 			{
 				CheckPingConnectionChanges(connection[current_client, 0], 2, current_client);
 
-				buttons[current_client].Image = Properties.Resources.device_ok48;
+				//buttons[current_client].Image = Properties.Resources.device_ok48;
 
 				connection[current_client, 0] = 2;
 			}
@@ -396,7 +362,7 @@ namespace Device_Control_2
 			{
 				CheckPingConnectionChanges(connection[current_client, 0], 1, current_client);
 
-				buttons[current_client].Image = Properties.Resources.device_red48;
+				//buttons[current_client].Image = Properties.Resources.device_red48;
 
 				connection[current_client, 0] = 1;
 
@@ -440,7 +406,7 @@ namespace Device_Control_2
 
 				connection[selected_client, 0] = 2;
 
-				buttons[selected_client].Image = Properties.Resources.device_ok48;
+				//buttons[selected_client].Image = Properties.Resources.device_ok48;
 
 				//WriteLog(true, "Связь присутствует");
 
@@ -452,7 +418,7 @@ namespace Device_Control_2
 
 				Change_Ping_Status(3);
 
-				buttons[selected_client].Image = Properties.Resources.device_red48;
+				//buttons[selected_client].Image = Properties.Resources.device_red48;
 
 				connection[selected_client, 0] = 1;
 
@@ -1146,30 +1112,51 @@ namespace Device_Control_2
 		{
 			DataGridView.HitTestInfo hit = dataGridView2.HitTest(e.X, e.Y);
 
+			selected_client = enabled[dataGridView2.Rows[hit.RowIndex].Index];
+
 			if (e.Button == MouseButtons.Right)
 			{
-				dataGridView2.Rows[hit.RowIndex].Selected = true;
+				//dataGridView2.Rows[hit.RowIndex].Selected = true;
 
 				//MessageBox.Show("Right click" + dataGridView2.Rows[hit.RowIndex].Index);
-				
-				GetConnList();
+				if(selected_client != 0)
+				{
+					button1.Location = new Point(e.X + 5, e.Y + 45);
+
+					button1.Text = cl[selected_client].Connect ? "Прекратить сканирование" : "Продолжить сканирование";
+				}
 			}
 			else if (e.Button == MouseButtons.Left)
 			{
 				//MessageBox.Show("Left click" + dataGridView2.Rows[hit.RowIndex].Index);
+
+				label1.Text = cl[selected_client].Name;
 			}
+		}
+
+        private void button1_MouseLeave(object sender, EventArgs e)
+        {
+			button1.Location = new Point(0, -100);
 		}
 
         private void button_Click(object sender, EventArgs e)
 		{
-			int button = FindGroup(sender, buttons);
+			//int button = FindGroup(sender, buttons);
 
 			//if (cl[button].Connect)
 			//selected_client = button;
 
-			ChangeInfo(button);
+			//ChangeInfo(button);
 
 			//SimpleSurvey();
+
+			button1.Location = new Point(0, -100);
+
+			cl[selected_client].Connect = cl[selected_client].Connect ? false : true;
+
+			GetConnList();
+
+			InitInterface();
 		}
 
 		private void mouse_button_Click(object sender, EventArgs e)
