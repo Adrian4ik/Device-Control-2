@@ -147,6 +147,7 @@ namespace Device_Control_2
 
 		private void GetConnList()
 		{
+			bool is_firsttime = true;
 			int disabled = 0;
 
 			for (int i = 0, j = 0; i < cl.Length; i++)
@@ -159,13 +160,19 @@ namespace Device_Control_2
 
 			enabled[cl.Length - disabled] = -1;
 
-			for (int i = 0, j = cl.Length + 1 - disabled, k = 0; i < cl.Length + 1; i++)
+			if(disabled > 0)
 			{
-				if (enabled[i] == -1)
-					k = 1;
+				for (int i = 0, j = cl.Length + 1 - disabled, k = 0; (i < cl.Length + 1) && (j < enabled.Length); i++)
+				{
+					if (enabled[i] == -1 && is_firsttime)
+					{
+						k = 1;
+						is_firsttime = false;
+					}
 
-				if (!cl[i - k].Connect && enabled[i] != -1)
-					enabled[j++] = i - k;
+					if (!cl[i - k].Connect)
+						enabled[j++] = i - k;
+				}
 			}
 		}
 
@@ -1130,7 +1137,7 @@ namespace Device_Control_2
 			{
 				//MessageBox.Show("Left click" + dataGridView2.Rows[hit.RowIndex].Index);
 
-				label1.Text = cl[selected_client].Name;
+				ChangeInfo();
 			}
 		}
 
@@ -1178,9 +1185,9 @@ namespace Device_Control_2
 			return result;
 		}
 
-		private void ChangeInfo(int client)
+		public void ChangeInfo()
         {
-			label1.Text = cl[client].IfName;
+			label1.Text = cl[selected_client].IfName;
         }
         #endregion
     }
