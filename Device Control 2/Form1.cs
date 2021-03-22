@@ -90,7 +90,7 @@ namespace Device_Control_2
 
 			Preprocess();
 
-			Start();
+			//Start();
 		}
 
 		private void Preprocess()
@@ -153,12 +153,14 @@ namespace Device_Control_2
 			while (j < 15) { tabPage1.Controls.Add(UI_labels[j++]); }
 
 			while (j < 19) { tabPage3.Controls.Add(UI_labels[j++]); }
+			
+			UI_labels[7].BringToFront();
 
-			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.3 (5.9)");
+			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.3 (6.0)");
 
 			UI_labels[0].Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
 			UI_labels[0].Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
-			UI_labels[0].Location = new Point(687, 400);
+			UI_labels[0].Location = new Point(507, 255);
 			UI_labels[0].Text = "v2.1.3";
 			UI_labels[0].TextAlign = System.Drawing.ContentAlignment.MiddleRight;
 
@@ -191,7 +193,10 @@ namespace Device_Control_2
 
 			UI_labels[6].Text = "Контролируемые\r\nустройства";
 
+			UI_labels[7].AutoSize = false;
+			UI_labels[7].Size = new Size(146, 50);
 			UI_labels[7].Text = "Неконтролируемые\r\nустройства";
+			UI_labels[7].TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 
 			UI_labels[8].Location = new Point(20, 15);
 			UI_labels[8].Text = "Тип устройства\r\n\r\nВремя от включения\r\n\r\nСистемное имя\r\n\r\nМестоположение";
