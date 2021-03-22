@@ -69,18 +69,18 @@ namespace Device_Control_2
 		AutoResetEvent waiter = new AutoResetEvent(false);
 
 		Pdu std = new Pdu(PduType.Get);
+
+		Notification notify;
+
+		DeviceInfo[] deviceInfo;
+
+		Label[] UI_labels = new Label[19];
 		#endregion
 
 		#region Внешние классы
 		Logs log = new Logs();
 		RawDeviceList devs = new RawDeviceList();
 		Display display = new Display();
-		#endregion
-
-		#region Нереализованные объекты
-		Notification notify;
-
-		DeviceInfo[] deviceInfo;
 		#endregion
 
 		#region Методы
@@ -90,7 +90,7 @@ namespace Device_Control_2
 
 			Preprocess();
 
-			//Start();
+			Start();
 		}
 
 		private void Preprocess()
@@ -104,30 +104,109 @@ namespace Device_Control_2
 			{
 				dataGridView2.Rows.Add(cl.Length + 1);
 
+				InitLabels();
+
 				InitClientList();
 
 				InitNotifier();
 
 				FillConstants();
 
-				InitInterface();
+				InitDevList();
 			}
             else
             {
-				label1.Visible = false;
-				label2.Visible = false;
-				label3.Visible = false;
-				label4.Visible = false;
-				label5.Visible = false;
-				label6.Visible = false;
-				label11.Text = "";
-				label12.Text = "";
-				label13.Text = "";
-				label14.Text = "";
-				label19.Visible = true;
+				UI_labels[1].Visible = false;
+				UI_labels[2].Visible = false;
+				UI_labels[4].Visible = false;
+				UI_labels[6].Visible = false;
+				UI_labels[7].Visible = false;
+				UI_labels[8].Visible = false;
+
+				UI_labels[5].Visible = true;
 
 				log.WriteEvent("Список устройств пуст");
 			}
+		}
+
+		private void InitLabels()
+        {
+			for (int i = 0; i < 19; i++)
+            {
+				UI_labels[i] = new Label();
+				UI_labels[i].AutoSize = true;
+				UI_labels[i].Name = "label" + i;
+				UI_labels[i].TabIndex = i + 20;
+				UI_labels[i].Size = new Size(0, 15);
+			}
+
+			int j = 0;
+
+			Controls.Add(UI_labels[j++]);
+
+			while (j < 4) { panel1.Controls.Add(UI_labels[j++]); }
+
+			Controls.Add(UI_labels[j++]);
+
+			while (j < 8) { panel2.Controls.Add(UI_labels[j++]); }
+
+			while (j < 15) { tabPage1.Controls.Add(UI_labels[j++]); }
+
+			while (j < 19) { tabPage3.Controls.Add(UI_labels[j++]); }
+
+			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.3 (5.9)");
+
+			UI_labels[0].Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+			UI_labels[0].Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
+			UI_labels[0].Location = new Point(687, 400);
+			UI_labels[0].Text = "v2.1.3";
+			UI_labels[0].TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+
+			UI_labels[1].Font = new Font("Microsoft Sans Serif", 14.25F, FontStyle.Bold | FontStyle.Underline, GraphicsUnit.Point, 204);
+			UI_labels[1].Location = new Point(30, 6);
+
+			UI_labels[2].Location = new Point(31, 30);
+
+			UI_labels[3].Location = new Point(320, 17);
+			UI_labels[3].Text = "Ping:";
+			UI_labels[3].Visible = false;
+
+			UI_labels[4].Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+			UI_labels[4].Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
+			UI_labels[4].Location = new Point(157, 255);
+
+			UI_labels[5].Anchor = AnchorStyles.Top | AnchorStyles.Bottom| AnchorStyles.Left;
+			UI_labels[5].Enabled = false;
+			UI_labels[5].Location = new Point(43, 0);
+			UI_labels[5].Text = "Устройства\r\nотсутствуют";
+			UI_labels[5].TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+			UI_labels[5].Visible = false;
+
+			for(int i = 6; i < 8; i++)
+			{
+				UI_labels[i].Font = new Font("Microsoft Sans Serif", 11.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
+				UI_labels[i].ForeColor = SystemColors.HotTrack;
+				UI_labels[i].Location = new Point(5, 5);
+			}
+
+			UI_labels[6].Text = "Контролируемые\r\nустройства";
+
+			UI_labels[7].Text = "Неконтролируемые\r\nустройства";
+
+			UI_labels[8].Location = new Point(20, 15);
+			UI_labels[8].Text = "Тип устройства\r\n\r\nВремя от включения\r\n\r\nСистемное имя\r\n\r\nМестоположение";
+
+			UI_labels[9].Location = new Point(20, 135);
+			UI_labels[9].Text = "Cистемное время";
+			UI_labels[9].Visible = false;
+
+			for(int i = 10; i < 15; i++) { UI_labels[i].Location = new Point(190, ((i - 10) * 30) + 15); }
+
+			UI_labels[15].Location = new Point(20, 15);
+			UI_labels[15].Text = "Температура текущая, °С\r\n\r\nТемпература максимально\r\nдопустимая, °С\r\nТемпература минимально\r\nдопустимая, °С";
+			UI_labels[15].Visible = false;
+
+			for(int i = 16; i < 19; i++) { UI_labels[i].Location = new Point(190, ((i - 16) * 30) + 15); }
 		}
 
 		private void InitClientList()
@@ -185,7 +264,7 @@ namespace Device_Control_2
 
 			notify = new Notification(devlist);
 		}
-		// Доделать
+		
 		private void FillConstants()
 		{
 			std.VbList.Add("1.3.6.1.2.1.1.1.0"); // sysDescr
@@ -224,9 +303,9 @@ namespace Device_Control_2
 
 			timer1.Interval = ping_interval * 1000;
 			timer2.Interval = snmp_interval * 60000;
-		}
+		} // Метка  старости (Доделать)
 
-		private void InitInterface()
+		private void InitDevList()
 		{
 			for (int i = 0, j = 0; i <= cl.Length; i++)
             {
@@ -242,7 +321,7 @@ namespace Device_Control_2
 					if(selected_client == 0)
 						dataGridView2[0, i].Selected = true;
 
-					label5.Location = new Point(5, i * 48 + 46);
+					UI_labels[7].Location = new Point(5, (i + 1) * 50);
 				}
 			}
 		}
@@ -269,7 +348,7 @@ namespace Device_Control_2
 
 		private void SimpleSurvey()
 		{
-			label1.Text = cl[selected_client].Name;
+			UI_labels[1].Text = cl[selected_client].Name;
 
 			/*try // if (NetworkInterface.GetIsNetworkAvailable())
 			{
@@ -534,14 +613,14 @@ namespace Device_Control_2
 		{
 			SnmpV1Packet result = SurveyList(cl[selected_client].Ip, std);
 
-			CheckStdOIDChanges(label11.Text, 0, result.Pdu.VbList[0].Value.ToString());
-			label11.Text = result.Pdu.VbList[0].Value.ToString();
-			CheckStdOIDChanges(label12.Text, 1, result.Pdu.VbList[1].Value.ToString());
-			label12.Text = result.Pdu.VbList[1].Value.ToString();
-			CheckStdOIDChanges(label13.Text, 2, result.Pdu.VbList[2].Value.ToString());
-			label13.Text = result.Pdu.VbList[2].Value.ToString();
-			CheckStdOIDChanges(label14.Text, 3, result.Pdu.VbList[3].Value.ToString());
-			label14.Text = result.Pdu.VbList[3].Value.ToString();
+			CheckStdOIDChanges(UI_labels[10].Text, 0, result.Pdu.VbList[0].Value.ToString());
+			UI_labels[10].Text = result.Pdu.VbList[0].Value.ToString();
+			CheckStdOIDChanges(UI_labels[11].Text, 1, result.Pdu.VbList[1].Value.ToString());
+			UI_labels[11].Text = result.Pdu.VbList[1].Value.ToString();
+			CheckStdOIDChanges(UI_labels[12].Text, 2, result.Pdu.VbList[2].Value.ToString());
+			UI_labels[12].Text = result.Pdu.VbList[2].Value.ToString();
+			CheckStdOIDChanges(UI_labels[13].Text, 3, result.Pdu.VbList[3].Value.ToString());
+			UI_labels[13].Text = result.Pdu.VbList[3].Value.ToString();
 
 			int ifNumber = Convert.ToInt32(result.Pdu.VbList[4].Value.ToString());
 
@@ -572,7 +651,7 @@ namespace Device_Control_2
 		{
 			if (cl[selected_client].SysTime != null)
 			{
-				label10.Visible = true;
+				UI_labels[9].Visible = true;
 
 				Pdu systime = new Pdu(PduType.Get);
 
@@ -588,14 +667,14 @@ namespace Device_Control_2
 				if (result.Pdu.VbList[0].Value.Type == SnmpVariableType.TimeTicks)
 					time = Decrypt_Time(time);
 
-				CheckModOIDChanges(label15.Text, 0, time, selected_client);
+				CheckModOIDChanges(UI_labels[14].Text, 0, time, selected_client);
 				long convertedTime = Convert.ToInt64(time); //сконвертированное в long время из string
-				label15.Text = DateTimeOffset.FromUnixTimeSeconds(convertedTime).ToString().Substring(0, 19);
+				UI_labels[14].Text = DateTimeOffset.FromUnixTimeSeconds(convertedTime).ToString().Substring(0, 19);
 			}
 			else
             {
-				label10.Visible = false;
-				label15.Text = "";
+				UI_labels[9].Visible = false;
+				UI_labels[14].Text = "";
 			}
 		}
 
@@ -655,7 +734,7 @@ namespace Device_Control_2
 		{
 			if (cl[selected_client].Modified != null)
 			{
-				label7.Visible = true;
+				UI_labels[15].Visible = true;
 				//label16.Visible = true;
 				//label17.Visible = true;
 
@@ -670,32 +749,32 @@ namespace Device_Control_2
 				//CheckPower();
 				//CheckFan();
 
-				CheckModOIDChanges(label21.Text, 0, result.Pdu.VbList[0].Value.ToString(), selected_client);
-				label21.Text = result.Pdu.VbList[0].Value.ToString();
-				CheckModOIDChanges(label22.Text, 1, result.Pdu.VbList[1].Value.ToString(), selected_client);
-				label22.Text = result.Pdu.VbList[1].Value.ToString();
-				CheckModOIDChanges(label23.Text, 2, result.Pdu.VbList[2].Value.ToString(), selected_client);
-				label23.Text = result.Pdu.VbList[2].Value.ToString();
+				CheckModOIDChanges(UI_labels[16].Text, 0, result.Pdu.VbList[0].Value.ToString(), selected_client);
+				UI_labels[16].Text = result.Pdu.VbList[0].Value.ToString();
+				CheckModOIDChanges(UI_labels[17].Text, 1, result.Pdu.VbList[1].Value.ToString(), selected_client);
+				UI_labels[17].Text = result.Pdu.VbList[1].Value.ToString();
+				CheckModOIDChanges(UI_labels[18].Text, 2, result.Pdu.VbList[2].Value.ToString(), selected_client);
+				UI_labels[18].Text = result.Pdu.VbList[2].Value.ToString();
 				//CheckModOIDChanges(label24.Text, 3, result.Pdu.VbList[3].Value.ToString(), selected_client);
 				//label24.Text = result.Pdu.VbList[3].Value.ToString();
 
-				label16.Visible = label24.Text != "";
-				label17.Visible = label25.Text != "";
-				label18.Visible = label26.Text != "";
+				//label16.Visible = label24.Text != "";
+				//label17.Visible = label25.Text != "";
+				//label18.Visible = label26.Text != "";
 			}
 			else
 			{
-				label7.Visible = false;
-				label16.Visible = false;
-				label17.Visible = false;
-				label18.Text = "";
+				UI_labels[15].Visible = false;
+				//label16.Visible = false;
+				//label17.Visible = false;
+				//label18.Text = "";
 
-				label21.Text = "";
-				label22.Text = "";
-				label23.Text = "";
-				label24.Text = "";
-				label25.Text = "";
-				label26.Text = "";
+				//label21.Text = "";
+				//label22.Text = "";
+				//label23.Text = "";
+				//label24.Text = "";
+				//label25.Text = "";
+				//label26.Text = "";
 			}
 		}
 
@@ -764,27 +843,27 @@ namespace Device_Control_2
 			{
 				case 0:
 					pictureBox1.Image = Properties.Resources.ajax_loader;
-					label2.Text = "Соединение";
+					UI_labels[2].Text = "Соединение";
 					break;
 				case 1:
 					pictureBox1.Image = Properties.Resources.green24;
-					label2.Text = "Режим опроса";
+					UI_labels[2].Text = "Режим опроса";
 					break;
 				case 2:
 					pictureBox1.Image = Properties.Resources.orange24;
-					label2.Text = "Режим опроса";
+					UI_labels[2].Text = "Режим опроса";
 					break;
 				case 3:
 					pictureBox1.Image = Properties.Resources.red24;
-					label2.Text = "Автономный";
+					UI_labels[2].Text = "Автономный";
 					break;
 				case 4:
 					pictureBox1.Image = Properties.Resources.gray24;
-					label2.Text = "Автономный";
+					UI_labels[2].Text = "Автономный";
 					break;
 				case 5:
 					pictureBox1.Image = Properties.Resources.gray24;
-					label2.Text = "Неактивный";
+					UI_labels[2].Text = "Неактивный";
 					break;
 			}
 		}
@@ -1033,7 +1112,7 @@ namespace Device_Control_2
 			// Тернарная операция: z = (x > y) ? x : y;
 			string time = (DateTime.Now.Hour < 10) ? "0" + DateTime.Now.Hour + ":" : DateTime.Now.Hour + ":";
 			time += (DateTime.Now.Minute < 10) ? "0" + DateTime.Now.Minute : DateTime.Now.Minute.ToString();
-			label3.Text = "Последний раз обновлено: " + time;
+			UI_labels[4].Text = "Последний раз обновлено: " + time;
 		}
         #endregion
 
@@ -1123,27 +1202,28 @@ namespace Device_Control_2
 
 			if (e.Button == MouseButtons.Right)
 			{
-				//dataGridView2.Rows[hit.RowIndex].Selected = true;
+				dataGridView2.Rows[hit.RowIndex].Selected = true;
 
 				//MessageBox.Show("Right click" + dataGridView2.Rows[hit.RowIndex].Index);
 				if(selected_client != 0)
 				{
-					button1.Location = new Point(e.X + 5, e.Y + 45);
+					panel3.Location = new Point(e.X + 6, e.Y + 51);
 
-					button1.Text = cl[selected_client].Connect ? "Прекратить сканирование" : "Продолжить сканирование";
+					button1.Text = cl[selected_client].Connect ? "Завершить сканирование" : "Начать сканирование";
 				}
 			}
-			else if (e.Button == MouseButtons.Left)
-			{
-				//MessageBox.Show("Left click" + dataGridView2.Rows[hit.RowIndex].Index);
 
-				ChangeInfo();
-			}
+			ChangeInfo();
 		}
 
-        private void button1_MouseLeave(object sender, EventArgs e)
+		private void button1_MouseEnter(object sender, EventArgs e)
+		{
+			panel3.BackColor = SystemColors.Highlight;
+		}
+
+		private void button1_MouseLeave(object sender, EventArgs e)
         {
-			button1.Location = new Point(0, -100);
+			//HideButton();
 		}
 
         private void button_Click(object sender, EventArgs e)
@@ -1157,13 +1237,19 @@ namespace Device_Control_2
 
 			//SimpleSurvey();
 
-			button1.Location = new Point(0, -100);
+			HideButton();
 
 			cl[selected_client].Connect = cl[selected_client].Connect ? false : true;
 
 			GetConnList();
 
-			InitInterface();
+			InitDevList();
+		}
+
+        private void HideButton()
+		{
+			panel3.Location = new Point(0, -100);
+			panel3.BackColor = Color.FromArgb(173, 173, 173);
 		}
 
 		private void mouse_button_Click(object sender, EventArgs e)
@@ -1185,10 +1271,27 @@ namespace Device_Control_2
 			return result;
 		}
 
-		public void ChangeInfo()
+		private void ChangeInfo()
         {
-			label1.Text = cl[selected_client].IfName;
-        }
+			UI_labels[1].Text = cl[selected_client].Name;
+
+			if (!cl[selected_client].Connect)
+				UI_labels[2].Text = "Неактивный";
+
+			//Switch_UI_visibility();
+		}
+
+		private void Switch_UI_visibility()
+        {
+			bool current_state = UI_labels[8].Visible;
+
+			UI_labels[8].Visible = !current_state;
+			UI_labels[10].Text = "";
+			UI_labels[11].Text = "";
+			UI_labels[12].Text = "";
+			UI_labels[13].Text = "";
+			UI_labels[5].Visible = true;
+		}
         #endregion
     }
 }
