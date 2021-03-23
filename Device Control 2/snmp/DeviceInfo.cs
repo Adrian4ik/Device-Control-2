@@ -12,7 +12,7 @@ namespace Device_Control_2.snmp
 
         public struct Status
         {
-
+            public string info_updated_time;
         }
 
         public DeviceInfo(RawDeviceList.Client client)
@@ -48,6 +48,10 @@ namespace Device_Control_2.snmp
         private void UpdateInfo()
         {
             //Survey;
+
+            string time = (DateTime.Now.Hour < 10) ? "0" + DateTime.Now.Hour + ":" : DateTime.Now.Hour + ":";
+            time += (DateTime.Now.Minute < 10) ? "0" + DateTime.Now.Minute : DateTime.Now.Minute.ToString();
+            //info_updated_time = "Последний раз обновлено: " + time;
         }
     }
 }

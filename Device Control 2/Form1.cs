@@ -74,7 +74,7 @@ namespace Device_Control_2
 
 		DeviceInfo[] deviceInfo;
 
-		Label[] UI_labels = new Label[19];
+		Label[] UI_labels = new Label[20];
 		#endregion
 
 		#region Внешние классы
@@ -90,7 +90,7 @@ namespace Device_Control_2
 
 			Preprocess();
 
-			//Start();
+			Start();
 		}
 
 		private void Preprocess()
@@ -102,7 +102,7 @@ namespace Device_Control_2
 
 			InitLabels();
 
-			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.3 (6.1)");
+			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.3 (6.2)");
 
 			if (cl.Length > 0)
 			{
@@ -125,9 +125,9 @@ namespace Device_Control_2
 				UI_labels[7].Visible = false;
 				UI_labels[8].Visible = false;
 
-				UI_labels[5].Visible = true;
+				dataGridView2.Visible = false;
 
-				dataGridView2.Enabled = false;
+				UI_labels[5].Visible = true;
 
 				log.WriteEvent("Список устройств пуст");
 			}
@@ -135,7 +135,7 @@ namespace Device_Control_2
 
 		private void InitLabels()
         {
-			for (int i = 0; i < 19; i++)
+			for (int i = 0; i < 20; i++)
             {
 				UI_labels[i] = new Label();
 				UI_labels[i].AutoSize = true;
@@ -158,12 +158,14 @@ namespace Device_Control_2
 
 			while (j < 19) { tabPage3.Controls.Add(UI_labels[j++]); }
 
+			Controls.Add(UI_labels[j++]);
+
 			UI_labels[5].BringToFront();
 			UI_labels[7].BringToFront();
 
 			UI_labels[0].Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
 			UI_labels[0].Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
-			UI_labels[0].Location = new Point(507, 255);
+			UI_labels[0].Location = new Point(507, 279);
 			UI_labels[0].Text = "v2.1.3";
 			UI_labels[0].TextAlign = System.Drawing.ContentAlignment.MiddleRight;
 
@@ -178,13 +180,14 @@ namespace Device_Control_2
 
 			UI_labels[4].Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
 			UI_labels[4].Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
-			UI_labels[4].Location = new Point(157, 255);
+			UI_labels[4].Location = new Point(157, 279);
+			UI_labels[4].Visible = false;
 
 			UI_labels[5].Anchor = AnchorStyles.Top | AnchorStyles.Bottom| AnchorStyles.Left;
 			UI_labels[5].AutoSize = false;
 			UI_labels[5].Enabled = false;
-			UI_labels[5].Location = new Point(43, 0);
-			UI_labels[5].Size = new Size(69, 274);
+			UI_labels[5].Location = new Point(43, 137);
+			UI_labels[5].Size = new Size(69, 26);
 			UI_labels[5].Text = "Устройства\r\nотсутствуют";
 			UI_labels[5].TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 			UI_labels[5].Visible = false;
@@ -217,6 +220,14 @@ namespace Device_Control_2
 			UI_labels[15].Visible = false;
 
 			for(int i = 16; i < 19; i++) { UI_labels[i].Location = new Point(190, ((i - 16) * 30) + 15); }
+
+			UI_labels[19].Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+			UI_labels[19].AutoSize = false;
+			UI_labels[19].Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
+			UI_labels[19].Location = new Point(276, 142);
+			UI_labels[19].Size = new Size(153, 16);
+			UI_labels[19].Text = "Выберите устройство";
+			UI_labels[19].TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 		}
 
 		private void InitClientList()
@@ -358,7 +369,7 @@ namespace Device_Control_2
 
 		private void SimpleSurvey()
 		{
-			UI_labels[1].Text = cl[selected_client].Name;
+			//UI_labels[1].Text = cl[selected_client].Name;
 
 			/*try // if (NetworkInterface.GetIsNetworkAvailable())
 			{
@@ -590,6 +601,7 @@ namespace Device_Control_2
 				}
 
 				notify.Update_list(notifications);
+				Focus();
 
 				log.WriteEvent(cl[client].Name + " / " + cl[client].Ip, "Связь с устройством: [Ping]= " + connection);
 			}
@@ -812,6 +824,7 @@ namespace Device_Control_2
 			}
 
 			notify.Update_list(notifications);
+			Focus();
 		}
 
 		private void GetAdd()
@@ -1208,22 +1221,46 @@ namespace Device_Control_2
 		{
 			DataGridView.HitTestInfo hit = dataGridView2.HitTest(e.X, e.Y);
 
-			selected_client = enabled[dataGridView2.Rows[hit.RowIndex].Index];
-
-			if (e.Button == MouseButtons.Right)
+			if(hit.RowIndex >= 0)
 			{
-				dataGridView2.Rows[hit.RowIndex].Selected = true;
+				selected_client = enabled[dataGridView2.Rows[hit.RowIndex].Index];
 
-				//MessageBox.Show("Right click" + dataGridView2.Rows[hit.RowIndex].Index);
-				if(selected_client != 0)
+				Switch_UI_visibility(true);
+
+				if (e.Button == MouseButtons.Right)
 				{
-					panel3.Location = new Point(e.X + 6, e.Y + 51);
 
-					button1.Text = cl[selected_client].Connect ? "Завершить сканирование" : "Начать сканирование";
+					dataGridView2.Rows[hit.RowIndex].Selected = true;
+
+					//MessageBox.Show("Right click" + dataGridView2.Rows[hit.RowIndex].Index);
+					if (selected_client != 0)
+					{
+						panel3.Location = new Point(e.X + 6, e.Y + 51);
+
+						button1.Text = cl[selected_client].Connect ? "Завершить сканирование" : "Начать сканирование";
+					}
+				}
+
+				ChangeInfo();
+			}
+			else
+				Switch_UI_visibility(false);
+		}
+
+		private void Switch_UI_visibility(bool show_UI)
+		{
+			panel1.Visible = show_UI;
+			tabControl1.Visible = show_UI;
+			UI_labels[4].Visible = show_UI;
+
+			if (dataGridView2.Rows.Count > 0 && !show_UI)
+			{
+				for (int i = 0; i < enabled.Length; i++)
+				{
+					if (enabled[i] == -1)
+						dataGridView2[0, i].Selected = true;
 				}
 			}
-
-			ChangeInfo();
 		}
 
 		private void button1_MouseEnter(object sender, EventArgs e)
@@ -1288,10 +1325,10 @@ namespace Device_Control_2
 			if (!cl[selected_client].Connect)
 				UI_labels[2].Text = "Неактивный";
 
-			//Switch_UI_visibility();
+			//Hide_UI();
 		}
 
-		private void Switch_UI_visibility()
+		private void Hide_UI()
         {
 			bool current_state = UI_labels[8].Visible;
 
