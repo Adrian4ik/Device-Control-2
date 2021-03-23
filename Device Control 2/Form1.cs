@@ -100,11 +100,13 @@ namespace Device_Control_2
 
 			cl = devs.ScanDevices;
 
+			InitLabels();
+
+			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.3 (6.1)");
+
 			if (cl.Length > 0)
 			{
 				dataGridView2.Rows.Add(cl.Length + 1);
-
-				InitLabels();
 
 				InitClientList();
 
@@ -124,6 +126,8 @@ namespace Device_Control_2
 				UI_labels[8].Visible = false;
 
 				UI_labels[5].Visible = true;
+
+				dataGridView2.Enabled = false;
 
 				log.WriteEvent("Список устройств пуст");
 			}
@@ -153,10 +157,9 @@ namespace Device_Control_2
 			while (j < 15) { tabPage1.Controls.Add(UI_labels[j++]); }
 
 			while (j < 19) { tabPage3.Controls.Add(UI_labels[j++]); }
-			
-			UI_labels[7].BringToFront();
 
-			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.3 (6.0)");
+			UI_labels[5].BringToFront();
+			UI_labels[7].BringToFront();
 
 			UI_labels[0].Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
 			UI_labels[0].Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
@@ -178,8 +181,10 @@ namespace Device_Control_2
 			UI_labels[4].Location = new Point(157, 255);
 
 			UI_labels[5].Anchor = AnchorStyles.Top | AnchorStyles.Bottom| AnchorStyles.Left;
+			UI_labels[5].AutoSize = false;
 			UI_labels[5].Enabled = false;
 			UI_labels[5].Location = new Point(43, 0);
+			UI_labels[5].Size = new Size(69, 274);
 			UI_labels[5].Text = "Устройства\r\nотсутствуют";
 			UI_labels[5].TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 			UI_labels[5].Visible = false;
