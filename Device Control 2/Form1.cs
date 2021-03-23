@@ -22,12 +22,24 @@ using Device_Control_2.snmp;
 using Microsoft.Win32;
 using SnmpSharpNet;
 
+// Поиск по ключевым словам:
+//
+// Метка старости (Пересмотреть)
+// Метка старости (Изменить)
+// Метка старости (Удалить)
+//
+//
+// Подсказки:
+//
+// Группы методов, которые используются сразу после событий или в других методах
+// объединены в регионы и идут сразу после событий или методов в которых используются
+
 namespace Device_Control_2
 {
 	public partial class Form1 : Form
 	{
-		#region Переменные
-		int current_client = 0,
+        #region Переменные
+        int current_client = 0,
 			selected_client = 0, // выбранный клиент
 			ping_interval = 6, // периодичность быстрого (1 пакет ICMP и 1 пакет SNMP) опроса устройств (сек)
 			snmp_interval = 1, // периодичность полного опроса всех устройств (мин)
@@ -57,13 +69,13 @@ namespace Device_Control_2
 			public string Text { get; set; }
 			public string Time { get; set; }
 		}
-		#endregion
+		#endregion Структуры
 
 		#region Структурные объекты
 		message[] note;
 		Notification_message[] notifications/* = new Message[10240]*/;
 		RawDeviceList.Client[] cl; // список клиентов (не более 1024 клиентов)
-		#endregion
+		#endregion Структурные объекты
 
 		#region Классовые объекты
 		AutoResetEvent waiter = new AutoResetEvent(false);
@@ -75,15 +87,14 @@ namespace Device_Control_2
 		DeviceInfo[] deviceInfo;
 
 		Label[] UI_labels = new Label[20];
-		#endregion
+		#endregion Классовые объекты
 
 		#region Внешние классы
 		Logs log = new Logs();
 		RawDeviceList devs = new RawDeviceList();
 		Display display = new Display();
-		#endregion
+		#endregion Внешние классы
 
-		#region Методы
 		public Form1()
 		{
 			InitializeComponent();
@@ -93,16 +104,17 @@ namespace Device_Control_2
 			Start();
 		}
 
+		#region Form1
 		private void Preprocess()
 		{
 			Startup_run sr = new Startup_run();
 			WindowState = sr.WindowState();
 
+			InitStandartLabels();
+
+			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.3 (6.3)");
+
 			cl = devs.ScanDevices;
-
-			InitLabels();
-
-			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.3 (6.2)");
 
 			if (cl.Length > 0)
 			{
@@ -114,7 +126,7 @@ namespace Device_Control_2
 
 				FillConstants();
 
-				InitDevList();
+				InitDeviceList();
 			}
             else
             {
@@ -132,8 +144,9 @@ namespace Device_Control_2
 				log.WriteEvent("Список устройств пуст");
 			}
 		}
-
-		private void InitLabels()
+        
+		#region Preprocess
+        private void InitStandartLabels()
         {
 			for (int i = 0; i < 20; i++)
             {
@@ -321,12 +334,9 @@ namespace Device_Control_2
 						break;
 				}
 			}
+		} // Метка  старости (Удалить)
 
-			timer1.Interval = ping_interval * 1000;
-			timer2.Interval = snmp_interval * 60000;
-		} // Метка  старости (Доделать)
-
-		private void InitDevList()
+		private void InitDeviceList()
 		{
 			for (int i = 0, j = 0; i <= cl.Length; i++)
             {
@@ -346,11 +356,15 @@ namespace Device_Control_2
 				}
 			}
 		}
+		#endregion Preprocess
 
 		private void Start()
 		{
 			if (cl.Length > 0)
 			{
+				timer1.Interval = ping_interval * 1000;
+				timer2.Interval = snmp_interval * 60000;
+
 				if (!timer1.Enabled)
 					timer1.Start();
 
@@ -365,9 +379,10 @@ namespace Device_Control_2
 			{
 				MessageBox.Show("Пожалуйста добавьте список устройств в файл:\n\n" + Environment.CurrentDirectory + "\\devlist.xml, и перезапустите программу.", "Устройства не найдены");
 			}
-		}
+		} // Метка старости (Изменить)
 
-		private void SimpleSurvey()
+        #region Start
+        private void SimpleSurvey()
 		{
 			//UI_labels[1].Text = cl[selected_client].Name;
 
@@ -395,242 +410,9 @@ namespace Device_Control_2
 			Survey_grid(Fill_main());
 
 			//TryPing(cl[choosed_client].Ip);
-		}
+		} // Метка старости (Изменить)
 
-		private void Survey()
-		{
-			if (timer1.Enabled)
-				timer1.Stop();
-
-			try
-			{
-				Ping ping = new Ping();
-				ping.PingCompleted += new PingCompletedEventHandler(Received_ping_reply);
-				ping.SendAsync(cl[current_client].Ip, 3000, waiter);
-
-				//buttons[current_client].Image = Properties.Resources.big_snake_loader;
-			}
-			catch
-			{
-				Console.WriteLine("Network is unavailable, check connection and restart program.");
-
-				display.On();
-
-				Console.Beep(2000, 1000);
-
-				log.Write("Соединение отсутствует");
-
-				CheckPingConnectionChanges(connection[current_client, 0], 0, current_client);
-			}
-
-
-		}
-
-		private void TryPing(string ip)
-		{
-			try // if (NetworkInterface.GetIsNetworkAvailable())
-			{
-				Ping ping = new Ping();
-				//ping.PingCompleted += new PingCompletedEventHandler(Received_simple_reply);
-				ping.SendAsync(ip, 3000, waiter);
-			}
-			catch // else
-			{
-				display.On();
-
-				Console.Beep(2000, 1000);
-
-				Connection(false);
-			}
-		}
-
-		private void Received_ping_reply(object sender, PingCompletedEventArgs e)
-		{
-			if (e.Cancelled)
-				((AutoResetEvent)e.UserState).Set();
-
-			if (e.Error != null)
-				((AutoResetEvent)e.UserState).Set();
-
-			// Let the main thread resume.
-			((AutoResetEvent)e.UserState).Set();
-
-			Connection(true);
-
-			if (e.Reply.Status == IPStatus.Success)
-			{
-				CheckPingConnectionChanges(connection[current_client, 0], 2, current_client);
-
-				//buttons[current_client].Image = Properties.Resources.device_ok48;
-
-				connection[current_client, 0] = 2;
-			}
-			else
-			{
-				CheckPingConnectionChanges(connection[current_client, 0], 1, current_client);
-
-				//buttons[current_client].Image = Properties.Resources.device_red48;
-
-				connection[current_client, 0] = 1;
-
-				display.On();
-
-				Console.Beep(2000, 1000);
-			}
-
-			SurveyUpdate();
-
-			if (++current_client == cl.Length)
-			{
-				current_client = 0;
-
-				if (!timer1.Enabled)
-					timer1.Start();
-			}
-			else
-				Survey();
-		}
-
-		private void Received_simple_reply(object sender, PingCompletedEventArgs e)
-		{
-			if (e.Cancelled)
-				((AutoResetEvent)e.UserState).Set();
-
-			if (e.Error != null)
-				((AutoResetEvent)e.UserState).Set();
-
-			// Let the main thread resume.
-			((AutoResetEvent)e.UserState).Set();
-
-			Connection(true);
-
-			if (e.Reply.Status == IPStatus.Success)
-			{
-				CheckPingConnectionChanges(connection[selected_client, 0], 2, selected_client);
-
-				Change_Ping_Status(1);
-				Change_SNMP_Status(0);
-
-				connection[selected_client, 0] = 2;
-
-				//buttons[selected_client].Image = Properties.Resources.device_ok48;
-
-				//WriteLog(true, "Связь присутствует");
-
-				Survey_grid(Fill_main());
-			}
-			else
-			{
-				CheckPingConnectionChanges(connection[selected_client, 0], 1, selected_client);
-
-				Change_Ping_Status(3);
-
-				//buttons[selected_client].Image = Properties.Resources.device_red48;
-
-				connection[selected_client, 0] = 1;
-
-				display.On();
-
-				Console.Beep(2000, 1000);
-
-				//WriteLog(true, "Связь отсутствует");
-			}
-
-			SurveyUpdate();
-		}
-
-		private void Connection(bool success)
-		{
-			if (success)
-			{
-				if (conn_state == 0)
-					log.WriteEvent("Соединение присутствует");
-				else if (conn_state == 1)
-					log.WriteEvent("Соединение восстановлено");
-
-				conn_state = 2;
-			}
-			else
-			{
-				if (conn_state == 0)
-					log.WriteEvent("Соединение отсутствует");
-				else if (conn_state == 2)
-					log.WriteEvent("Соединение утеряно");
-
-				conn_state = 1;
-			}
-		}
-
-		private void CheckPingConnectionChanges(int original, int status, int client)
-		{
-			string connection = "";
-
-			if (status != original)
-			{
-				if (original == 0)
-				{
-					if (status == 2)
-						connection = "присутствует";
-					else
-					{
-						connection = "отсутствует";
-
-						notifications[(client * 10) + 0].State = true;
-						if (notifications[(client * 10) + 0].Time == "" || notifications[(client * 10) + 0].Time == null)
-							notifications[(client * 10) + 0].Time = DateTime.Now.ToString();
-					}
-				}
-				else
-				{
-					if (status == 2)
-					{
-						connection = "восстановлена";
-
-						notifications[(client * 10) + 0].State = false;
-						if (notifications[(client * 10) + 0].Time != "" && notifications[(client * 10) + 0].Time != null)
-							notifications[(client * 10) + 0].Time = "";
-					}
-					else
-					{
-						connection = "утеряна";
-
-						notifications[(client * 10) + 0].State = true;
-						if (notifications[(client * 10) + 0].Time == "" || notifications[(client * 10) + 0].Time == null)
-							notifications[(client * 10) + 0].Time = DateTime.Now.ToString();
-					}
-				}
-
-				notify.Update_list(notifications);
-				Focus();
-
-				log.WriteEvent(cl[client].Name + " / " + cl[client].Ip, "Связь с устройством: [Ping]= " + connection);
-			}
-		}
-
-		private void Change_Ping_Status(int stat)
-		{
-			switch (stat)
-			{
-				case 0:
-					pictureBox2.Image = Properties.Resources.ajax_loader;
-					break;
-				case 1:
-					pictureBox2.Image = Properties.Resources.green24;
-					break;
-				case 2:
-					pictureBox2.Image = Properties.Resources.orange24;
-					break;
-				case 3:
-					pictureBox2.Image = Properties.Resources.red24;
-					Change_SNMP_Status(3);
-					break;
-				case 4:
-					pictureBox2.Image = Properties.Resources.gray24;
-					Change_SNMP_Status(4);
-					break;
-			}
-		}
-
+		#region SimpleSurvey
 		private int Fill_main()
 		{
 			SnmpV1Packet result = SurveyList(cl[selected_client].Ip, std);
@@ -653,6 +435,64 @@ namespace Device_Control_2
 			Change_SNMP_Status(1);
 
 			return ifNumber;
+		} // Метка старости (Пересмотреть)
+
+		#region Fill_main
+		private SnmpV1Packet SurveyList(IPAddress ip, Pdu list)
+		{
+			// SNMP community name
+			//OctetString comm;
+
+			/*if (community == 1)
+				comm = new OctetString("private");
+			else*/
+			OctetString comm = new OctetString("public");
+
+			// Define agent parameters class
+			AgentParameters param = new AgentParameters(comm);
+			// Set SNMP version to 1 (or 2)
+			param.Version = SnmpVersion.Ver1;
+			// Construct the agent address object
+			// IpAddress class is easy to use here because
+			//  it will try to resolve constructor parameter if it doesn't
+			//  parse to an IP address
+			IpAddress agent = new IpAddress(ip);
+
+			// Construct target
+			UdpTarget target = new UdpTarget(ip, 161, 2000, 1);
+
+			// Pdu class used for all requests
+			Pdu pdu = list;
+
+			SnmpV1Packet result = null;
+
+			try
+			{
+				// Make SNMP request
+				result = (SnmpV1Packet)target.Request(list, param);
+			}
+			catch
+			{
+				//MessageBox.Show("пропадание связи по SNMP");
+				log.WriteEvent(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Связь с устройством: [SNMP]= утеряна");
+			}
+
+			// If result is null then agent didn't reply or we couldn't parse the reply.
+			if (result != null)
+				if (result.Pdu.ErrorStatus != 0)
+					Console.WriteLine("Error in SNMP reply. Error {0} index {1}", result.Pdu.ErrorStatus, result.Pdu.ErrorIndex);
+				else
+				{
+					target.Close();
+
+					return result;
+				}
+			else
+				Console.WriteLine("No response received from SNMP agent.");
+
+			target.Close();
+
+			return result;
 		}
 
 		private void CheckStdOIDChanges(string original, int oid_id, string oid_result)
@@ -667,7 +507,7 @@ namespace Device_Control_2
 
 				log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной" + was_changed + ": [" + std_oid_names[oid_id] + "]=" + oid_result);
 			}
-		}
+		} // Метка старости (Удалить)
 
 		private void GetTime()
 		{
@@ -694,12 +534,13 @@ namespace Device_Control_2
 				UI_labels[14].Text = DateTimeOffset.FromUnixTimeSeconds(convertedTime).ToString().Substring(0, 19);
 			}
 			else
-            {
+			{
 				UI_labels[9].Visible = false;
 				UI_labels[14].Text = "";
 			}
 		}
 
+		#region GetTime
 		private string Decrypt_Time(string value)
 		{
 			string result, days = "", hours = "", minutes = "", seconds = "", milliseconds = "";
@@ -752,6 +593,22 @@ namespace Device_Control_2
 			return result;
 		}
 
+		private void CheckModOIDChanges(string original, int oid_id, string oid_result, int client)
+		{
+			//oid_id = (selected_client * 10) + oid_id;
+			//oid_id += 2;
+
+			if (oid_result != original)
+				if (original == "" || original == null)
+				{
+					string jopa = cl[client].Modified[oid_id, 1];
+					log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной: [" + cl[client].Modified[oid_id, 1] + "]=" + oid_result);
+				}
+				else
+					log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной было изменено: [" + cl[client].Modified[oid_id, 1] + "]=" + oid_result);
+		}
+		#endregion GetTime
+
 		private void GetMod()
 		{
 			if (cl[selected_client].Modified != null)
@@ -762,7 +619,7 @@ namespace Device_Control_2
 
 				Pdu modified = new Pdu(PduType.Get);
 
-				for(int i = 0; i < cl[selected_client].Modified.Length / 3; i++)
+				for (int i = 0; i < cl[selected_client].Modified.Length / 3; i++)
 					modified.VbList.Add(cl[selected_client].Modified[i, 0]);
 
 				SnmpV1Packet result = SurveyList(cl[selected_client].Ip, modified);
@@ -800,6 +657,7 @@ namespace Device_Control_2
 			}
 		}
 
+		#region GetMod
 		private void CheckTemperature(int cur_t, int max_t, int min_t)
 		{
 			if (cur_t >= max_t || cur_t <= min_t)
@@ -826,6 +684,7 @@ namespace Device_Control_2
 			notify.Update_list(notifications);
 			Focus();
 		}
+		#endregion GetMod
 
 		private void GetAdd()
 		{
@@ -843,21 +702,6 @@ namespace Device_Control_2
 				CheckModOIDChanges(label26.Text, 9, result.Pdu.VbList[9].Value.ToString());
 				label26.Text = result.Pdu.VbList[9].Value.ToString();*/
 			}
-		}
-
-		private void CheckModOIDChanges(string original, int oid_id, string oid_result, int client)
-		{
-			//oid_id = (selected_client * 10) + oid_id;
-			//oid_id += 2;
-
-			if (oid_result != original)
-				if (original == "" || original == null)
-				{
-					string jopa = cl[client].Modified[oid_id, 1];
-					log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной: [" + cl[client].Modified[oid_id, 1] + "]=" + oid_result);
-				}
-				else
-					log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной было изменено: [" + cl[client].Modified[oid_id, 1] + "]=" + oid_result);
 		}
 
 		private void Change_SNMP_Status(int stat)
@@ -890,8 +734,9 @@ namespace Device_Control_2
 					break;
 			}
 		}
-		// Доделать
-		private void Survey_grid(int ifNum)
+        #endregion Fill_main
+
+        private void Survey_grid(int ifNum)
 		{
 			int fi = 0, ri = 0;
 
@@ -905,7 +750,7 @@ namespace Device_Control_2
 			while (/*flag == */true) // бред, но работает только в том случае, если оиды из одной подсетки (из разных запрещено делать запросы)
 			{
 				Pdu list = new Pdu(PduType.Get);
-								
+
 				list.VbList.Add("1.3.6.1.2.1.2.2.1.1." + i); // 1 столбец
 				list.VbList.Add("1.3.6.1.2.1.2.2.1.2." + i); // 2 столбец
 				list.VbList.Add("1.3.6.1.2.1.2.2.1.3." + i); // 6 столбец
@@ -971,17 +816,17 @@ namespace Device_Control_2
 						state_to_log = "2";
 
 					interfaces[k, 0] = (k + 1).ToString(); // result.Pdu.VbList[0].Value.ToString();
-					
-						CheckITableChanges(interfaces[k, 1], k, result.Pdu.VbList[1].Value.ToString(), "ifDescr");
-					
+
+					CheckITableChanges(interfaces[k, 1], k, result.Pdu.VbList[1].Value.ToString(), "ifDescr");
+
 					interfaces[k, 1] = result.Pdu.VbList[1].Value.ToString();
 
-						CheckITableChanges(state_to_log, k, result.Pdu.VbList[4].Value.ToString(), "ifOperStatus");
-					
+					CheckITableChanges(state_to_log, k, result.Pdu.VbList[4].Value.ToString(), "ifOperStatus");
+
 					interfaces[k, 3] = state;
-					
-						CheckITableChanges(Convert.ToInt32(interfaces[k, 4]) * 1000000 + "", k, result.Pdu.VbList[3].Value.ToString(), "ifSpeed");
-					
+
+					CheckITableChanges(Convert.ToInt32(interfaces[k, 4]) * 1000000 + "", k, result.Pdu.VbList[3].Value.ToString(), "ifSpeed");
+
 					interfaces[k, 4] = Convert.ToInt32(result.Pdu.VbList[3].Value.ToString()) / 1000000 + "";
 					interfaces[k, 5] = type;
 
@@ -1003,7 +848,7 @@ namespace Device_Control_2
 				}
 				else
 					empty++;
-				
+
 				i++;
 			}
 
@@ -1034,9 +879,10 @@ namespace Device_Control_2
 			}
 
 			Fill_grid(fi);
-		}
+		} // Метка старости (Удалить)
 
-		private void CheckITableChanges(string original, int ifindex, string oid_result, string oid_name)
+        #region Survey_grid
+        private void CheckITableChanges(string original, int ifindex, string oid_result, string oid_name)
 		{
 			if (oid_result != original)
 				if (original == "" || original == null)
@@ -1072,62 +918,173 @@ namespace Device_Control_2
 				}
 			}
 		}
+		#endregion Survey_grid
+		#endregion SimpleSurvey
 
-		private SnmpV1Packet SurveyList(IPAddress ip, Pdu list)
+		private void Survey()
 		{
-			// SNMP community name
-			//OctetString comm;
-
-			/*if (community == 1)
-				comm = new OctetString("private");
-			else*/
-			OctetString comm = new OctetString("public");
-
-			// Define agent parameters class
-			AgentParameters param = new AgentParameters(comm);
-			// Set SNMP version to 1 (or 2)
-			param.Version = SnmpVersion.Ver1;
-			// Construct the agent address object
-			// IpAddress class is easy to use here because
-			//  it will try to resolve constructor parameter if it doesn't
-			//  parse to an IP address
-			IpAddress agent = new IpAddress(ip);
-
-			// Construct target
-			UdpTarget target = new UdpTarget(ip, 161, 2000, 1);
-
-			// Pdu class used for all requests
-			Pdu pdu = list;
-
-			SnmpV1Packet result = null;
+			if (timer1.Enabled)
+				timer1.Stop();
 
 			try
 			{
-				// Make SNMP request
-				result = (SnmpV1Packet)target.Request(list, param);
+				Ping ping = new Ping();
+				ping.PingCompleted += new PingCompletedEventHandler(Received_ping_reply);
+				ping.SendAsync(cl[current_client].Ip, 3000, waiter);
+
+				//buttons[current_client].Image = Properties.Resources.big_snake_loader;
 			}
 			catch
 			{
-				//MessageBox.Show("пропадание связи по SNMP");
-				log.WriteEvent(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Связь с устройством: [SNMP]= утеряна");
-			}
+				Console.WriteLine("Network is unavailable, check connection and restart program.");
 
-			// If result is null then agent didn't reply or we couldn't parse the reply.
-			if (result != null)
-				if (result.Pdu.ErrorStatus != 0)
-					Console.WriteLine("Error in SNMP reply. Error {0} index {1}", result.Pdu.ErrorStatus, result.Pdu.ErrorIndex);
+				display.On();
+
+				Console.Beep(2000, 1000);
+
+				log.Write("Соединение отсутствует");
+
+				CheckPingConnectionChanges(connection[current_client, 0], 0, current_client);
+			}
+		} // Метка старости (Удалить)
+
+		#region Survey
+		private void CheckPingConnectionChanges(int original, int status, int client)
+		{
+			string connection = "";
+
+			if (status != original)
+			{
+				if (original == 0)
+				{
+					if (status == 2)
+						connection = "присутствует";
+					else
+					{
+						connection = "отсутствует";
+
+						notifications[(client * 10) + 0].State = true;
+						if (notifications[(client * 10) + 0].Time == "" || notifications[(client * 10) + 0].Time == null)
+							notifications[(client * 10) + 0].Time = DateTime.Now.ToString();
+					}
+				}
 				else
 				{
-					target.Close();
+					if (status == 2)
+					{
+						connection = "восстановлена";
 
-					return result;
+						notifications[(client * 10) + 0].State = false;
+						if (notifications[(client * 10) + 0].Time != "" && notifications[(client * 10) + 0].Time != null)
+							notifications[(client * 10) + 0].Time = "";
+					}
+					else
+					{
+						connection = "утеряна";
+
+						notifications[(client * 10) + 0].State = true;
+						if (notifications[(client * 10) + 0].Time == "" || notifications[(client * 10) + 0].Time == null)
+							notifications[(client * 10) + 0].Time = DateTime.Now.ToString();
+					}
 				}
+
+				notify.Update_list(notifications);
+				Focus();
+
+				log.WriteEvent(cl[client].Name + " / " + cl[client].Ip, "Связь с устройством: [Ping]= " + connection);
+			}
+		} // Метка старости (Пересмотреть)
+		#endregion Survey
+
+		private void TryPing(string ip)
+		{
+			try // if (NetworkInterface.GetIsNetworkAvailable())
+			{
+				Ping ping = new Ping();
+				//ping.PingCompleted += new PingCompletedEventHandler(Received_simple_reply);
+				ping.SendAsync(ip, 3000, waiter);
+			}
+			catch // else
+			{
+				display.On();
+
+				Console.Beep(2000, 1000);
+
+				Connection(false);
+			}
+		}// Метка старости (Пересмотреть)
+		#endregion Start
+		#endregion Form1
+
+		#region События
+		private void Received_ping_reply(object sender, PingCompletedEventArgs e)
+		{
+			if (e.Cancelled)
+				((AutoResetEvent)e.UserState).Set();
+
+			if (e.Error != null)
+				((AutoResetEvent)e.UserState).Set();
+
+			// Let the main thread resume.
+			((AutoResetEvent)e.UserState).Set();
+
+			Connection(true);
+
+			if (e.Reply.Status == IPStatus.Success)
+			{
+				CheckPingConnectionChanges(connection[current_client, 0], 2, current_client);
+
+				//buttons[current_client].Image = Properties.Resources.device_ok48;
+
+				connection[current_client, 0] = 2;
+			}
 			else
-				Console.WriteLine("No response received from SNMP agent.");
+			{
+				CheckPingConnectionChanges(connection[current_client, 0], 1, current_client);
 
-			target.Close();
+				//buttons[current_client].Image = Properties.Resources.device_red48;
 
-			return result;
+				connection[current_client, 0] = 1;
+
+				display.On();
+
+				Console.Beep(2000, 1000);
+			}
+
+			SurveyUpdate();
+
+			if (++current_client == cl.Length)
+			{
+				current_client = 0;
+
+				if (!timer1.Enabled)
+					timer1.Start();
+			}
+			else
+				Survey();
+		}
+
+		#region Received_ping_reply
+		private void Connection(bool success)
+		{
+			if (success)
+			{
+				if (conn_state == 0)
+					log.WriteEvent("Соединение присутствует");
+				else if (conn_state == 1)
+					log.WriteEvent("Соединение восстановлено");
+
+				conn_state = 2;
+			}
+			else
+			{
+				if (conn_state == 0)
+					log.WriteEvent("Соединение отсутствует");
+				else if (conn_state == 2)
+					log.WriteEvent("Соединение утеряно");
+
+				conn_state = 1;
+			}
 		}
 
 		private void SurveyUpdate()
@@ -1137,14 +1094,88 @@ namespace Device_Control_2
 			time += (DateTime.Now.Minute < 10) ? "0" + DateTime.Now.Minute : DateTime.Now.Minute.ToString();
 			UI_labels[4].Text = "Последний раз обновлено: " + time;
 		}
-        #endregion
+		#endregion Received_ping_reply
 
-        #region События
+		private void Received_simple_reply(object sender, PingCompletedEventArgs e)
+		{
+			if (e.Cancelled)
+				((AutoResetEvent)e.UserState).Set();
+
+			if (e.Error != null)
+				((AutoResetEvent)e.UserState).Set();
+
+			// Let the main thread resume.
+			((AutoResetEvent)e.UserState).Set();
+
+			Connection(true);
+
+			if (e.Reply.Status == IPStatus.Success)
+			{
+				CheckPingConnectionChanges(connection[selected_client, 0], 2, selected_client);
+
+				Change_Ping_Status(1);
+				Change_SNMP_Status(0);
+
+				connection[selected_client, 0] = 2;
+
+				//buttons[selected_client].Image = Properties.Resources.device_ok48;
+
+				//WriteLog(true, "Связь присутствует");
+
+				Survey_grid(Fill_main());
+			}
+			else
+			{
+				CheckPingConnectionChanges(connection[selected_client, 0], 1, selected_client);
+
+				Change_Ping_Status(3);
+
+				//buttons[selected_client].Image = Properties.Resources.device_red48;
+
+				connection[selected_client, 0] = 1;
+
+				display.On();
+
+				Console.Beep(2000, 1000);
+
+				//WriteLog(true, "Связь отсутствует");
+			}
+
+			SurveyUpdate();
+		}
+
+		#region Received_simple_reply
+		private void Change_Ping_Status(int stat)
+		{
+			switch (stat)
+			{
+				case 0:
+					pictureBox2.Image = Properties.Resources.ajax_loader;
+					break;
+				case 1:
+					pictureBox2.Image = Properties.Resources.green24;
+					break;
+				case 2:
+					pictureBox2.Image = Properties.Resources.orange24;
+					break;
+				case 3:
+					pictureBox2.Image = Properties.Resources.red24;
+					Change_SNMP_Status(3);
+					break;
+				case 4:
+					pictureBox2.Image = Properties.Resources.gray24;
+					Change_SNMP_Status(4);
+					break;
+			}
+		}
+		#endregion Received_simple_reply
+
         private void Form1_Resize(object sender, EventArgs e)
 		{
 			Resize_form();
 		}
 
+		#region Form1_Resize
 		private void Resize_form()
 		{
 			if (ClientSize.Width > 777)
@@ -1161,11 +1192,19 @@ namespace Device_Control_2
 
 			//label3.Text = ClientSize.Width + ":" + ClientSize.Height; // 539 (+16) / 276 (+39)
 		}
+		#endregion Form1_Resize
 
+		#region Timers
 		private void timer1_Tick(object sender, EventArgs e)
 		{
 			Survey();
 		}
+
+		private void timer2_Tick(object sender, EventArgs e)
+		{
+			SimpleSurvey();
+		}
+		#endregion Timers
 
 		private void Form1_FormClosing(object sender, FormClosingEventArgs e)
 		{
@@ -1183,6 +1222,7 @@ namespace Device_Control_2
 			}
 		}
 
+		#region Tray
 		private void openTSM_Click(object sender, EventArgs e)
 		{
 			Show();
@@ -1190,32 +1230,23 @@ namespace Device_Control_2
 			WindowState = FormWindowState.Normal;
 		}
 
+		private void commentTSM_Click(object sender, EventArgs e)
+		{
+
+		}
+
+		private void aboutTSM_Click(object sender, EventArgs e)
+		{
+
+		}
+
 		private void exitTSM_Click(object sender, EventArgs e)
 		{
 			TrayIcon.Visible = false;
 
 			Application.Exit();
-		}
-
-		private void timer2_Tick(object sender, EventArgs e)
-		{
-			SimpleSurvey();
-		}
-
-        private void commentTSM_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void aboutTSM_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void Form1_ClientSizeChanged(object sender, EventArgs e)
-		{
-			Resize_form();
-		}
+		} // Метка старости (Изменить)
+		#endregion Tray
 
         private void dataGridView2_CellMouseClick(object sender, MouseEventArgs e)
 		{
@@ -1247,6 +1278,17 @@ namespace Device_Control_2
 				Switch_UI_visibility(false);
 		}
 
+		#region dataGridView2_CellMouseClick
+		private void ChangeInfo()
+		{
+			UI_labels[1].Text = cl[selected_client].Name;
+
+			if (!cl[selected_client].Connect)
+				UI_labels[2].Text = "Неактивный";
+
+			//Hide_UI();
+		}
+
 		private void Switch_UI_visibility(bool show_UI)
 		{
 			panel1.Visible = show_UI;
@@ -1262,7 +1304,9 @@ namespace Device_Control_2
 				}
 			}
 		}
+		#endregion dataGridView2_CellMouseClick
 
+		#region Button
 		private void button1_MouseEnter(object sender, EventArgs e)
 		{
 			panel3.BackColor = SystemColors.Highlight;
@@ -1290,23 +1334,20 @@ namespace Device_Control_2
 
 			GetConnList();
 
-			InitDevList();
+			InitDeviceList();
 		}
 
-        private void HideButton()
+		#region button_Click
+		private void HideButton()
 		{
 			panel3.Location = new Point(0, -100);
 			panel3.BackColor = Color.FromArgb(173, 173, 173);
 		}
+		#endregion button_Click
+		#endregion Button
+		#endregion
 
-		private void mouse_button_Click(object sender, EventArgs e)
-		{
-			MouseEventArgs mouseEvent = (MouseEventArgs)e;
-
-			if (mouseEvent.Button == MouseButtons.Right) { MessageBox.Show("Right click"); }
-			if (mouseEvent.Button == MouseButtons.Left) { MessageBox.Show("Left click"); }
-		}
-
+		#region Доп. Методы
 		private int FindGroup(object sender, object[] compare_with)
 		{
 			int result;
@@ -1316,16 +1357,6 @@ namespace Device_Control_2
 					break;
 
 			return result;
-		}
-
-		private void ChangeInfo()
-        {
-			UI_labels[1].Text = cl[selected_client].Name;
-
-			if (!cl[selected_client].Connect)
-				UI_labels[2].Text = "Неактивный";
-
-			//Hide_UI();
 		}
 
 		private void Hide_UI()

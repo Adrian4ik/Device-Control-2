@@ -413,7 +413,6 @@
             this.Name = "Form1";
             this.Text = "DeviceControl 2 - Устройства";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
-            this.ClientSizeChanged += new System.EventHandler(this.Form1_ClientSizeChanged);
             this.Resize += new System.EventHandler(this.Form1_Resize);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.tabControl1.ResumeLayout(false);
