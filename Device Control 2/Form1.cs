@@ -112,7 +112,7 @@ namespace Device_Control_2
 
 			InitStandartLabels();
 
-			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.3 (6.3)");
+			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.3 (6.4)");
 
 			cl = devs.ScanDevices;
 
@@ -368,12 +368,12 @@ namespace Device_Control_2
 				if (!timer1.Enabled)
 					timer1.Start();
 
-				if (!timer2.Enabled)
-					timer2.Start();
+				//if (!timer2.Enabled)
+					//timer2.Start();
 
 				SimpleSurvey();
 
-				Survey();
+				//Survey();
 			}
 			else
 			{
@@ -386,7 +386,7 @@ namespace Device_Control_2
 		{
 			//UI_labels[1].Text = cl[selected_client].Name;
 
-			/*try // if (NetworkInterface.GetIsNetworkAvailable())
+			try // if (NetworkInterface.GetIsNetworkAvailable())
 			{
 				Ping ping = new Ping();
 				ping.PingCompleted += new PingCompletedEventHandler(Received_simple_reply);
@@ -405,9 +405,9 @@ namespace Device_Control_2
 				CheckPingConnectionChanges(connection[current_client, 0], 0, current_client);
 
 				Change_SNMP_Status(4);
-			}*/
+			}
 
-			Survey_grid(Fill_main());
+			//Survey_grid(Fill_main());
 
 			//TryPing(cl[choosed_client].Ip);
 		} // Метка старости (Изменить)
