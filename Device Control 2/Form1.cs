@@ -119,7 +119,7 @@ namespace Device_Control_2
 
 			InitStandartLabels();
 
-			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.4 (0)");
+			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.4 (1)");
 
 			cl = devs.ScanDevices;
 
@@ -209,7 +209,12 @@ namespace Device_Control_2
 								vals[k] = Convert.ToInt32(trap.vb[k].Value.ToString());
 							}
 
-							CheckTemperature(vals, i);
+							foreach (Vb v in trap.vb)
+                            {
+								
+                            }
+
+							CheckTemperature(ChangeVar(trap.vb, cl[i].Modified, i), i);
 						}
 						else
 						{
@@ -231,6 +236,28 @@ namespace Device_Control_2
 					}
 				}
 			}
+		}
+
+		private int[] ChangeVar(Vb[] vbs, string[,] array, int counter)
+		{
+			int[] vals = new int[vbs.Length];
+
+			for (int j = 0; j < array.Length / 3; j++)
+			{
+				int k = 0;
+
+				foreach (Vb v in vbs)
+				{
+					if (array[j, 0] == v.Oid.ToString())
+					{
+						log.WriteEvent(cl[counter].Name + " / " + cl[counter].Ip, "Значение переменной было изменено" + ": [" + array[j, 1] + "]=" + v.Value);
+
+						vals[k++] = Convert.ToInt32(v.Value.ToString());
+					}
+				}
+			}
+
+			return vals;
 		}
 
 		private void CheckTemperature(int[] values, int counter)
