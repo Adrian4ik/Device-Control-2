@@ -69,6 +69,12 @@ namespace Device_Control_2
 			public string Text { get; set; }
 			public string Time { get; set; }
 		}
+
+		public struct trap_result
+		{
+			public IPAddress Ip;
+			public Vb[] vb;
+		}
 		#endregion Структуры
 
 		#region Структурные объекты
@@ -92,6 +98,7 @@ namespace Device_Control_2
 		#region Внешние классы
 		Logs log = new Logs();
 		RawDeviceList devs = new RawDeviceList();
+		Traps traps = new Traps();
 		Display display = new Display();
 		#endregion Внешние классы
 
@@ -112,13 +119,15 @@ namespace Device_Control_2
 
 			InitStandartLabels();
 
-			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.3 (6.4)");
+			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.4 (0)");
 
 			cl = devs.ScanDevices;
 
 			if (cl.Length > 0)
 			{
 				dataGridView2.Rows.Add(cl.Length + 1);
+				traps.RegisterCallback(GetError);
+				traps.RegisterCallback(GetTrap);
 
 				InitClientList();
 
@@ -144,9 +153,114 @@ namespace Device_Control_2
 				log.WriteEvent("Список устройств пуст");
 			}
 		}
-        
+
 		#region Preprocess
-        private void InitStandartLabels()
+		protected delegate void PostAsyncMessageDelegate(string msg);
+
+		public delegate void PostAsyncResultDelegate(trap_result res);
+
+		void GetError(string msg)
+		{
+			//Console.WriteLine($"{txt}");
+
+			if (InvokeRequired)
+				Invoke(new PostAsyncMessageDelegate(GetError), new object[] { msg });
+			//else
+				//listBox1.Items.Add(msg);
+		}
+
+		void GetTrap(trap_result res)
+		{
+			if (InvokeRequired)
+				Invoke(new PostAsyncResultDelegate(GetTrap), new object[] { res });
+			else
+			{
+				//listBox1.Items.Add(res.Ip);
+				/*dataGridView1.Rows.Add(res.Ip, "");
+
+				foreach (Vb vb in res.vb)
+				{
+					//listBox1.Items.Add(vb.Oid);
+					//listBox1.Items.Add(vb.Value);
+					//listBox1.Items.Add(vb.Type);
+					dataGridView1.Rows.Add(vb.Oid, vb.Value);
+				}*/
+
+				DecryptTrap(res);
+			}
+		}
+
+		private void DecryptTrap(trap_result trap)
+		{
+			for (int i = 0; i < cl.Length; i++)
+			{
+				if (cl[i].Ip.ToString() == trap.Ip.ToString() && cl[i].Connect)
+				{
+					for(int j = 0; j < cl[i].Modified.Length / 3; j++)
+					{
+						if(trap.vb.Length == 3)
+						{
+							int[] vals = new int[3];
+
+							for (int k = 0; k < trap.vb.Length; k++)
+							{
+								log.WriteEvent(cl[i].Name + " / " + cl[i].Ip, "Значение переменной было изменено" + ": [" + cl[i].Modified[j, 1] + "]=" + trap.vb[k].Value);
+
+								vals[k] = Convert.ToInt32(trap.vb[k].Value.ToString());
+							}
+
+							CheckTemperature(vals, i);
+						}
+						else
+						{
+							for (int k = 0; k < trap.vb.Length; k++)
+							{
+								if (cl[i].Modified[j, 0] == trap.vb[k].Oid.ToString())
+									log.WriteEvent(cl[i].Name + " / " + cl[i].Ip, "Значение переменной было изменено" + ": [" + cl[i].Modified[j, 1] + "]=" + trap.vb[k].Value);
+							}
+						}
+					}
+
+					for (int j = 0; j < cl[i].Addition.Length / 3; j++)
+					{
+						foreach (Vb v in trap.vb)
+						{
+							if (cl[i].Addition[j, 0] == v.Oid.ToString())
+								log.WriteEvent(cl[i].Name + " / " + cl[i].Ip, "Значение переменной было изменено" + ": [" + cl[i].Addition[j, 1] + "]=" + v.Value);
+						}
+					}
+				}
+			}
+		}
+
+		private void CheckTemperature(int[] values, int counter)
+		{
+			if (values[0] >= values[1] || values[0] <= values[2])
+			{
+				notifications[(counter * 10) + 2].State = true;
+				if (notifications[(counter * 10) + 2].Time == "" || notifications[(counter * 10) + 2].Time == null)
+				{
+					notifications[(counter * 10) + 2].Time = DateTime.Now.ToString();
+
+					log.WriteEvent(cl[counter].Name + " / " + cl[counter].Ip, "Нештатное значение температуры: [max temperature]= " + values[1] + " / [temperature]= " + values[0]);
+				}
+			}
+			else
+			{
+				notifications[(counter * 10) + 2].State = false;
+				if (notifications[(counter * 10) + 2].Time != "" && notifications[(counter * 10) + 2].Time != null)
+				{
+					notifications[(counter * 10) + 2].Time = "";
+
+					log.WriteEvent(cl[counter].Name + " / " + cl[counter].Ip, "Возврат температуры к норме: [max temperature]= " + values[1] + " / [temperature]= " + values[0]);
+				}
+			}
+
+			notify.Update_list(notifications);
+			Focus();
+		}
+
+		private void InitStandartLabels()
         {
 			for (int i = 0; i < 20; i++)
             {
