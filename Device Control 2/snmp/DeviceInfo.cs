@@ -12,8 +12,18 @@ namespace Device_Control_2.snmp
 
         public struct Status
         {
+            int[] interface_list;
+
             public string info_updated_time;
+            public string SysTime;
+
+            public string[] temperatures;
+
+            public string[,] additional;
+            public string[,] interface_table;
         }
+
+        public Status status = new Status();
 
         public DeviceInfo(RawDeviceList.Client client)
         {
@@ -33,11 +43,6 @@ namespace Device_Control_2.snmp
         public void Save()
         {
 
-        }
-
-        public Status GetStatus()
-        {
-            return new Status();
         }
 
         private void Inspect()

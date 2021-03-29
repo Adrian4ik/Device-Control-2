@@ -119,7 +119,7 @@ namespace Device_Control_2
 
 			InitStandartLabels();
 
-			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.4 (1)");
+			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.4 (2)");
 
 			cl = devs.ScanDevices;
 
@@ -196,7 +196,7 @@ namespace Device_Control_2
 			{
 				if (cl[i].Ip.ToString() == trap.Ip.ToString() && cl[i].Connect)
 				{
-					for(int j = 0; j < cl[i].Modified.Length / 3; j++)
+					for(int j = 0; j < cl[i].Temperature.Length / 3; j++)
 					{
 						if(trap.vb.Length == 3)
 						{
@@ -204,7 +204,7 @@ namespace Device_Control_2
 
 							for (int k = 0; k < trap.vb.Length; k++)
 							{
-								log.WriteEvent(cl[i].Name + " / " + cl[i].Ip, "Значение переменной было изменено" + ": [" + cl[i].Modified[j, 1] + "]=" + trap.vb[k].Value);
+								log.WriteEvent(cl[i].Name + " / " + cl[i].Ip, "Значение переменной было изменено" + ": [" + cl[i].Temperature[j, 1] + "]=" + trap.vb[k].Value);
 
 								vals[k] = Convert.ToInt32(trap.vb[k].Value.ToString());
 							}
@@ -214,14 +214,14 @@ namespace Device_Control_2
 								
                             }
 
-							CheckTemperature(ChangeVar(trap.vb, cl[i].Modified, i), i);
+							CheckTemperature(ChangeVar(trap.vb, cl[i].Temperature, i), i);
 						}
 						else
 						{
 							for (int k = 0; k < trap.vb.Length; k++)
 							{
-								if (cl[i].Modified[j, 0] == trap.vb[k].Oid.ToString())
-									log.WriteEvent(cl[i].Name + " / " + cl[i].Ip, "Значение переменной было изменено" + ": [" + cl[i].Modified[j, 1] + "]=" + trap.vb[k].Value);
+								if (cl[i].Temperature[j, 0] == trap.vb[k].Oid.ToString())
+									log.WriteEvent(cl[i].Name + " / " + cl[i].Ip, "Значение переменной было изменено" + ": [" + cl[i].Temperature[j, 1] + "]=" + trap.vb[k].Value);
 							}
 						}
 					}
@@ -742,17 +742,17 @@ namespace Device_Control_2
 			if (oid_result != original)
 				if (original == "" || original == null)
 				{
-					string jopa = cl[client].Modified[oid_id, 1];
-					log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной: [" + cl[client].Modified[oid_id, 1] + "]=" + oid_result);
+					string jopa = cl[client].Temperature[oid_id, 1];
+					log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной: [" + cl[client].Temperature[oid_id, 1] + "]=" + oid_result);
 				}
 				else
-					log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной было изменено: [" + cl[client].Modified[oid_id, 1] + "]=" + oid_result);
+					log.Write(cl[selected_client].Name + " / " + cl[selected_client].Ip, "Значение переменной было изменено: [" + cl[client].Temperature[oid_id, 1] + "]=" + oid_result);
 		}
 		#endregion GetTime
 
 		private void GetMod()
 		{
-			if (cl[selected_client].Modified != null)
+			if (cl[selected_client].Temperature != null)
 			{
 				UI_labels[15].Visible = true;
 				//label16.Visible = true;
@@ -760,8 +760,8 @@ namespace Device_Control_2
 
 				Pdu modified = new Pdu(PduType.Get);
 
-				for (int i = 0; i < cl[selected_client].Modified.Length / 3; i++)
-					modified.VbList.Add(cl[selected_client].Modified[i, 0]);
+				for (int i = 0; i < cl[selected_client].Temperature.Length / 3; i++)
+					modified.VbList.Add(cl[selected_client].Temperature[i, 0]);
 
 				SnmpV1Packet result = SurveyList(cl[selected_client].Ip, modified);
 
@@ -834,7 +834,7 @@ namespace Device_Control_2
 				Pdu addition = new Pdu(PduType.Get);
 
 				for (int i = 0; i < cl[selected_client].Addition.Length / 3; i++)
-					addition.VbList.Add(cl[selected_client].Modified[i, 0]);
+					addition.VbList.Add(cl[selected_client].Temperature[i, 0]);
 
 				SnmpV1Packet result = SurveyList(cl[selected_client].Ip, addition);
 
@@ -1424,10 +1424,42 @@ namespace Device_Control_2
 		{
 			UI_labels[1].Text = cl[selected_client].Name;
 
-			if (!cl[selected_client].Connect)
-				UI_labels[2].Text = "Неактивный";
+			if (cl[selected_client].Connect)
+				ShowInfo(deviceInfo[selected_client].status);
+			else
+				ClearInfo();
+		}
 
-			//Hide_UI();
+		private void ShowInfo(DeviceInfo.Status status)
+        {
+			UI_labels[4].Visible = true;
+			UI_labels[4].Text = status.info_updated_time;
+			UI_labels[8].Visible = true;
+			UI_labels[9].Visible = cl[selected_client].SysTime != null;
+			UI_labels[9].Text = cl[selected_client].SysTime != null ? status.SysTime : "";
+			UI_labels[10].Text = "";
+			UI_labels[11].Text = "";
+			UI_labels[12].Text = "";
+			UI_labels[13].Text = "";
+			UI_labels[14].Text = "";
+			UI_labels[15].Visible = cl[selected_client].Temperature != null;
+			UI_labels[16].Text = "";
+			UI_labels[17].Text = "";
+			UI_labels[18].Text = "";
+		}
+
+		private void ClearInfo()
+		{
+			Change_SNMP_Status(5);
+			dataGridView1.Rows.Clear();
+
+			UI_labels[4].Text = "";
+			UI_labels[8].Visible = false;
+			UI_labels[9].Visible = false;
+
+			for (int i = 10; i < 15; i++) { UI_labels[i].Text = ""; }
+			UI_labels[15].Visible = cl[selected_client].Temperature != null;
+			for (int i = 16; i < 19; i++) { UI_labels[i].Text = ""; }
 		}
 
 		private void Switch_UI_visibility(bool show_UI)
@@ -1498,18 +1530,6 @@ namespace Device_Control_2
 					break;
 
 			return result;
-		}
-
-		private void Hide_UI()
-        {
-			bool current_state = UI_labels[8].Visible;
-
-			UI_labels[8].Visible = !current_state;
-			UI_labels[10].Text = "";
-			UI_labels[11].Text = "";
-			UI_labels[12].Text = "";
-			UI_labels[13].Text = "";
-			UI_labels[5].Visible = true;
 		}
         #endregion
     }

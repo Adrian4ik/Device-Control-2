@@ -26,7 +26,7 @@ namespace Device_Control_2.snmp
 			public string IfName;
 
 			public string[,] Addition;
-			public string[,] Modified;
+			public string[,] Temperature;
 		}
 
 		Client[] actual_list = new Client[1];
@@ -204,14 +204,14 @@ namespace Device_Control_2.snmp
 				client.SysTime = optlist[0, 0];
 				client.IfName = optlist[1, 0];
 
-				client.Modified = new string[mod - 2, 3];
+				client.Temperature = new string[mod - 2, 3];
 				client.Addition = new string[add, 3];
 
 				for (int i = 2; i < mod; i++)
 				{
-					client.Modified[i - 2, 0] = optlist[i, 0];
-					client.Modified[i - 2, 1] = optlist[i, 1];
-					client.Modified[i - 2, 2] = optlist[i, 2];
+					client.Temperature[i - 2, 0] = optlist[i, 0];
+					client.Temperature[i - 2, 1] = optlist[i, 1];
+					client.Temperature[i - 2, 2] = optlist[i, 2];
 				}
 
 				for (int i = 2 + mod; i < mod + add; i++)
