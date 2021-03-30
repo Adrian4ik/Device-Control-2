@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Device_Control_2.snmp
 {
@@ -25,6 +26,8 @@ namespace Device_Control_2.snmp
 
         public Status status = new Status();
 
+        Timer timer = new Timer();
+
         public DeviceInfo(RawDeviceList.Client client)
         {
             cl = client;
@@ -32,6 +35,8 @@ namespace Device_Control_2.snmp
             if (cl.Connect)
             {
                 Inspect();
+                timer.Interval = 6000;
+                timer.Tick += new EventHandler(TimerTick);
             }
         }
 
@@ -57,6 +62,11 @@ namespace Device_Control_2.snmp
             string time = (DateTime.Now.Hour < 10) ? "0" + DateTime.Now.Hour + ":" : DateTime.Now.Hour + ":";
             time += (DateTime.Now.Minute < 10) ? "0" + DateTime.Now.Minute : DateTime.Now.Minute.ToString();
             //info_updated_time = "Последний раз обновлено: " + time;
+        }
+
+        private void TimerTick(object sender, EventArgs e)
+        {
+            UpdateInfo();
         }
     }
 }

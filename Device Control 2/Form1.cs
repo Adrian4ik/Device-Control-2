@@ -119,7 +119,7 @@ namespace Device_Control_2
 
 			InitStandartLabels();
 
-			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.4 (2)");
+			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.4 (3)");
 
 			cl = devs.ScanDevices;
 
