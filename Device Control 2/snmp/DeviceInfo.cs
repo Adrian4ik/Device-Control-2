@@ -36,7 +36,7 @@ namespace Device_Control_2.snmp
             {
                 Inspect();
                 timer.Interval = 6000;
-                timer.Tick += new EventHandler(TimerTick);
+                timer.Tick += new EventHandler(InspectTimer);
             }
         }
 
@@ -62,6 +62,11 @@ namespace Device_Control_2.snmp
             string time = (DateTime.Now.Hour < 10) ? "0" + DateTime.Now.Hour + ":" : DateTime.Now.Hour + ":";
             time += (DateTime.Now.Minute < 10) ? "0" + DateTime.Now.Minute : DateTime.Now.Minute.ToString();
             //info_updated_time = "Последний раз обновлено: " + time;
+        }
+
+        private void InspectTimer(object sender, EventArgs e)
+        {
+            Inspect();
         }
 
         private void TimerTick(object sender, EventArgs e)
