@@ -70,7 +70,7 @@ namespace Device_Control_2
 			public string Time { get; set; }
 		}
 
-		public struct trap_result
+		public struct snmp_result
 		{
 			public IPAddress Ip;
 			public Vb[] vb;
@@ -119,7 +119,7 @@ namespace Device_Control_2
 
 			InitStandartLabels();
 
-			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.4 (4)");
+			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.4 (5)");
 
 			cl = devs.ScanDevices;
 
@@ -157,7 +157,7 @@ namespace Device_Control_2
 		#region Preprocess
 		protected delegate void PostAsyncMessageDelegate(string msg);
 
-		public delegate void PostAsyncResultDelegate(trap_result res);
+		public delegate void PostAsyncResultDelegate(snmp_result res);
 
 		void GetError(string msg)
 		{
@@ -169,7 +169,7 @@ namespace Device_Control_2
 				//listBox1.Items.Add(msg);
 		}
 
-		void GetTrap(trap_result res)
+		void GetTrap(snmp_result res)
 		{
 			if (InvokeRequired)
 				Invoke(new PostAsyncResultDelegate(GetTrap), new object[] { res });
@@ -190,7 +190,7 @@ namespace Device_Control_2
 			}
 		}
 
-		private void DecryptTrap(trap_result trap)
+		private void DecryptTrap(snmp_result trap)
 		{
 			for (int i = 0; i < cl.Length; i++)
 			{
@@ -1132,7 +1132,7 @@ namespace Device_Control_2
 				notify.Update_list(notifications);
 				Focus();
 
-				log.WriteEvent(cl[client].Name + " / " + cl[client].Ip, "Связь с устройством: [Ping]= " + connection);
+				log.WriteEvent(cl[client].Name + " / " + cl[client].Ip, "Связь с устройством: [ICMP]= " + connection);
 			}
 		} // Метка старости (Пересмотреть)
 		#endregion Survey
@@ -1437,10 +1437,8 @@ namespace Device_Control_2
 			UI_labels[8].Visible = true;
 			UI_labels[9].Visible = cl[selected_client].SysTime != null;
 			UI_labels[9].Text = cl[selected_client].SysTime != null ? status.SysTime : "";
-			UI_labels[10].Text = "";
-			UI_labels[11].Text = "";
-			UI_labels[12].Text = "";
-			UI_labels[13].Text = "";
+
+			for(int i = 0; i < 4; i++) { UI_labels[10 + i].Text = status.standart[i]; }
 			UI_labels[14].Text = "";
 			UI_labels[15].Visible = cl[selected_client].Temperature != null;
 			UI_labels[16].Text = "";

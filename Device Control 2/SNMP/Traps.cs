@@ -14,7 +14,7 @@ namespace Device_Control_2.snmp
 
 		private Timer timer1 = new Timer();
 
-		Action<Form1.trap_result> localResult;
+		Action<Form1.snmp_result> localResult;
 		Action<string> localError;
 
 		public Traps()
@@ -174,7 +174,7 @@ namespace Device_Control_2.snmp
 				}
 				if (pkt != null)
 				{
-					Form1.trap_result res = new Form1.trap_result();
+					Form1.snmp_result res = new Form1.snmp_result();
 					res.Ip = _peerIP.Address;
 					res.vb = new Vb[pkt.Pdu.VbList.Count];
 
@@ -251,7 +251,7 @@ namespace Device_Control_2.snmp
 			localError?.Invoke(msg);
 		}
 
-		protected void PostAsyncResult(Form1.trap_result result)
+		protected void PostAsyncResult(Form1.snmp_result result)
 		{
 			localResult?.Invoke(result);
 		}
@@ -261,7 +261,7 @@ namespace Device_Control_2.snmp
 			localError = callback;
 		}
 
-		public void RegisterCallback(Action<Form1.trap_result> callback)
+		public void RegisterCallback(Action<Form1.snmp_result> callback)
 		{
 			localResult = callback;
 
