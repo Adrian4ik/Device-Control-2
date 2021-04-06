@@ -119,7 +119,7 @@ namespace Device_Control_2
 
 			InitStandartLabels();
 
-			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.4 (5)");
+			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.4 (6)");
 
 			cl = devs.ScanDevices;
 
@@ -1192,8 +1192,6 @@ namespace Device_Control_2
 				Console.Beep(2000, 1000);
 			}
 
-			SurveyUpdate();
-
 			if (++current_client == cl.Length)
 			{
 				current_client = 0;
@@ -1226,14 +1224,6 @@ namespace Device_Control_2
 
 				conn_state = 1;
 			}
-		}
-
-		private void SurveyUpdate()
-		{
-			// Тернарная операция: z = (x > y) ? x : y;
-			string time = (DateTime.Now.Hour < 10) ? "0" + DateTime.Now.Hour + ":" : DateTime.Now.Hour + ":";
-			time += (DateTime.Now.Minute < 10) ? "0" + DateTime.Now.Minute : DateTime.Now.Minute.ToString();
-			UI_labels[4].Text = "Последний раз обновлено: " + time;
 		}
 		#endregion Received_ping_reply
 
@@ -1281,8 +1271,6 @@ namespace Device_Control_2
 
 				//WriteLog(true, "Связь отсутствует");
 			}
-
-			SurveyUpdate();
 		}
 
 		#region Received_simple_reply
@@ -1420,11 +1408,11 @@ namespace Device_Control_2
 		}
 
 		#region dataGridView2_CellMouseClick
-		private void ChangeInfo()
+		private void ChangeInfo() //---------------------------------------------------------------------------
 		{
 			UI_labels[1].Text = cl[selected_client].Name;
 
-			if (cl[selected_client].Connect)
+			if (cl[selected_client].Connect && deviceInfo[selected_client].status.snmp_conn != 0)
 				ShowInfo(deviceInfo[selected_client].status);
 			else
 				ClearInfo();

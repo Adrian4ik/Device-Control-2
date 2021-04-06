@@ -1,26 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using SnmpSharpNet;
+using Device_Control_2.Features;
 
 namespace Device_Control_2.snmp
 {
     class DeviceInfo
     {
-        Action<Form1.snmp_result> localResult;
+        Action<Status> localResult;
         Action<string> localError;
 
         Pdu std = new Pdu(PduType.Get);
+
+        Ping ping = new Ping();
+
+        AutoResetEvent waiter = new AutoResetEvent(false);
 
         RawDeviceList.Client cl;
 
         Survey survey;
 
+        bool is_first = true;
+
         public struct Status
         {
+            public int icmp_conn;
+            public int snmp_conn;
+
             public int[] interface_list;
 
             public string info_updated_time;
@@ -35,7 +47,7 @@ namespace Device_Control_2.snmp
 
         public Status status = new Status();
 
-        Timer timer = new Timer();
+        System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
 
         public DeviceInfo(RawDeviceList.Client client)
         {
@@ -49,10 +61,37 @@ namespace Device_Control_2.snmp
 
             if (cl.Connect)
             {
-                Inspect();
+                status.icmp_conn = 0;
+                status.snmp_conn = 0;
+
+                ping.PingCompleted += new PingCompletedEventHandler(Received_ping_reply);
+
                 timer.Interval = 6000;
-                timer.Tick += new EventHandler(InspectTimer);
+                timer.Tick += new EventHandler(TimerTick);
+
+                survey = new Survey(cl.Ip, std);
             }
+        }
+
+        private void Received_ping_reply(object sender, PingCompletedEventArgs e)
+        {
+            if (e.Cancelled)
+                ((AutoResetEvent)e.UserState).Set();
+
+            if (e.Error != null)
+                ((AutoResetEvent)e.UserState).Set();
+
+            // Let the main thread resume.
+            ((AutoResetEvent)e.UserState).Set();
+
+            if (e.Reply.Status == IPStatus.Success)
+            {
+                status.icmp_conn = 2;
+
+                survey.RegisterCallback(GetStandart);
+            }
+            else
+                status.icmp_conn = 0;
         }
 
         public void Init()
@@ -60,71 +99,79 @@ namespace Device_Control_2.snmp
 
         }
 
-        public void Save()
-        {
-
-        }
-
-        private void Inspect()
+        public void Save() //---------------------------------------------------------------------------
         {
             // Первый раз опрашивает устройство и записывает его таблицу интерфейсов для исключения в дальнейшем пустых опросов
-
-            survey = new Survey(cl.Ip, std);
-            survey.RegisterCallback(GetStandart);
-        }
-
-        private string UpdateInfo()
-        {
-            //Survey;
-
-            string time = (DateTime.Now.Hour < 10) ? "0" + DateTime.Now.Hour + ":" : DateTime.Now.Hour + ":";
-            time += (DateTime.Now.Minute < 10) ? "0" + DateTime.Now.Minute : DateTime.Now.Minute.ToString();
-            return "Последний раз обновлено: " + time;
-        }
-
-        private void InspectTimer(object sender, EventArgs e)
-        {
-            Inspect();
-        }
-
-        private void TimerTick(object sender, EventArgs e)
-        {
-            //UpdateInfo();
-        }
-
-        void GetStandart(Form1.snmp_result res)
-        {
-            /*if (InvokeRequired)
-                Invoke(new PostAsyncResultDelegate(GetResult), new object[] { res });
-            else
-            {
-                dataGridView1.Rows.Add(res.Ip, "");
-
-                foreach (Vb vb in res.vb)
-                {
-                    dataGridView1.Rows.Add(vb.Oid, vb.Value);
-                }
-            }*/
 
             status.standart = new string[5];
 
             int i = 0;
 
-            foreach (Vb vb in res.vb)
-            {
-                status.standart[i++] = vb.Value.ToString();
-            }
+            foreach (Vb vb in vbs) { status.standart[i++] = vb.Value.ToString(); }
 
             status.interface_list = new int[int.Parse(status.standart[4])];
 
-            status.info_updated_time = UpdateInfo();
+            is_first = false;
         }
 
-        public delegate void PostAsyncResultDelegate(Form1.snmp_result res);
+        private void Inspect(Vb[] vbs) //---------------------------------------------------------------------------
+        {
+            int i = 0;
 
-        protected void PostAsyncResult(Form1.snmp_result result)
+            foreach (Vb vb in vbs) { status.standart[i++] = vb.Value.ToString(); }
+
+            status.interface_list = new int[int.Parse(status.standart[4])];
+        }
+
+        private string UpdateInfo()
+        {
+            string time = (DateTime.Now.Hour < 10) ? "0" + DateTime.Now.Hour + ":" : DateTime.Now.Hour + ":";
+            time += (DateTime.Now.Minute < 10) ? "0" + DateTime.Now.Minute : DateTime.Now.Minute.ToString();
+            return "Последний раз обновлено: " + time;
+        }
+
+        private void TimerTick(object sender, EventArgs e)
+        {
+            bool to_survey = true;
+
+            try { ping.SendAsync(cl.Ip, 3000, waiter); }
+            catch { to_survey = false; }
+
+            if (to_survey)
+            {
+                survey.RegisterCallback(GetStandart);
+            }
+        }
+
+        void GetStandart(Form1.snmp_result res) //---------------------------------------------------------------------------
+        {
+            if (res.vb != null)
+            {
+                status.snmp_conn = 2;
+
+                if (is_first)
+                    Save();
+                else if (res.vb != null)
+                    Inspect(res.vb);
+
+                status.info_updated_time = UpdateInfo();
+            }
+            else
+                status.snmp_conn = 0;
+        }
+
+        public delegate void PostAsyncResultDelegate(Status result);
+
+        protected void PostAsyncResult(Status result)
         {
             localResult?.Invoke(result);
+        }
+
+        public delegate void ResultDelegate(string result);
+
+        protected void Result(string result)
+        {
+            localError?.Invoke(result);
         }
     }
 }
