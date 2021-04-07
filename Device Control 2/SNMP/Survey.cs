@@ -17,10 +17,38 @@ namespace Device_Control_2.snmp
 		IPAddress ip;
 		Pdu list;
 
-		public Survey(IPAddress address, Pdu pdu)
+		public Survey(IPAddress address)
+		{// Опрашивает список стандартных oid
+			ip = address;
+
+			list = new Pdu();
+
+			list.VbList.Add("1.3.6.1.2.1.1.1.0"); // sysDescr
+			list.VbList.Add("1.3.6.1.2.1.1.3.0"); // sysUpTime
+			list.VbList.Add("1.3.6.1.2.1.1.5.0"); // sysName
+			list.VbList.Add("1.3.6.1.2.1.1.6.0"); // sysLocation
+			list.VbList.Add("1.3.6.1.2.1.2.1.0"); // ifNumber
+		}
+
+		public Survey(IPAddress address, string oid)
 		{
 			ip = address;
-			list = pdu;
+
+			list = new Pdu();
+
+			list.VbList.Add(oid);
+		}
+
+		public Survey(IPAddress address, string[] oid_list)
+		{
+			ip = address;
+
+			list = new Pdu();
+
+			foreach(string oid in oid_list)
+			{
+				list.VbList.Add(oid);
+			}
 		}
 
 		private void SurveyList()

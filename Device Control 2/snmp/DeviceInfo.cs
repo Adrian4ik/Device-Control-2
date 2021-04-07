@@ -26,7 +26,8 @@ namespace Device_Control_2.snmp
 
         Survey survey;
 
-        bool is_first = true;
+        bool is_first = true,
+            to_survey = true;
 
         public struct Status
         {
@@ -68,8 +69,6 @@ namespace Device_Control_2.snmp
 
                 timer.Interval = 6000;
                 timer.Tick += new EventHandler(TimerTick);
-
-                survey = new Survey(cl.Ip, std);
             }
         }
 
@@ -84,10 +83,17 @@ namespace Device_Control_2.snmp
             // Let the main thread resume.
             ((AutoResetEvent)e.UserState).Set();
 
+            if (to_survey)
+            {
+                survey = new Survey(cl.Ip);
+                survey.RegisterCallback(GetStandart);
+            }
+
             if (e.Reply.Status == IPStatus.Success)
             {
                 status.icmp_conn = 2;
 
+                survey = new Survey(cl.Ip);
                 survey.RegisterCallback(GetStandart);
             }
             else
@@ -99,19 +105,9 @@ namespace Device_Control_2.snmp
 
         }
 
-        public void Save() //---------------------------------------------------------------------------
+        public void Save(Form1.snmp_result res) //---------------------------------------------------------------------------
         {
             // Первый раз опрашивает устройство и записывает его таблицу интерфейсов для исключения в дальнейшем пустых опросов
-
-            status.standart = new string[5];
-
-            int i = 0;
-
-            foreach (Vb vb in vbs) { status.standart[i++] = vb.Value.ToString(); }
-
-            status.interface_list = new int[int.Parse(status.standart[4])];
-
-            is_first = false;
         }
 
         private void Inspect(Vb[] vbs) //---------------------------------------------------------------------------
@@ -132,15 +128,14 @@ namespace Device_Control_2.snmp
 
         private void TimerTick(object sender, EventArgs e)
         {
-            bool to_survey = true;
+            if(cl.Connect)
+                TryPing();
+        }
 
+        private void TryPing()
+        {
             try { ping.SendAsync(cl.Ip, 3000, waiter); }
             catch { to_survey = false; }
-
-            if (to_survey)
-            {
-                survey.RegisterCallback(GetStandart);
-            }
         }
 
         void GetStandart(Form1.snmp_result res) //---------------------------------------------------------------------------
@@ -150,7 +145,38 @@ namespace Device_Control_2.snmp
                 status.snmp_conn = 2;
 
                 if (is_first)
-                    Save();
+                {
+                    status.standart = new string[5];
+
+                    int i = 0;
+
+                    foreach (Vb vb in res.vb) { status.standart[i++] = vb.Value.ToString(); }
+
+                    status.interface_list = new int[int.Parse(status.standart[4])];
+
+                    survey = new Survey(cl.Ip, cl.SysTime);
+                    survey.RegisterCallback(Save);
+
+                    if (cl.SysTime != null)
+                    {
+                        survey = new Survey(cl.Ip, cl.SysTime);
+                        survey.RegisterCallback(GetStandart);
+                    }
+                    else if (cl.Temperature != null)
+                    {
+                        string[] arr = new string[cl.Temperature.Length / 3];
+
+                        for (int j = 0; j < arr.Length; j++)
+                        {
+                            arr[j] = cl.Temperature[j, 0];
+                        }
+
+                        survey = new Survey(cl.Ip, arr);
+                        survey.RegisterCallback(GetStandart);
+                    }
+                    else
+                        is_first = false;
+                }
                 else if (res.vb != null)
                     Inspect(res.vb);
 
@@ -159,6 +185,8 @@ namespace Device_Control_2.snmp
             else
                 status.snmp_conn = 0;
         }
+
+
 
         public delegate void PostAsyncResultDelegate(Status result);
 
