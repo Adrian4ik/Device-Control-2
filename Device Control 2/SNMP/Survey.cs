@@ -45,11 +45,19 @@ namespace Device_Control_2.snmp
 
 			list = new Pdu();
 
-			foreach(string oid in oid_list)
-			{
-				list.VbList.Add(oid);
-			}
+			foreach(string oid in oid_list) { list.VbList.Add(oid); }
 		}
+
+		public Survey(IPAddress address, string[,] iftable)
+        {
+			ip = address;
+
+			list = new Pdu();
+
+			for (int i = 0; i < iftable.Length / 5; i++)
+				for(int j = 0; j < 5; j++)
+					list.VbList.Add(iftable[i, j]);
+        }
 
 		private void SurveyList()
 		{

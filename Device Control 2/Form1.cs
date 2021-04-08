@@ -112,14 +112,14 @@ namespace Device_Control_2
 		}
 
 		#region Form1
-		private void Preprocess()
+		void Preprocess()
 		{
 			Startup_run sr = new Startup_run();
 			WindowState = sr.WindowState();
 
 			InitStandartLabels();
 
-			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.4 (7)");
+			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.4 (8)");
 
 			cl = devs.ScanDevices;
 
@@ -499,7 +499,7 @@ namespace Device_Control_2
 		}
 		#endregion Preprocess
 
-		private void Start()
+		void Start()
 		{
 			if (cl.Length > 0)
 			{
@@ -523,7 +523,7 @@ namespace Device_Control_2
 		} // Метка старости (Изменить)
 
         #region Start
-        private void SimpleSurvey()
+        void SimpleSurvey()
 		{
 			//UI_labels[1].Text = cl[selected_client].Name;
 
@@ -554,7 +554,7 @@ namespace Device_Control_2
 		} // Метка старости (Изменить)
 
 		#region SimpleSurvey
-		private int Fill_main()
+		int Fill_main()
 		{
 			SnmpV1Packet result = SurveyList(cl[selected_client].Ip, std);
 
@@ -579,7 +579,7 @@ namespace Device_Control_2
 		} // Метка старости (Пересмотреть)
 
 		#region Fill_main
-		private SnmpV1Packet SurveyList(IPAddress ip, Pdu list)
+		SnmpV1Packet SurveyList(IPAddress ip, Pdu list)
 		{
 			// SNMP community name
 			//OctetString comm;
@@ -636,7 +636,7 @@ namespace Device_Control_2
 			return result;
 		}
 
-		private void CheckStdOIDChanges(string original, int oid_id, string oid_result)
+		void CheckStdOIDChanges(string original, int oid_id, string oid_result)
 		{
 			string was_changed = "";
 			string[] std_oid_names = { "sysDescr", "sysUpTime", "sysName", "sysLocation" };
@@ -650,7 +650,7 @@ namespace Device_Control_2
 			}
 		} // Метка старости (Удалить)
 
-		private void GetTime()
+		void GetTime()
 		{
 			if (cl[selected_client].SysTime != null)
 			{
@@ -750,7 +750,7 @@ namespace Device_Control_2
 		}
 		#endregion GetTime
 
-		private void GetMod()
+		void GetMod()
 		{
 			if (cl[selected_client].Temperature != null)
 			{
@@ -827,7 +827,7 @@ namespace Device_Control_2
 		}
 		#endregion GetMod
 
-		private void GetAdd()
+		void GetAdd()
 		{
 			if (cl[selected_client].Addition != null)
 			{
@@ -845,7 +845,7 @@ namespace Device_Control_2
 			}
 		}
 
-		private void Change_SNMP_Status(int stat)
+		void Change_SNMP_Status(int stat)
 		{
 			switch (stat)
 			{
@@ -877,7 +877,7 @@ namespace Device_Control_2
 		}
         #endregion Fill_main
 
-        private void Survey_grid(int ifNum)
+        void Survey_grid(int ifNum)
 		{
 			int fi = 0, ri = 0;
 
@@ -1062,7 +1062,7 @@ namespace Device_Control_2
 		#endregion Survey_grid
 		#endregion SimpleSurvey
 
-		private void Survey()
+		void Survey()
 		{
 			if (timer1.Enabled)
 				timer1.Stop();
@@ -1137,7 +1137,7 @@ namespace Device_Control_2
 		} // Метка старости (Пересмотреть)
 		#endregion Survey
 
-		private void TryPing(string ip)
+		void TryPing(string ip)
 		{
 			try // if (NetworkInterface.GetIsNetworkAvailable())
 			{
@@ -1158,7 +1158,7 @@ namespace Device_Control_2
 		#endregion Form1
 
 		#region События
-		private void Received_ping_reply(object sender, PingCompletedEventArgs e)
+		void Received_ping_reply(object sender, PingCompletedEventArgs e)
 		{
 			if (e.Cancelled)
 				((AutoResetEvent)e.UserState).Set();
@@ -1227,7 +1227,7 @@ namespace Device_Control_2
 		}
 		#endregion Received_ping_reply
 
-		private void Received_simple_reply(object sender, PingCompletedEventArgs e)
+		void Received_simple_reply(object sender, PingCompletedEventArgs e)
 		{
 			if (e.Cancelled)
 				((AutoResetEvent)e.UserState).Set();
@@ -1299,7 +1299,7 @@ namespace Device_Control_2
 		}
 		#endregion Received_simple_reply
 
-        private void Form1_Resize(object sender, EventArgs e)
+        void Form1_Resize(object sender, EventArgs e)
 		{
 			Resize_form();
 		}
@@ -1335,7 +1335,7 @@ namespace Device_Control_2
 		}
 		#endregion Timers
 
-		private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+		void Form1_FormClosing(object sender, FormClosingEventArgs e)
 		{
 			if (TrayIcon.Visible && cl.Length > 0)
 			{
@@ -1377,7 +1377,7 @@ namespace Device_Control_2
 		} // Метка старости (Изменить)
 		#endregion Tray
 
-        private void dataGridView2_CellMouseClick(object sender, MouseEventArgs e)
+        void dataGridView2_CellMouseClick(object sender, MouseEventArgs e)
 		{
 			DataGridView.HitTestInfo hit = dataGridView2.HitTest(e.X, e.Y);
 
