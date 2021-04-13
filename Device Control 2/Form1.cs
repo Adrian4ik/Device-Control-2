@@ -137,7 +137,7 @@ namespace Device_Control_2
 
 			InitStandartLabels();
 
-			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.4 (9)");
+			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.4 (10)");
 
 			cl = devs.ScanDevices;
 
@@ -411,16 +411,27 @@ namespace Device_Control_2
 			for (int i = 0; i < cl.Length; i++)
 			{
 				deviceInfo[i] = new DeviceInfo(cl[i]);
-			}
 
-			deviceInfo.RegisterCallback();
-			deviceInfo.RegisterCallback();
+				deviceInfo[i].RegisterCallback(ShowClientStatus);
+				deviceInfo[i].RegisterCallback(ShowClientNotification);
+			}
 
 			enabled = new int[cl.Length + 1];
 			connection = new int[cl.Length, 2];
 
 			GetConnList();
 		}
+
+		void ShowClientStatus(DeviceInfo.Status status)
+		{
+			Change_SNMP_Status(status.snmp_conn, enabled[status.id]);
+		}
+
+		void ShowClientNotification(note result)
+		{
+
+		}
+
 
 		void GetConnList()
 		{
@@ -568,7 +579,7 @@ namespace Device_Control_2
 
 				CheckPingConnectionChanges(connection[current_client, 0], 0, current_client);
 
-				Change_SNMP_Status(4);
+				Change_SNMP_Status(4, selected_client);
 			}
 
 			//Survey_grid(Fill_main());
@@ -596,7 +607,7 @@ namespace Device_Control_2
 			GetMod();
 			GetAdd();
 
-			Change_SNMP_Status(1);
+			Change_SNMP_Status(1, selected_client);
 
 			return ifNumber;
 		} // Метка старости (Пересмотреть)
@@ -868,18 +879,18 @@ namespace Device_Control_2
 			}
 		}
 
-		void Change_SNMP_Status(int stat)
+		void Change_SNMP_Status(int stat, int client)
 		{
 			switch (stat)
 			{
 				case 0:
-					dataGridView2[0, enabled[selected_client]].Value = Properties.Resources.device_ok48;
+					dataGridView2[0, enabled[client]].Value = Properties.Resources.device_ok48;
 					break;
 				case 1:
-					dataGridView2[0, enabled[selected_client]].Value = Properties.Resources.device_warning48;
+					dataGridView2[0, enabled[client]].Value = Properties.Resources.device_warning48;
 					break;
 				case 2:
-					dataGridView2[0, enabled[selected_client]].Value = Properties.Resources.device_fail48;
+					dataGridView2[0, enabled[client]].Value = Properties.Resources.device_fail48;
 					break;
 				/*case 0:
 					pictureBox1.Image = Properties.Resources.ajax_loader;
@@ -1277,7 +1288,7 @@ namespace Device_Control_2
 				CheckPingConnectionChanges(connection[selected_client, 0], 2, selected_client);
 
 				Change_Ping_Status(1);
-				Change_SNMP_Status(0);
+				Change_SNMP_Status(0, selected_client);
 
 				connection[selected_client, 0] = 2;
 
@@ -1468,7 +1479,7 @@ namespace Device_Control_2
 		{
 			UI_labels[1].Text = cl[selected_client].Name;
 
-			if (cl[selected_client].Connect && deviceInfo[selected_client].status.snmp_conn != 0)
+			if (cl[selected_client].Connect && deviceInfo[selected_client].status.snmp_conn != 3)
 				ShowInfo(deviceInfo[selected_client].status);
 			else
 				ClearInfo();
@@ -1477,7 +1488,7 @@ namespace Device_Control_2
 		private void ShowInfo(DeviceInfo.Status status)
         {
 			Change_Ping_Status(status.icmp_conn);
-			Change_SNMP_Status(status.snmp_conn);
+			Change_SNMP_Status(status.snmp_conn, selected_client);
 
 			UI_labels[4].Visible = true;
 			UI_labels[4].Text = status.info_updated_time;
@@ -1495,7 +1506,7 @@ namespace Device_Control_2
 
 		private void ClearInfo()
 		{
-			Change_SNMP_Status(5);
+			Change_SNMP_Status(5, selected_client);
 			dataGridView1.Rows.Clear();
 
 			UI_labels[4].Text = "";

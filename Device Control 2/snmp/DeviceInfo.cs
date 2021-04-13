@@ -50,6 +50,8 @@ namespace Device_Control_2.snmp
             public int icmp_conn; // 1 - отлично, 3 - плохо
             public int snmp_conn; // 0 - отлично, 1 - не очень, 2 - плохо
 
+            public int id;
+
             public int[] interface_list;
 
             public string info_updated_time;
@@ -78,6 +80,8 @@ namespace Device_Control_2.snmp
 
             timer.Interval = 6000;
             timer.Tick += new EventHandler(TimerTick);
+
+            status.id = cl.id;
 
             notification.id = cl.id;
             notification.type = new bool[5];
@@ -116,6 +120,11 @@ namespace Device_Control_2.snmp
                         timer.Start();
                 }
             }
+            else
+            {
+                status.icmp_conn = 5;
+                PostAsyncResult(status);
+            }
         } // 1
 
 
@@ -139,12 +148,16 @@ namespace Device_Control_2.snmp
 
                 notification.type[1] = false;
 
+                status.icmp_conn = 1;
+
                 survey = new Survey(cl.Ip);
                 survey.RegisterCallback(GetStandart);
             }
             else
             {
                 icmp_connection[conn_state_counter] = false;
+
+                status.icmp_conn = 3;
 
                 notification.type[1] = true;
                 PostAsyncNotification(notification);
@@ -201,6 +214,8 @@ namespace Device_Control_2.snmp
                 AnalyzeConnection(); //----------------------------------------------
             else
                 conn_state_counter++;
+
+            PostAsyncResult(status);
         } // 2 res & 3
 
         void AnalyzeConnection()
