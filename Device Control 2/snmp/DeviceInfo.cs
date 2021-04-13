@@ -17,23 +17,15 @@ namespace Device_Control_2.snmp
         bool is_first = true,
             to_survey = true; // переменная наличия связи с интернетом / кабелем
 
-        int counter = 0, ri_counter = 0;
+        bool[] icmp_connection = new bool[10];
+        bool[] snmp_connection = new bool[10];
+
+        int conn_state_counter = 0, row_counter = 0, ri_counter = 0; // номер строки в таблице интерфейсов
 
         string[,] if_table; // таблица с 5-ю столбцами, доп. столбец заполняется в string[] ifnames
                             // данная таблица хранит в себе все действующие oid'ы из таблицы интерфейсов
 
-        bool[] notifications = new bool[7]; // список уведомлений (false означает, что всё нормально)
-                                            // если связь плохая, то в ячейке утеранной связи должно стоять false
-                                            // 
-                                            // 0 - связь icmp утеряна
-                                            // 1 - связь icmp плохая
-                                            // 2 - связь snmp утеряна
-                                            // 3 - связь snmp плохая
-                                            // 4 - нештатка по температуре
-                                            // 5 - нештатка по питанию
-                                            // 6 - доп. нештатка, если присутствует
-
-        // такая же и последовательность опроса устройства:
+        // последовательность опроса устройства:
         // 1 - icmp
         // 2 - snmp standart
         // 3 - snmp inteface table
@@ -51,12 +43,12 @@ namespace Device_Control_2.snmp
         Logs log = new Logs(); // простые изменения кидать в логи отсюда, а в форму передавать лишь нештатные состояния
 
         Action<Status> localResult;
-        Action<bool[]> localChanges;
+        Action<Form1.note> localNote;
 
         public struct Status
         {
-            public int icmp_conn;
-            public int snmp_conn;
+            public int icmp_conn; // 1 - отлично, 3 - плохо
+            public int snmp_conn; // 0 - отлично, 1 - не очень, 2 - плохо
 
             public int[] interface_list;
 
@@ -73,6 +65,8 @@ namespace Device_Control_2.snmp
 
         public Status status = new Status();
 
+        Form1.note notification = new Form1.note();
+
         System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
         #endregion
 
@@ -80,30 +74,51 @@ namespace Device_Control_2.snmp
         {
             cl = client;
 
-            if (cl.Connect)
-            {
-                status.icmp_conn = 0;
-                status.snmp_conn = 0;
+            ping.PingCompleted += new PingCompletedEventHandler(Received_ping_reply);
 
-                ping.PingCompleted += new PingCompletedEventHandler(Received_ping_reply);
+            timer.Interval = 6000;
+            timer.Tick += new EventHandler(TimerTick);
 
-                timer.Interval = 6000;
-                timer.Tick += new EventHandler(TimerTick);
-            }
+            notification.id = cl.id;
+            notification.type = new bool[5];
+
+            if(cl.Addition != null)
+                notification.add_type = new bool[cl.Addition.Length];
+
+            for (int i = 0; i < 5; i++) { notification.type[i] = false; }
         }
 
         public void RegisterCallback(Action<Status> callback)
         {
             localResult = callback;
+        }
+
+        public void RegisterCallback(Action<Form1.note> callback)
+        {
+            localNote = callback;
 
             TryPing();
         }
 
         void TryPing()
         {
-            try { ping.SendAsync(cl.Ip, 3000, waiter); }
-            catch { to_survey = false; }
-        }
+            if (cl.Connect)
+            {
+                try { ping.SendAsync(cl.Ip, 3000, waiter); }
+                catch
+                {
+                    to_survey = false;
+
+                    notification.type[0] = true;
+                    PostAsyncNotification(notification);
+
+                    if (!timer.Enabled)
+                        timer.Start();
+                }
+            }
+        } // 1
+
+
 
         void Received_ping_reply(object sender, PingCompletedEventArgs e)
         {
@@ -116,28 +131,40 @@ namespace Device_Control_2.snmp
             // Let the main thread resume.
             ((AutoResetEvent)e.UserState).Set();
 
-            if (to_survey)
-            {
-                survey = new Survey(cl.Ip);
-                survey.RegisterCallback(GetStandart);
-            }
+            notification.type[0] = false;
 
             if (e.Reply.Status == IPStatus.Success)
             {
-                status.icmp_conn = 2;
+                icmp_connection[conn_state_counter] = true;
+
+                notification.type[1] = false;
 
                 survey = new Survey(cl.Ip);
                 survey.RegisterCallback(GetStandart);
             }
             else
-                status.icmp_conn = 0;
-        } // устранить повторение RegisterCallback(GetStandart)
+            {
+                icmp_connection[conn_state_counter] = false;
 
-        void GetStandart(Form1.snmp_result res)
+                notification.type[1] = true;
+                PostAsyncNotification(notification);
+
+                if (!timer.Enabled)
+                    timer.Start();
+            }
+        } // 1 res & 2
+        
+
+
+        void GetStandart(Form1.snmp_result res) //---------------------------------------------------------------------------
         {
+            notification.type[1] = false;
+
             if (res.vb != null)
             {
-                status.snmp_conn = 2;
+                snmp_connection[conn_state_counter] = true;
+
+                notification.type[2] = false;
 
                 if (is_first) // is_first можно убрать
                 {
@@ -149,26 +176,8 @@ namespace Device_Control_2.snmp
 
                     status.interface_list = new int[int.Parse(status.standart[4])];
 
-                    if (counter == 0)
+                    if (row_counter == 0)
                         NextRow();
-
-                    if (cl.SysTime != null)
-                    {
-                        survey = new Survey(cl.Ip, cl.SysTime);
-                        survey.RegisterCallback(GetStandart);
-                    }
-                    else if (cl.Temperature != null)
-                    {
-                        string[] arr = new string[cl.Temperature.Length / 3];
-
-                        for (int j = 0; j < arr.Length; j++)
-                        {
-                            arr[j] = cl.Temperature[j, 0];
-                        }
-
-                        survey = new Survey(cl.Ip, arr);
-                        survey.RegisterCallback(GetStandart);
-                    }
                     else
                         is_first = false;
                 }
@@ -178,21 +187,75 @@ namespace Device_Control_2.snmp
                 UpdateInfo(); // скорее всего требуется в другом месте (в конце опроса устройства)
             }
             else
+            {
+                snmp_connection[conn_state_counter] = false;
+
+                notification.type[2] = true;
+                PostAsyncNotification(notification);
+
+                if (!timer.Enabled)
+                    timer.Start();
+            }
+
+            if (conn_state_counter == 10)
+                AnalyzeConnection(); //----------------------------------------------
+            else
+                conn_state_counter++;
+        } // 2 res & 3
+
+        void AnalyzeConnection()
+        {
+            int bad_connections = 0;
+
+            foreach(bool conn_state in icmp_connection)
+            {
+                if (!conn_state)
+                    bad_connections++;
+            }
+
+            /*if (bad_connections > 0)
+            {*/
+                if (bad_connections == 10)
+                    status.icmp_conn = 3;
+                else
+                    status.icmp_conn = 1;
+            /*}
+            else
+                status.icmp_conn = 2;*/
+
+            bad_connections = 0;
+
+            foreach (bool conn_state in snmp_connection)
+            {
+                if (!conn_state)
+                    bad_connections++;
+            }
+
+            if (bad_connections > 0)
+            {
+                if (bad_connections == 10)
+                    status.snmp_conn = 2;
+                else
+                    status.snmp_conn = 1;
+            }
+            else
                 status.snmp_conn = 0;
-        } //---------------------------------------------------------------------------
+
+            conn_state_counter = 0;
+        }
 
         void NextRow()
         {
-            counter++;
+            row_counter++;
 
             string[] arr = new string[5];
 
-            arr[0] = "1.3.6.1.2.1.2.2.1.1." + counter; // 1 столбец
-            arr[1] = "1.3.6.1.2.1.2.2.1.2." + counter; // 2 столбец
+            arr[0] = "1.3.6.1.2.1.2.2.1.1." + row_counter; // 1 столбец
+            arr[1] = "1.3.6.1.2.1.2.2.1.2." + row_counter; // 2 столбец
 
-            arr[2] = "1.3.6.1.2.1.2.2.1.8." + counter; // 4 столбец
-            arr[3] = "1.3.6.1.2.1.2.2.1.5." + counter; // 5 столбец
-            arr[4] = "1.3.6.1.2.1.2.2.1.3." + counter; // 6 столбец
+            arr[2] = "1.3.6.1.2.1.2.2.1.8." + row_counter; // 4 столбец
+            arr[3] = "1.3.6.1.2.1.2.2.1.5." + row_counter; // 5 столбец
+            arr[4] = "1.3.6.1.2.1.2.2.1.3." + row_counter; // 6 столбец
 
             if (ri_counter + 1 == status.interface_list.Length)
             {
@@ -209,7 +272,7 @@ namespace Device_Control_2.snmp
                 MessageBox.Show("Ничоси, ip " + res.Ip.ToString() + " не совпадает с клиентом " + cl.Name);
             else if(res.vb != null)
             {
-                status.interface_list[ri_counter] = counter;
+                status.interface_list[ri_counter] = row_counter;
                 
                 for (int i = 0; i < 5; i++)
                 {
@@ -249,8 +312,7 @@ namespace Device_Control_2.snmp
 
         void TimerTick(object sender, EventArgs e)
         {
-            if (cl.Connect)
-                TryPing();
+            TryPing();
         }
 
 
@@ -269,11 +331,11 @@ namespace Device_Control_2.snmp
             localResult?.Invoke(result);
         }
 
-        public delegate void ResultDelegate(string result);
+        public delegate void PostAsyncNotificationDelegate(Form1.note result);
 
-        protected void Result(bool[] result)
+        protected void PostAsyncNotification(Form1.note result)
         {
-            localChanges?.Invoke(result);
+            localNote?.Invoke(result);
         }
     }
 }

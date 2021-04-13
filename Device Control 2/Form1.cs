@@ -75,11 +75,29 @@ namespace Device_Control_2
 			public IPAddress Ip;
 			public Vb[] vb;
 		}
+
+		public struct note
+		{
+			public int id;
+
+			public bool[] type; // список уведомлений (false означает, что всё нормально)
+								// если связь плохая, то в ячейке утеранной связи должно стоять false
+								// можно перевести в одну int переменную
+								// 
+								// 0 - связь утеряна
+								// 1 - связь icmp утеряна
+								// 2 - связь snmp утеряна
+								// 3 - нештатка по температуре
+								// 4 - нештатка по питанию
+
+			public bool[] add_type; // доп. нештатка, если присутствует
+		}
 		#endregion Структуры
 
 		#region Структурные объекты
-		message[] note;
+		message[] mess;
 		Notification_message[] notifications/* = new Message[10240]*/;
+		note notif;
 		RawDeviceList.Client[] cl; // список клиентов (не более 1024 клиентов)
 		#endregion Структурные объекты
 
@@ -119,7 +137,7 @@ namespace Device_Control_2
 
 			InitStandartLabels();
 
-			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.4 (8)");
+			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.4 (9)");
 
 			cl = devs.ScanDevices;
 
@@ -128,6 +146,8 @@ namespace Device_Control_2
 				dataGridView2.Rows.Add(cl.Length + 1);
 				traps.RegisterCallback(GetError);
 				traps.RegisterCallback(GetTrap);
+
+				
 
 				InitClientList();
 
@@ -190,7 +210,7 @@ namespace Device_Control_2
 			}
 		}
 
-		private void DecryptTrap(snmp_result trap)
+		void DecryptTrap(snmp_result trap)
 		{
 			for (int i = 0; i < cl.Length; i++)
 			{
@@ -238,7 +258,7 @@ namespace Device_Control_2
 			}
 		}
 
-		private int[] ChangeVar(Vb[] vbs, string[,] array, int counter)
+		int[] ChangeVar(Vb[] vbs, string[,] array, int counter)
 		{
 			int[] vals = new int[vbs.Length];
 
@@ -260,7 +280,7 @@ namespace Device_Control_2
 			return vals;
 		}
 
-		private void CheckTemperature(int[] values, int counter)
+		void CheckTemperature(int[] values, int counter)
 		{
 			if (values[0] >= values[1] || values[0] <= values[2])
 			{
@@ -287,7 +307,7 @@ namespace Device_Control_2
 			Focus();
 		}
 
-		private void InitStandartLabels()
+		void InitStandartLabels()
         {
 			for (int i = 0; i < 20; i++)
             {
@@ -384,7 +404,7 @@ namespace Device_Control_2
 			UI_labels[19].TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 		}
 
-		private void InitClientList()
+		void InitClientList()
 		{
 			deviceInfo = new DeviceInfo[cl.Length];
 
@@ -393,13 +413,16 @@ namespace Device_Control_2
 				deviceInfo[i] = new DeviceInfo(cl[i]);
 			}
 
+			deviceInfo.RegisterCallback();
+			deviceInfo.RegisterCallback();
+
 			enabled = new int[cl.Length + 1];
 			connection = new int[cl.Length, 2];
 
 			GetConnList();
 		}
 
-		private void GetConnList()
+		void GetConnList()
 		{
 			bool is_firsttime = true;
 			int disabled = 0;
@@ -430,7 +453,7 @@ namespace Device_Control_2
 			}
 		}
 
-		private void InitNotifier()
+		void InitNotifier()
 		{
 			string[] devlist = new string[cl.Length];
 
@@ -440,7 +463,7 @@ namespace Device_Control_2
 			notify = new Notification(devlist);
 		}
 		
-		private void FillConstants()
+		void FillConstants()
 		{
 			std.VbList.Add("1.3.6.1.2.1.1.1.0"); // sysDescr
 			std.VbList.Add("1.3.6.1.2.1.1.3.0"); // sysUpTime
@@ -477,7 +500,7 @@ namespace Device_Control_2
 			}
 		} // Метка  старости (Удалить)
 
-		private void InitDeviceList()
+		void InitDeviceList()
 		{
 			for (int i = 0, j = 0; i <= cl.Length; i++)
             {
@@ -850,6 +873,15 @@ namespace Device_Control_2
 			switch (stat)
 			{
 				case 0:
+					dataGridView2[0, enabled[selected_client]].Value = Properties.Resources.device_ok48;
+					break;
+				case 1:
+					dataGridView2[0, enabled[selected_client]].Value = Properties.Resources.device_warning48;
+					break;
+				case 2:
+					dataGridView2[0, enabled[selected_client]].Value = Properties.Resources.device_fail48;
+					break;
+				/*case 0:
 					pictureBox1.Image = Properties.Resources.ajax_loader;
 					UI_labels[2].Text = "Соединение";
 					break;
@@ -872,7 +904,7 @@ namespace Device_Control_2
 				case 5:
 					pictureBox1.Image = Properties.Resources.gray24;
 					UI_labels[2].Text = "Неактивный";
-					break;
+					break;*/
 			}
 		}
         #endregion Fill_main
@@ -1253,7 +1285,7 @@ namespace Device_Control_2
 
 				//WriteLog(true, "Связь присутствует");
 
-				Survey_grid(Fill_main());
+				//Survey_grid(Fill_main());
 			}
 			else
 			{
@@ -1279,22 +1311,46 @@ namespace Device_Control_2
 			switch (stat)
 			{
 				case 0:
-					pictureBox2.Image = Properties.Resources.ajax_loader;
+					pictureBox1.Image = Properties.Resources.ajax_loader;
+					UI_labels[2].Text = "Соединение";
 					break;
 				case 1:
-					pictureBox2.Image = Properties.Resources.green24;
+					pictureBox1.Image = Properties.Resources.green24;
+					UI_labels[2].Text = "Режим опроса";
 					break;
 				case 2:
-					pictureBox2.Image = Properties.Resources.orange24;
+					pictureBox1.Image = Properties.Resources.orange24;
+					UI_labels[2].Text = "Режим опроса";
 					break;
 				case 3:
-					pictureBox2.Image = Properties.Resources.red24;
-					Change_SNMP_Status(3);
+					pictureBox1.Image = Properties.Resources.red24;
+					UI_labels[2].Text = "Автономный";
 					break;
 				case 4:
-					pictureBox2.Image = Properties.Resources.gray24;
-					Change_SNMP_Status(4);
+					pictureBox1.Image = Properties.Resources.gray24;
+					UI_labels[2].Text = "Автономный";
 					break;
+				case 5:
+					pictureBox1.Image = Properties.Resources.gray24;
+					UI_labels[2].Text = "Неактивный";
+					break;
+					/*case 0:
+						pictureBox2.Image = Properties.Resources.ajax_loader;
+						break;
+					case 1:
+						pictureBox2.Image = Properties.Resources.green24;
+						break;
+					case 2:
+						pictureBox2.Image = Properties.Resources.orange24;
+						break;
+					case 3:
+						pictureBox2.Image = Properties.Resources.red24;
+						Change_SNMP_Status(3);
+						break;
+					case 4:
+						pictureBox2.Image = Properties.Resources.gray24;
+						Change_SNMP_Status(4);
+						break;*/
 			}
 		}
 		#endregion Received_simple_reply
@@ -1420,6 +1476,9 @@ namespace Device_Control_2
 
 		private void ShowInfo(DeviceInfo.Status status)
         {
+			Change_Ping_Status(status.icmp_conn);
+			Change_SNMP_Status(status.snmp_conn);
+
 			UI_labels[4].Visible = true;
 			UI_labels[4].Text = status.info_updated_time;
 			UI_labels[8].Visible = true;

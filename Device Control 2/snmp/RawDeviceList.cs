@@ -19,6 +19,7 @@ namespace Device_Control_2.snmp
 			private string Folder;
 
 			public bool Connect;
+			public int id;
 			public string Name;
 			public IPAddress Ip;
 
@@ -65,8 +66,12 @@ namespace Device_Control_2.snmp
 					j = 0;
 
 					for (int i = 0; i < devices.Length; i++)
-						if(actuals[i])
-							actual_list[j++] = GetClient(devices[i]);
+						if (actuals[i])
+						{
+							actual_list[j] = GetClient(devices[i]);
+							actual_list[j].id = j;
+							j++;
+						}
 				}
 
 				return actual_list;
