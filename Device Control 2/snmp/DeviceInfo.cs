@@ -82,6 +82,11 @@ namespace Device_Control_2.snmp
             timer.Tick += new EventHandler(TimerTick);
 
             status.id = cl.id;
+            status.interface_list = new int[0];
+            status.temperatures = new string[0];
+            status.ifnames = new string[0];
+            status.additional = new string[0, 0];
+            status.interface_table = new string[0, 0];
 
             notification.id = cl.id;
             notification.type = new bool[5];
@@ -123,6 +128,7 @@ namespace Device_Control_2.snmp
             else
             {
                 status.icmp_conn = 5;
+                status.snmp_conn = 2;
                 PostAsyncResult(status);
             }
         } // 1
@@ -158,6 +164,7 @@ namespace Device_Control_2.snmp
                 icmp_connection[conn_state_counter] = false;
 
                 status.icmp_conn = 3;
+                status.snmp_conn = 2;
 
                 notification.type[1] = true;
                 PostAsyncNotification(notification);
@@ -190,7 +197,12 @@ namespace Device_Control_2.snmp
                     status.interface_list = new int[int.Parse(status.standart[4])];
 
                     if (row_counter == 0)
+                    {
+                        if_table = new string[int.Parse(status.standart[4]), 5];
+                        status.interface_table = new string[int.Parse(status.standart[4]), 5];
+
                         NextRow();
+                    }
                     else
                         is_first = false;
                 }
@@ -272,11 +284,11 @@ namespace Device_Control_2.snmp
             arr[3] = "1.3.6.1.2.1.2.2.1.5." + row_counter; // 5 столбец
             arr[4] = "1.3.6.1.2.1.2.2.1.3." + row_counter; // 6 столбец
 
-            if (ri_counter + 1 == status.interface_list.Length)
+            /*if (ri_counter + 1 <= status.interface_list.Length)
             {
                 survey = new Survey(cl.Ip, arr);
                 survey.RegisterCallback(Save);
-            }
+            }*/
         }
 
         void Save(Form1.snmp_result res)
@@ -287,15 +299,31 @@ namespace Device_Control_2.snmp
                 MessageBox.Show("Ничоси, ip " + res.Ip.ToString() + " не совпадает с клиентом " + cl.Name);
             else if(res.vb != null)
             {
-                status.interface_list[ri_counter] = row_counter;
-                
-                for (int i = 0; i < 5; i++)
+                if(cl.Name == "БРИ-CM")
                 {
-                    if_table[ri_counter, i] = res.vb[i].Oid.ToString();
-                    status.interface_table[ri_counter, i] = res.vb[i].Value.ToString();
-                }
+                    if (res.vb[4].Value.ToString() != "Null" && res.vb[4].Value.ToString() == "6")
+                    {
+                        status.interface_list[ri_counter] = row_counter;
 
-                ri_counter++;
+                        for (int i = 0; i < 5; i++)
+                        {
+                            if_table[ri_counter, i] = res.vb[i].Oid.ToString();
+                            status.interface_table[ri_counter, i] = res.vb[i].Value.ToString();
+                        }
+
+                        //if_table[ri_counter, ];
+
+                        ri_counter++;
+
+                        if(ri_counter == 30)
+                        {
+
+                        }
+                    }
+
+                    if (ri_counter < int.Parse(status.standart[4]))
+                        NextRow();
+                }
             }
         } //---------------------------------------------------------------------------
 
