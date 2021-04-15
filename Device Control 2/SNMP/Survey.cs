@@ -15,52 +15,56 @@ namespace Device_Control_2.snmp
 		Action<string> localError;
 
 		IPAddress ip;
-		Pdu list;
+		Pdu list = new Pdu();
 
-		public Survey(IPAddress address)
-		{// Опрашивает список стандартных oid
-			ip = address;
-
-			list = new Pdu();
-
+		/// <summary>
+		/// Опрашивает список стандартных oid'ов устройства
+		/// </summary>
+		public Survey(IPAddress address, Action<Form1.snmp_result> callback, Action<string> error_callback)
+		{
 			list.VbList.Add("1.3.6.1.2.1.1.1.0"); // sysDescr
 			list.VbList.Add("1.3.6.1.2.1.1.3.0"); // sysUpTime
 			list.VbList.Add("1.3.6.1.2.1.1.5.0"); // sysName
 			list.VbList.Add("1.3.6.1.2.1.1.6.0"); // sysLocation
 			list.VbList.Add("1.3.6.1.2.1.2.1.0"); // ifNumber
+
+			SurveyList(address, callback, error_callback);
 		}
 
-		public Survey(IPAddress address, string oid)
+		public Survey(IPAddress address, string oid, Action<Form1.snmp_result> callback, Action<string> error_callback)
 		{
-			ip = address;
-
-			list = new Pdu();
-
 			list.VbList.Add(oid);
+
+			SurveyList(address, callback, error_callback);
 		}
 
-		public Survey(IPAddress address, string[] oid_list)
+		public Survey(IPAddress address, string[] oid_list, Action<Form1.snmp_result> callback, Action<string> error_callback)
 		{
-			ip = address;
-
-			list = new Pdu();
-
 			foreach(string oid in oid_list) { list.VbList.Add(oid); }
+
+			SurveyList(address, callback, error_callback);
 		}
 
-		public Survey(IPAddress address, string[,] iftable)
+		public Survey(IPAddress address, string[,] iftable, Action<Form1.snmp_result> callback, Action<string> error_callback)
         {
-			ip = address;
-
-			list = new Pdu();
-
 			for (int i = 0; i < iftable.Length / 5; i++)
 				for(int j = 0; j < 5; j++)
 					list.VbList.Add(iftable[i, j]);
-        }
 
-		private void SurveyList()
+			SurveyList(address, callback, error_callback);
+		}
+
+		public void Restart()
+        {
+			SurveyList(ip, localResult, localError);
+		}
+
+		void SurveyList(IPAddress address, Action<Form1.snmp_result> callback, Action<string> error_callback)
 		{
+			ip = address;
+			localResult = callback;
+			localError = error_callback;
+
 			// Define agent parameters class
 			AgentParameters param = new AgentParameters(new OctetString("public"));
 			// Set SNMP version to 1 (or 2)
@@ -79,7 +83,7 @@ namespace Device_Control_2.snmp
 			}
 		}
 
-		private void ReceiveCallback(AsyncRequestResult result, SnmpPacket packet) // program itself
+		void ReceiveCallback(AsyncRequestResult result, SnmpPacket packet) // program itself
 		{
 			if (packet != null)
 			{
@@ -103,21 +107,9 @@ namespace Device_Control_2.snmp
 			localError?.Invoke(msg);
 		}
 
-		public void RegisterCallback(Action<string> callback)
-		{
-			localError = callback;
-		}
-
 		protected void PostAsyncResult(Form1.snmp_result result)
 		{
 			localResult?.Invoke(result);
-		}
-
-		public void RegisterCallback(Action<Form1.snmp_result> callback)
-		{
-			localResult = callback;
-
-			SurveyList();
 		}
 	}
 }

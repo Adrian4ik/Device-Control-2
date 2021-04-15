@@ -17,10 +17,15 @@ namespace Device_Control_2.snmp
 		Action<Form1.snmp_result> localResult;
 		Action<string> localError;
 
-		public Traps()
+		public Traps(Action<Form1.snmp_result> callback, Action<string> error_callback)
 		{
 			timer1.Interval = 1000;
 			timer1.Tick += new EventHandler(timer1_Tick);
+
+			localResult = callback;
+			localError = error_callback;
+
+			Start();
 		}
 
 		private void Start() // (Start 1)
@@ -254,18 +259,6 @@ namespace Device_Control_2.snmp
 		protected void PostAsyncResult(Form1.snmp_result result)
 		{
 			localResult?.Invoke(result);
-		}
-
-		public void RegisterCallback(Action<string> callback)
-		{
-			localError = callback;
-		}
-
-		public void RegisterCallback(Action<Form1.snmp_result> callback)
-		{
-			localResult = callback;
-
-			Start();
 		}
 
 		private void timer1_Tick(object sender, EventArgs e)

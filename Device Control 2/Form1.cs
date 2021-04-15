@@ -108,6 +108,8 @@ namespace Device_Control_2
 
 		Notification notify;
 
+		Traps traps;
+
 		DeviceInfo[] deviceInfo;
 
 		Label[] UI_labels = new Label[20];
@@ -116,11 +118,10 @@ namespace Device_Control_2
 		#region Внешние классы
 		Logs log = new Logs();
 		RawDeviceList devs = new RawDeviceList();
-		Traps traps = new Traps();
 		Display display = new Display();
 		#endregion Внешние классы
 
-		const string version = "2.1.4 (12)";
+		const string version = "2.1.4 (13)";
 
 		public Form1()
 		{
@@ -146,10 +147,9 @@ namespace Device_Control_2
 			if (cl.Length > 0)
 			{
 				dataGridView2.Rows.Add(cl.Length + 1);
-				traps.RegisterCallback(GetError);
-				traps.RegisterCallback(GetTrap);
+				traps = new Traps(GetTrap, GetError);
 
-				
+
 
 				InitClientList();
 
@@ -415,13 +415,7 @@ namespace Device_Control_2
 
 			GetConnList();
 
-			for (int i = 0; i < cl.Length; i++)
-			{
-				deviceInfo[i] = new DeviceInfo(cl[i]);
-
-				deviceInfo[i].RegisterCallback(ShowClientStatus);
-				deviceInfo[i].RegisterCallback(ShowClientNotification);
-			}
+			for (int i = 0; i < cl.Length; i++) { deviceInfo[i] = new DeviceInfo(cl[i], ShowClientStatus, ShowClientNotification); }
 		}
 
 		delegate void ShowClientStatusDelegate(DeviceInfo.Status status);
@@ -488,12 +482,6 @@ namespace Device_Control_2
 		
 		void FillConstants()
 		{
-			std.VbList.Add("1.3.6.1.2.1.1.1.0"); // sysDescr
-			std.VbList.Add("1.3.6.1.2.1.1.3.0"); // sysUpTime
-			std.VbList.Add("1.3.6.1.2.1.1.5.0"); // sysName
-			std.VbList.Add("1.3.6.1.2.1.1.6.0"); // sysLocation
-			std.VbList.Add("1.3.6.1.2.1.2.1.0"); // ifNumber
-
 			notifications = new Notification_message[cl.Count() * 10];
 
 			for (int i = 0; i < notifications.Count(); i++)
@@ -552,8 +540,8 @@ namespace Device_Control_2
 				timer1.Interval = ping_interval * 1000;
 				timer2.Interval = snmp_interval * 60000;
 
-				if (!timer1.Enabled)
-					timer1.Start();
+				//if (!timer1.Enabled)
+					//timer1.Start();
 
 				//if (!timer2.Enabled)
 					//timer2.Start();

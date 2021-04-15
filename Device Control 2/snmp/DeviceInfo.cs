@@ -17,8 +17,9 @@ namespace Device_Control_2.snmp
         bool is_first = true,
             to_survey = true; // переменная наличия связи с интернетом / кабелем
 
-        bool[] icmp_connection = new bool[10];
-        bool[] snmp_connection = new bool[10];
+        bool[] survey_exists = new bool[6],
+            icmp_connection = new bool[10],
+            snmp_connection = new bool[10];
 
         int conn_state_counter = 0, row_counter = 0, ri_counter = 0; // номер строки в таблице интерфейсов
 
@@ -39,7 +40,7 @@ namespace Device_Control_2.snmp
 
         RawDeviceList.Client cl;
 
-        Survey survey;
+        Survey[] survey = new Survey[6];
         Logs log = new Logs(); // простые изменения кидать в логи отсюда, а в форму передавать лишь нештатные состояния
 
         Action<Status> localResult;
@@ -55,14 +56,14 @@ namespace Device_Control_2.snmp
             public int[] interface_list;
 
             public string info_updated_time;
-            public string SysTime;
+            public string SysTime; // survey 2
 
-            public string[] standart;
-            public string[] temperatures;
-            public string[] ifnames;
+            public string[] standart; // survey 0
+            public string[] temperatures; // survey 3
+            public string[] ifnames; // survey 4
 
-            public string[,] additional;
-            public string[,] interface_table;
+            public string[,] additional; // survey 5
+            public string[,] interface_table; // survey 1
         }
 
         public Status status = new Status();
@@ -72,7 +73,7 @@ namespace Device_Control_2.snmp
         System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
         #endregion
 
-        public DeviceInfo(RawDeviceList.Client client)
+        public DeviceInfo(RawDeviceList.Client client, Action<Status> status_callback, Action<Form1.note> notification_callback)
         {
             cl = client;
 
@@ -95,6 +96,11 @@ namespace Device_Control_2.snmp
                 notification.add_type = new bool[cl.Addition.Length];
 
             for (int i = 0; i < 5; i++) { notification.type[i] = false; }
+
+            localResult = status_callback;
+            localNote = notification_callback;
+
+            TryPing();
         }
 
         public void RegisterCallback(Action<Status> callback)
@@ -157,8 +163,13 @@ namespace Device_Control_2.snmp
 
                 status.icmp_conn = 1;
 
-                survey = new Survey(cl.Ip);
-                survey.RegisterCallback(GetStandart);
+                if (!survey_exists[0])
+                {
+                    survey[0] = new Survey(cl.Ip, GetStandart, GetError);
+                    survey_exists[0] = true;
+                }
+                else
+                    survey[0].Restart();
             }
             else
             {
@@ -230,14 +241,19 @@ namespace Device_Control_2.snmp
                     timer.Start();
             }
 
+            conn_state_counter++;
+
             if (conn_state_counter == 10)
                 AnalyzeConnection(); //----------------------------------------------
-            else
-                conn_state_counter++;
 
             UpdateInfo();
             PostAsyncResult(status);
         } // 2 res & 3
+
+        void GetError(string msg)
+        {
+
+        }
 
         void AnalyzeConnection()
         {
@@ -293,11 +309,8 @@ namespace Device_Control_2.snmp
             arr[3] = "1.3.6.1.2.1.2.2.1.5." + row_counter; // 5 столбец
             arr[4] = "1.3.6.1.2.1.2.2.1.3." + row_counter; // 6 столбец
 
-            /*if (ri_counter + 1 <= status.interface_list.Length)
-            {
-                survey = new Survey(cl.Ip, arr);
-                survey.RegisterCallback(Save);
-            }*/
+            //if (ri_counter + 1 <= status.interface_list.Length)
+                //survey[1] = new Survey(cl.Ip, arr, Save, GetError);
         }
 
         void Save(Form1.snmp_result res)
@@ -344,8 +357,13 @@ namespace Device_Control_2.snmp
 
             status.interface_list = new int[int.Parse(status.standart[4])];
 
-            survey = new Survey(cl.Ip, if_table);
-            survey.RegisterCallback(RewriteTable);
+            if(!survey_exists[1])
+            {
+                survey[1] = new Survey(cl.Ip, if_table, RewriteTable, GetError);
+                survey_exists[1] = true;
+            }
+            else
+                survey[1].Restart();
         } //---------------------------------------------------------------------------
 
         void RewriteTable(Form1.snmp_result res)
