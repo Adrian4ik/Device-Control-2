@@ -120,6 +120,8 @@ namespace Device_Control_2
 		Display display = new Display();
 		#endregion Внешние классы
 
+		const string version = "2.1.4 (12)";
+
 		public Form1()
 		{
 			InitializeComponent();
@@ -137,7 +139,7 @@ namespace Device_Control_2
 
 			InitStandartLabels();
 
-			toolTip1.SetToolTip(UI_labels[0], "Версия: 2.1.4 (11)");
+			toolTip1.SetToolTip(UI_labels[0], "Версия: " + version);
 
 			cl = devs.ScanDevices;
 
@@ -210,7 +212,7 @@ namespace Device_Control_2
 			}
 		}
 
-		void DecryptTrap(snmp_result trap)
+		void DecryptTrap(snmp_result trap) //------------------------------------------
 		{
 			for (int i = 0; i < cl.Length; i++)
 			{
@@ -422,10 +424,19 @@ namespace Device_Control_2
 			}
 		}
 
+		delegate void ShowClientStatusDelegate(DeviceInfo.Status status);
+
 		void ShowClientStatus(DeviceInfo.Status status)
 		{
-			if(enabled[status.id] != -1)
+			if (InvokeRequired)
+				Invoke(new ShowClientStatusDelegate(ShowClientStatus), new object[] { status });
+			else
+			{
 				Change_SNMP_Status(status.snmp_conn, status.id);
+
+				if (panel1.Visible && status.id == selected_client)
+					ShowInfo(status);
+			}
 		}
 
 		void ShowClientNotification(note result)
@@ -547,7 +558,7 @@ namespace Device_Control_2
 				//if (!timer2.Enabled)
 					//timer2.Start();
 
-				SimpleSurvey();
+				//SimpleSurvey();
 
 				//Survey();
 			}
@@ -885,19 +896,16 @@ namespace Device_Control_2
 			switch (stat)
 			{
 				case 0:
-					dataGridView2[0, enabled[client]].Value = Properties.Resources.device_ok48;
+					dataGridView2[0, FindRowFromClient(client)].Value = Properties.Resources.device_ok48;
 					break;
 				case 1:
-					dataGridView2[0, enabled[client]].Value = Properties.Resources.device_warning48;
+					dataGridView2[0, FindRowFromClient(client)].Value = Properties.Resources.device_warning48;
 					break;
 				case 2:
-					dataGridView2[0, enabled[client]].Value = Properties.Resources.device_fail48;
+					dataGridView2[0, FindRowFromClient(client)].Value = Properties.Resources.device_fail48;
 					break;
 				case 5:
-					if(enabled[client] == -1)
-						dataGridView2[0, enabled[client + 1]].Value = Properties.Resources.device48;
-					else
-						dataGridView2[0, enabled[client]].Value = Properties.Resources.device48;
+					dataGridView2[0, FindRowFromClient(client)].Value = Properties.Resources.device48;
 					break;
 				/*case 0:
 					pictureBox1.Image = Properties.Resources.ajax_loader;
@@ -925,9 +933,28 @@ namespace Device_Control_2
 					break;*/
 			}
 		}
-        #endregion Fill_main
 
-        void Survey_grid(int ifNum)
+		int FindRowFromClient(int client)
+		{
+			if (cl[client].Connect)
+				return client;
+
+			int row = 0;
+
+			for (int i = 0; i < enabled.Length; i++)
+			{
+				if (enabled[i] == client)
+				{
+					row = i;
+					break;
+				}
+			}
+
+			return row;
+		}
+		#endregion Fill_main
+
+		void Survey_grid(int ifNum)
 		{
 			int fi = 0, ri = 0;
 
@@ -1114,7 +1141,7 @@ namespace Device_Control_2
 		{
 			dataGridView1.Rows.Clear();
 
-			if (iftable != null)
+			if (iftable != null && iftable.Length != 0)
 			{
 				int rows_count = iftable.Length / 5;
 
@@ -1436,7 +1463,7 @@ namespace Device_Control_2
 		#region Timers
 		private void timer1_Tick(object sender, EventArgs e)
 		{
-			Survey();
+			//Survey();
 		}
 
 		private void timer2_Tick(object sender, EventArgs e)
@@ -1522,7 +1549,7 @@ namespace Device_Control_2
 		{
 			UI_labels[1].Text = cl[selected_client].Name;
 
-			if (cl[selected_client].Connect && deviceInfo[selected_client].status.snmp_conn != 3)
+			if (cl[selected_client].Connect) // && deviceInfo[selected_client].status.snmp_conn != 3
 				ShowInfo(deviceInfo[selected_client].status);
 			else
 				ClearInfo();
@@ -1530,34 +1557,33 @@ namespace Device_Control_2
 
 		private void ShowInfo(DeviceInfo.Status status)
         {
-			if (status.standart != null)
-			{
-				Change_Ping_Status(status.icmp_conn);
-				Change_SNMP_Status(status.snmp_conn, selected_client);
+			Change_Ping_Status(status.icmp_conn);
+			//Change_SNMP_Status(status.snmp_conn, selected_client);
 
-				UI_labels[4].Visible = true;
-				UI_labels[4].Text = status.info_updated_time;
-				UI_labels[8].Visible = true;
-				UI_labels[9].Visible = cl[selected_client].SysTime != null;
-				UI_labels[9].Text = cl[selected_client].SysTime != null ? status.SysTime : "";
+			UI_labels[4].Visible = true;
+			UI_labels[4].Text = status.info_updated_time;
+			UI_labels[8].Visible = true;
+			UI_labels[9].Visible = cl[selected_client].SysTime != null;
+			UI_labels[15].Visible = cl[selected_client].Temperature != null;
 
-				for (int i = 0; i < 4; i++) { UI_labels[10 + i].Text = status.standart[i]; }
-
-				UI_labels[14].Text = "";
-				UI_labels[15].Visible = cl[selected_client].Temperature != null;
-				UI_labels[16].Text = "";
-				UI_labels[17].Text = "";
-				UI_labels[18].Text = "";
-
-				Fill_grid(status.interface_table, status.ifnames);
-			}
+			if (status.standart != null && status.standart.Length != 0)
+				for (int i = 0; i < 4; i++) { UI_labels[i + 10].Text = status.standart[i] != null ? status.standart[i] : ""; }
 			else
-				ClearInfo();
+				for (int i = 0; i < 4; i++) { UI_labels[i + 10].Text = ""; }
+
+			Fill_grid(status.interface_table, status.ifnames);
+
+			UI_labels[14].Text = status.SysTime != null ? status.SysTime : "";
+
+			if (status.temperatures != null && status.temperatures.Length != 0)
+				for(int i = 0; i < 3; i++) { UI_labels[i + 16].Text = status.temperatures[i] != null ? status.temperatures[i] : ""; }
+			else
+				for (int i = 0; i < 3; i++) { UI_labels[i + 16].Text = ""; }
 		}
 
 		private void ClearInfo()
 		{
-			Change_SNMP_Status(5, selected_client);
+			//Change_SNMP_Status(5, selected_client);
 			Change_Ping_Status(5);
 			dataGridView1.Rows.Clear();
 

@@ -116,7 +116,7 @@ namespace Device_Control_2.snmp
                 try { ping.SendAsync(cl.Ip, 3000, waiter); }
                 catch
                 {
-                    to_survey = false;
+                    //to_survey = false;
 
                     notification.type[0] = true;
                     PostAsyncNotification(notification);
@@ -128,7 +128,8 @@ namespace Device_Control_2.snmp
             else
             {
                 status.icmp_conn = 5;
-                status.snmp_conn = 2;
+                status.snmp_conn = 5;
+                UpdateInfo();
                 PostAsyncResult(status);
             }
         } // 1
@@ -168,10 +169,13 @@ namespace Device_Control_2.snmp
 
                 notification.type[1] = true;
                 PostAsyncNotification(notification);
-
-                if (!timer.Enabled)
-                    timer.Start();
             }
+
+            if (!timer.Enabled)
+                timer.Start();
+
+            UpdateInfo();
+            PostAsyncResult(status);
         } // 1 res & 2
         
 
@@ -189,6 +193,8 @@ namespace Device_Control_2.snmp
                 if (is_first) // is_first можно убрать
                 {
                     status.standart = new string[5];
+
+                    status.snmp_conn = 0;
 
                     int i = 0;
 
@@ -218,6 +224,8 @@ namespace Device_Control_2.snmp
                 notification.type[2] = true;
                 PostAsyncNotification(notification);
 
+                status.snmp_conn = 1;
+
                 if (!timer.Enabled)
                     timer.Start();
             }
@@ -227,6 +235,7 @@ namespace Device_Control_2.snmp
             else
                 conn_state_counter++;
 
+            UpdateInfo();
             PostAsyncResult(status);
         } // 2 res & 3
 
