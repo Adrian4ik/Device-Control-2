@@ -121,7 +121,7 @@ namespace Device_Control_2
 		Display display = new Display();
 		#endregion Внешние классы
 
-		const string version = "2.1.4 (14)";
+		const string version = "2.1.4 (15)";
 
 		public Form1()
 		{
@@ -424,7 +424,7 @@ namespace Device_Control_2
 		{
 			if (InvokeRequired)
 				Invoke(new ShowClientStatusDelegate(ShowClientStatus), new object[] { status });
-			else
+			else if (cl[status.id].Connect)
 			{
 				Change_SNMP_Status(status.snmp_conn, status.id);
 
@@ -1630,6 +1630,11 @@ namespace Device_Control_2
 			GetConnList();
 
 			InitDeviceList();
+
+			if (cl[selected_client].Connect)
+				ShowInfo(deviceInfo[selected_client].status);
+			else
+				Switch_UI_visibility(false);
 		}
 
 		#region button_Click
