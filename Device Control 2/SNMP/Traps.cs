@@ -12,15 +12,14 @@ namespace Device_Control_2.snmp
 		protected byte[] _inbuffer; // из тутора
 		protected IPEndPoint _peerIP; // из тутора
 
-		private Timer timer1 = new Timer();
-
-		Action<Form1.snmp_result> localResult;
-		Action<string> localError;
+		readonly Timer timer1 = new Timer();
+        readonly Action<Form1.snmp_result> localResult;
+        readonly Action<string> localError;
 
 		public Traps(Action<Form1.snmp_result> callback, Action<string> error_callback)
 		{
 			timer1.Interval = 1000;
-			timer1.Tick += new EventHandler(timer1_Tick);
+			timer1.Tick += new EventHandler(Timer1_Tick);
 
 			localResult = callback;
 			localError = error_callback;
@@ -179,11 +178,9 @@ namespace Device_Control_2.snmp
 				}
 				if (pkt != null)
 				{
-					Form1.snmp_result res = new Form1.snmp_result();
-					res.Ip = _peerIP.Address;
-					res.vb = new Vb[pkt.Pdu.VbList.Count];
+                    Form1.snmp_result res = new Form1.snmp_result{ Ip = _peerIP.Address, vb = new Vb[pkt.Pdu.VbList.Count] };
 
-					int i = 0;
+                    int i = 0;
 
 					foreach (Vb vb in pkt.Pdu.VbList)
 					{
@@ -261,7 +258,7 @@ namespace Device_Control_2.snmp
 			localResult?.Invoke(result);
 		}
 
-		private void timer1_Tick(object sender, EventArgs e)
+		private void Timer1_Tick(object sender, EventArgs e)
 		{
 			Start();
 		}

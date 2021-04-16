@@ -121,7 +121,7 @@ namespace Device_Control_2
 		Display display = new Display();
 		#endregion Внешние классы
 
-		const string version = "2.1.4 (13)";
+		const string version = "2.1.4 (14)";
 
 		public Form1()
 		{
