@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+//using System.Collections.Generic;
+//using System.Linq;
 using System.Net.NetworkInformation;
-using System.Text;
+//using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+//using System.Threading.Tasks;
+//using System.Windows.Forms;
 using SnmpSharpNet;
 using Device_Control_2.Features;
 
@@ -52,6 +52,7 @@ namespace Device_Control_2.snmp
             public int snmp_conn; // 0 - отлично, 1 - не очень, 2 - плохо
 
             public int id;
+            public int interface_count;
 
             public int[] interface_list;
 
@@ -144,10 +145,10 @@ namespace Device_Control_2.snmp
 
         void Received_ping_reply(object sender, PingCompletedEventArgs e)
         {
-            if (e.Cancelled)
-                ((AutoResetEvent)e.UserState).Set();
+            if (timer.Enabled)
+                timer.Stop();
 
-            if (e.Error != null)
+            if (e.Cancelled || e.Error != null)
                 ((AutoResetEvent)e.UserState).Set();
 
             // Let the main thread resume.
@@ -182,8 +183,7 @@ namespace Device_Control_2.snmp
                 PostAsyncNotification(notification);
             }
 
-            if (!timer.Enabled)
-                timer.Start();
+            if (!timer.Enabled) timer.Start();
 
             UpdateInfo();
             PostAsyncResult(status);
@@ -213,20 +213,50 @@ namespace Device_Control_2.snmp
 
                     status.interface_list = new int[int.Parse(status.standart[4])];
 
-                    if (row_counter == 0)
+                    /*if (row_counter == 0)
                     {
                         if_table = new string[int.Parse(status.standart[4]), 5];
                         status.interface_table = new string[int.Parse(status.standart[4]), 5];
 
                         NextRow();
                     }
-                    else
+                    else*/
                         is_first = false;
                 }
-                else if (res.vb != null)
+                else
                     InspectStdChanges(res.vb);
 
-                UpdateInfo(); // скорее всего требуется в другом месте (в конце опроса устройства)
+                if (cl.SysTime != null)
+                {
+                    survey[2] = new Survey(cl.Ip, cl.SysTime, GetSysTime, GetError);
+                    UpdateInfo();
+                }
+                else if (cl.Temperature != null)
+                {
+                    if (cl.Temperature.Length != 0)
+                    {
+                        survey[3] = new Survey(cl.Ip, cl.Temperature, GetTemperatures, GetError);
+                        UpdateInfo();
+                    }
+                }
+                else if (cl.IfName != null)
+                {
+                    survey[4] = new Survey(cl.Ip, cl.IfName, GetIfNames, GetError);
+                    UpdateInfo();
+                }
+                else if (cl.Addition != null)
+                {
+                    if (cl.Addition.Length != 0)
+                    {
+                        survey[5] = new Survey(cl.Ip, cl.Addition, GetAdditional, GetError);
+                        UpdateInfo();
+                    }
+                }
+                else if (!timer.Enabled)
+                {
+                    timer.Start();
+                    UpdateInfo();
+                }
             }
             else
             {
@@ -237,8 +267,7 @@ namespace Device_Control_2.snmp
 
                 status.snmp_conn = 1;
 
-                if (!timer.Enabled)
-                    timer.Start();
+                if (!timer.Enabled) timer.Start();
             }
 
             conn_state_counter++;
@@ -265,15 +294,15 @@ namespace Device_Control_2.snmp
                     bad_connections++;
             }
 
-            /*if (bad_connections > 0)
-            {*/
+            if (bad_connections > 0)
+            {
                 if (bad_connections == 10)
                     status.icmp_conn = 3;
                 else
                     status.icmp_conn = 1;
-            /*}
+            }
             else
-                status.icmp_conn = 2;*/
+                status.icmp_conn = 2;
 
             bad_connections = 0;
 
@@ -309,42 +338,115 @@ namespace Device_Control_2.snmp
             arr[3] = "1.3.6.1.2.1.2.2.1.5." + row_counter; // 5 столбец
             arr[4] = "1.3.6.1.2.1.2.2.1.3." + row_counter; // 6 столбец
 
-            //if (ri_counter + 1 <= status.interface_list.Length)
-                //survey[1] = new Survey(cl.Ip, arr, Save, GetError);
+            if (ri_counter + 1 <= status.interface_list.Length)
+                survey[1] = new Survey(cl.Ip, arr, Save, GetError);
         }
 
         void Save(Form1.snmp_result res)
         {
             // Первый раз опрашивает устройство и записывает его таблицу интерфейсов для исключения в дальнейшем пустых опросов
 
-            if (res.Ip != cl.Ip)
-                MessageBox.Show("Ничоси, ip " + res.Ip.ToString() + " не совпадает с клиентом " + cl.Name);
-            else if(res.vb != null)
+            if (res.vb != null)
             {
-                if(cl.Name == "БРИ-CM")
+                if (cl.Name == "Localhost")
                 {
-                    if (res.vb[4].Value.ToString() != "Null" && res.vb[4].Value.ToString() == "6")
+                    if (res.vb[4].Value != null && res.vb[4].Value.ToString() == "6")
                     {
                         status.interface_list[ri_counter] = row_counter;
 
-                        for (int i = 0; i < 5; i++)
-                        {
-                            if_table[ri_counter, i] = res.vb[i].Oid.ToString();
-                            status.interface_table[ri_counter, i] = res.vb[i].Value.ToString();
-                        }
+                        for (int i = 0; i < 5; i++) { if_table[ri_counter, i] = res.vb[i].Oid.ToString(); }
+
+                        status.interface_table[ri_counter, 0] = res.vb[0].Value.ToString();
+                        status.interface_table[ri_counter, 1] = res.vb[1].Value.ToString();
+                        status.interface_table[ri_counter, 2] = res.vb[2].Value.ToString() == "1" ? "Связь есть" : "Отключен";
+                        status.interface_table[ri_counter, 3] = (int.Parse(res.vb[3].Value.ToString()) / 1000000).ToString();
+                        status.interface_table[ri_counter, 4] = "Ethernet";
+
+                        ri_counter++;
+                    }
+                    else
+                        Console.WriteLine(row_counter + " is empty");
+                }
+                else if (cl.Name == "БРИ-CM")
+                {
+                    if (res.vb[4].Value != null && res.vb[4].Value.ToString() == "6")
+                    {
+                        status.interface_list[ri_counter] = row_counter;
+
+                        for (int i = 0; i < 5; i++) { if_table[ri_counter, i] = res.vb[i].Oid.ToString(); }
+
+                        status.interface_table[ri_counter, 0] = res.vb[0].Value.ToString();
+                        status.interface_table[ri_counter, 1] = res.vb[1].Value.ToString();
+                        status.interface_table[ri_counter, 2] = res.vb[2].Value.ToString() == "1" ? "Связь есть" : "Отключен";
+                        status.interface_table[ri_counter, 3] = (int.Parse(res.vb[3].Value.ToString()) / 1000000).ToString();
+                        status.interface_table[ri_counter, 4] = "Ethernet";
+
+                        ri_counter++;
+                    }
+                    else
+                        Console.WriteLine(row_counter + " is empty");
+                }
+                else if (cl.Name == "БКМ")
+                {
+                    if (res.vb[4].Value != null && res.vb[4].Value.ToString() == "6")
+                    {
+                        status.interface_list[ri_counter] = row_counter;
+
+                        for (int i = 0; i < 5; i++) { if_table[ri_counter, i] = res.vb[i].Oid.ToString(); }
+
+                        status.interface_table[ri_counter, 0] = res.vb[0].Value.ToString();
+                        status.interface_table[ri_counter, 1] = res.vb[1].Value.ToString();
+                        status.interface_table[ri_counter, 2] = res.vb[2].Value.ToString() == "1" ? "Связь есть" : "Отключен";
+                        status.interface_table[ri_counter, 3] = (int.Parse(res.vb[3].Value.ToString()) / 1000000).ToString();
+                        status.interface_table[ri_counter, 4] = "Ethernet";
+
+                        ri_counter++;
+                    }
+                    else
+                        Console.WriteLine(row_counter + " is empty");
+                }
+                else
+                {
+                    if (res.vb[4].Value != null && res.vb[4].Value.ToString() == "6")
+                    {
+                        status.interface_list[ri_counter] = row_counter;
+
+                        for (int i = 0; i < 5; i++) { if_table[ri_counter, i] = res.vb[i].Oid.ToString(); }
+
+                        status.interface_table[ri_counter, 0] = res.vb[0].Value.ToString();
+                        status.interface_table[ri_counter, 1] = res.vb[1].Value.ToString();
+                        status.interface_table[ri_counter, 2] = res.vb[2].Value.ToString() == "1" ? "Связь есть" : "Отключен";
+                        status.interface_table[ri_counter, 3] = (int.Parse(res.vb[3].Value.ToString()) / 1000000).ToString();
+                        status.interface_table[ri_counter, 4] = "Ethernet";
 
                         //if_table[ri_counter, ];
 
                         ri_counter++;
 
-                        if(ri_counter == 30)
+                        /*if (ri_counter == 30)
                         {
 
-                        }
+                        }*/
                     }
+                    else
+                        Console.WriteLine(row_counter + " is empty");
+                }
 
-                    if (ri_counter < int.Parse(status.standart[4]))
-                        NextRow();
+                int ifs = int.Parse(status.standart[4]);
+
+                if (ri_counter < ifs && row_counter < ifs + 30)
+                    NextRow();
+                else
+                {
+                    status.interface_count = ri_counter;
+
+                    if (cl.Temperature.Length == 0)
+                    {
+                        if (!timer.Enabled)
+                            timer.Start();
+                    }
+                    else if (!timer.Enabled)
+                        timer.Start();
                 }
             }
         } //---------------------------------------------------------------------------
@@ -369,8 +471,13 @@ namespace Device_Control_2.snmp
         void RewriteTable(Form1.snmp_result res)
         {
             for (int i = 0; i < res.vb.Length / 5; i++)
-                for (int j = 0; j < 5; j++)
-                    status.interface_table[i, j] = res.vb[i * 5 + j].Value.ToString();
+            {
+                status.interface_table[i, 0] = res.vb[i * 5].Value.ToString();
+                status.interface_table[i, 1] = res.vb[i * 5 + 1].Value.ToString();
+                status.interface_table[i, 2] = res.vb[i * 5 + 2].Value.ToString() == "1" ? "Связь есть" : "Отключен";
+                status.interface_table[i, 3] = (int.Parse(res.vb[i * 5 + 3].Value.ToString()) / 1000000).ToString();
+                status.interface_table[i, 4] = "Ethernet";
+            }
         }
 
         void UpdateInfo()
@@ -387,10 +494,10 @@ namespace Device_Control_2.snmp
 
 
 
-        public void ChangeStat(Form1.snmp_result trap)
-        {
-            // сканируем все oid'ы trap'а на соответствие и возможно выдаём нештатку
-        } // метод применяемый при поимке snmp trap
+        //public void ChangeStat(Form1.snmp_result trap)
+        //{
+            // сканируем все oid'ы trap'а на соответствие и возможно выдаём нештатное состояние
+        //} // метод применяемый при поимке snmp trap
 
 
 

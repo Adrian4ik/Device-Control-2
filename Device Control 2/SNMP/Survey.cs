@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+//using System.Collections.Generic;
+//using System.Linq;
 using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
+//using System.Net.Sockets;
+//using System.Text;
+//using System.Threading.Tasks;
 using SnmpSharpNet;
 
 namespace Device_Control_2.snmp
@@ -33,30 +33,48 @@ namespace Device_Control_2.snmp
 
 		public Survey(IPAddress address, string oid, Action<Form1.snmp_result> callback, Action<string> error_callback)
 		{
-			list.VbList.Add(oid);
+			if (oid != null)
+			{
+				list.VbList.Add(oid);
 
-			SurveyList(address, callback, error_callback);
+				if (list.VbCount != 0)
+					SurveyList(address, callback, error_callback);
+			}
 		}
 
 		public Survey(IPAddress address, string[] oid_list, Action<Form1.snmp_result> callback, Action<string> error_callback)
 		{
-			foreach(string oid in oid_list) { list.VbList.Add(oid); }
+			if(oid_list != null)
+			{
+				foreach (string oid in oid_list)
+				{
+					if (oid != null)
+						list.VbList.Add(oid);
+				}
 
-			SurveyList(address, callback, error_callback);
+				if (list.VbCount != 0)
+					SurveyList(address, callback, error_callback);
+			}
 		}
 
 		public Survey(IPAddress address, string[,] iftable, Action<Form1.snmp_result> callback, Action<string> error_callback)
         {
-			for (int i = 0; i < iftable.Length / 5; i++)
-				for(int j = 0; j < 5; j++)
-					list.VbList.Add(iftable[i, j]);
+			if (iftable != null)
+			{
+				for (int i = 0; i < iftable.Length / 5; i++)
+					for (int j = 0; j < 5; j++)
+						if (iftable[i, j] != null)
+							list.VbList.Add(iftable[i, j]);
 
-			SurveyList(address, callback, error_callback);
+				if (list.VbCount != 0)
+					SurveyList(address, callback, error_callback);
+			}
 		}
 
 		public void Restart()
-        {
-			SurveyList(ip, localResult, localError);
+		{
+			if (list.VbCount != 0)
+				SurveyList(ip, localResult, localError);
 		}
 
 		void SurveyList(IPAddress address, Action<Form1.snmp_result> callback, Action<string> error_callback)
@@ -66,9 +84,7 @@ namespace Device_Control_2.snmp
 			localError = error_callback;
 
 			// Define agent parameters class
-			AgentParameters param = new AgentParameters(new OctetString("public"));
-			// Set SNMP version to 1 (or 2)
-			param.Version = SnmpVersion.Ver1;
+			AgentParameters param = new AgentParameters(SnmpVersion.Ver1, new OctetString("public"));
 			// Construct target
 			UdpTarget target = new UdpTarget(ip, 161, 2000, 1);
 

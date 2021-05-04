@@ -121,7 +121,8 @@ namespace Device_Control_2
 		Display display = new Display();
 		#endregion Внешние классы
 
-		const string version = "2.1.4 (15)";
+		const string version = "2.1.4",
+					   patch = " (16)";
 
 		public Form1()
 		{
@@ -140,7 +141,7 @@ namespace Device_Control_2
 
 			InitStandartLabels();
 
-			toolTip1.SetToolTip(UI_labels[0], "Версия: " + version);
+			toolTip1.SetToolTip(UI_labels[0], "Версия: " + version + patch);
 
 			cl = devs.ScanDevices;
 
@@ -342,7 +343,7 @@ namespace Device_Control_2
 			UI_labels[0].Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
 			UI_labels[0].Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
 			UI_labels[0].Location = new Point(507, 279);
-			UI_labels[0].Text = "v2.1.3";
+			UI_labels[0].Text = "v " + version;
 			UI_labels[0].TextAlign = System.Drawing.ContentAlignment.MiddleRight;
 
 			UI_labels[1].Font = new Font("Microsoft Sans Serif", 14.25F, FontStyle.Bold | FontStyle.Underline, GraphicsUnit.Point, 204);
@@ -1125,35 +1126,29 @@ namespace Device_Control_2
 			}
 		}
 
-		private void Fill_grid(string[,] iftable, string[] ifnames)
+		private void Fill_grid(string[,] iftable, string[] ifnames, int if_count)
 		{
 			dataGridView1.Rows.Clear();
 
 			if (iftable != null && iftable.Length != 0)
 			{
-				int rows_count = iftable.Length / 5;
+				dataGridView1.Rows.Add(if_count);
 
-				dataGridView1.Rows.Add(rows_count);
-
-				for (int i = 0; i < rows_count; i++)
+				for (int i = 0; i < if_count; i++)
 				{
 					dataGridView1.Rows[i].HeaderCell.Value = iftable[i, 0];
 					dataGridView1[0, i].Value = iftable[i, 1];
 
 					for (int j = 2; j < 5; j++) { dataGridView1[j, i].Value = iftable[i, j]; }
 
-					/*for (int j = 0; j < 5; j++)
-					{
-						dataGridView1[j, i].Value = interfaces[i, j + 1];
-
-						if (interfaces[i, 3] == "Отключен")
+					if (iftable[i, 2] == "Отключен")
+						for(int j = 0; j < 5; j++)
 							dataGridView1[j, i].Style.BackColor = Color.LightGray;
-					}*/
 				}
 
 				if(ifnames != null && ifnames.Length != 0)
                 {
-					for(int i = 0; i < rows_count; i++)
+					for(int i = 0; i < if_count; i++)
                     {
 						dataGridView1[1, i].Value = ifnames[i];
                     }
@@ -1559,7 +1554,7 @@ namespace Device_Control_2
 			else
 				for (int i = 0; i < 4; i++) { UI_labels[i + 10].Text = ""; }
 
-			Fill_grid(status.interface_table, status.ifnames);
+			Fill_grid(status.interface_table, status.ifnames, status.interface_count);
 
 			UI_labels[14].Text = status.SysTime != null ? status.SysTime : "";
 
