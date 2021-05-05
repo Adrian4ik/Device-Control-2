@@ -113,6 +113,7 @@ namespace Device_Control_2
 		DeviceInfo[] deviceInfo;
 
 		Label[] UI_labels = new Label[20];
+		Label[] Add_labels;
 		#endregion Классовые объекты
 
 		#region Внешние классы
@@ -122,7 +123,7 @@ namespace Device_Control_2
 		#endregion Внешние классы
 
 		const string version = "2.1.4",
-					   patch = " (16)";
+					   patch = " (17)";
 
 		public Form1()
 		{
@@ -151,6 +152,8 @@ namespace Device_Control_2
 				traps = new Traps(GetTrap, GetError);
 
 
+
+				InitAdditionalLabels();
 
 				InitClientList();
 
@@ -405,6 +408,44 @@ namespace Device_Control_2
 			UI_labels[19].Size = new Size(153, 16);
 			UI_labels[19].Text = "Выберите устройство";
 			UI_labels[19].TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+		}
+
+		void InitAdditionalLabels()
+        {
+			int i = 0, j = 0, k = 0;
+
+			while (i < cl.Length)
+            {
+				if (cl[i].Addition != null)
+				{
+					if (cl[j].Addition != null)
+						j = cl[i].Addition.Length > cl[j].Addition.Length ? cl[i].Addition.Length : cl[j].Addition.Length;
+					else
+                    {
+						i++;
+						j++;
+                    }
+				}
+				else
+					i++;
+            }
+
+			Add_labels = new Label[j];
+
+			for(int l = 0; l < k; l++)
+			{
+				Add_labels[l] = new Label();
+				tabPage3.Controls.Add(Add_labels[l]);
+
+				Add_labels[l].AutoSize = true;
+				Add_labels[l].Name = "Add_label" + l;
+				Add_labels[l].TabIndex = l + 40;
+				Add_labels[l].Size = new Size(0, 15);
+
+				Add_labels[l].Location = new Point(20, ((l - 10) * 30) + 15);
+				Add_labels[l].Text = "";
+				Add_labels[l].Visible = false;
+			}
 		}
 
 		void InitClientList()

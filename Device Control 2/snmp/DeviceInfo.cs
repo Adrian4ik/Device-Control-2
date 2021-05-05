@@ -21,7 +21,8 @@ namespace Device_Control_2.snmp
             icmp_connection = new bool[10],
             snmp_connection = new bool[10];
 
-        int conn_state_counter = 0, row_counter = 0, ri_counter = 0; // номер строки в таблице интерфейсов
+        int step = 0,
+            conn_state_counter = 0, row_counter = 0, ri_counter = 0; // номер строки в таблице интерфейсов
 
         string[,] if_table; // таблица с 5-ю столбцами, доп. столбец заполняется в string[] ifnames
                             // данная таблица хранит в себе все действующие oid'ы из таблицы интерфейсов
@@ -101,7 +102,13 @@ namespace Device_Control_2.snmp
             localResult = status_callback;
             localNote = notification_callback;
 
+            FillArray();
             TryPing();
+        }
+
+        void FillArray()
+        {
+
         }
 
         public void RegisterCallback(Action<Status> callback)
@@ -170,7 +177,7 @@ namespace Device_Control_2.snmp
                     survey_exists[0] = true;
                 }
                 else
-                    survey[0].Restart();
+                    survey[0].Start();
             }
             else
             {
@@ -235,20 +242,20 @@ namespace Device_Control_2.snmp
                 {
                     if (cl.Temperature.Length != 0)
                     {
-                        survey[3] = new Survey(cl.Ip, cl.Temperature, GetTemperatures, GetError);
+                        //survey[3] = new Survey(cl.Ip, cl.Temperature, GetTemperatures, GetError);
                         UpdateInfo();
                     }
                 }
                 else if (cl.IfName != null)
                 {
-                    survey[4] = new Survey(cl.Ip, cl.IfName, GetIfNames, GetError);
+                    //survey[4] = new Survey(cl.Ip, cl.IfName, GetIfNames, GetError);
                     UpdateInfo();
                 }
                 else if (cl.Addition != null)
                 {
                     if (cl.Addition.Length != 0)
                     {
-                        survey[5] = new Survey(cl.Ip, cl.Addition, GetAdditional, GetError);
+                        //survey[5] = new Survey(cl.Ip, cl.Addition, GetAdditional, GetError);
                         UpdateInfo();
                     }
                 }
@@ -278,6 +285,11 @@ namespace Device_Control_2.snmp
             UpdateInfo();
             PostAsyncResult(status);
         } // 2 res & 3
+
+        void GetSysTime(Form1.snmp_result res)
+        {
+
+        }
 
         void GetError(string msg)
         {
@@ -465,7 +477,7 @@ namespace Device_Control_2.snmp
                 survey_exists[1] = true;
             }
             else
-                survey[1].Restart();
+                survey[1].Start();
         } //---------------------------------------------------------------------------
 
         void RewriteTable(Form1.snmp_result res)

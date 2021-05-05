@@ -1,5 +1,5 @@
 ﻿using System;
-//using System.Collections.Generic;
+using System.Collections.Generic;
 //using System.Linq;
 using System.Net;
 //using System.Net.Sockets;
@@ -28,7 +28,9 @@ namespace Device_Control_2.snmp
 			list.VbList.Add("1.3.6.1.2.1.1.6.0"); // sysLocation
 			list.VbList.Add("1.3.6.1.2.1.2.1.0"); // ifNumber
 
-			SurveyList(address, callback, error_callback);
+			ip = address;
+			localResult = callback;
+			localError = error_callback;
 		}
 
 		public Survey(IPAddress address, string oid, Action<Form1.snmp_result> callback, Action<string> error_callback)
@@ -37,8 +39,7 @@ namespace Device_Control_2.snmp
 			{
 				list.VbList.Add(oid);
 
-				if (list.VbCount != 0)
-					SurveyList(address, callback, error_callback);
+				Init(oid, address, callback, error_callback);
 			}
 		}
 
@@ -52,8 +53,7 @@ namespace Device_Control_2.snmp
 						list.VbList.Add(oid);
 				}
 
-				if (list.VbCount != 0)
-					SurveyList(address, callback, error_callback);
+				Init(oid_list, address, callback, error_callback);
 			}
 		}
 
@@ -66,27 +66,78 @@ namespace Device_Control_2.snmp
 						if (iftable[i, j] != null)
 							list.VbList.Add(iftable[i, j]);
 
-				if (list.VbCount != 0)
-					SurveyList(address, callback, error_callback);
+				Init(iftable, address, callback, error_callback);
 			}
 		}
 
-		public void Restart()
+		public Survey(IPAddress address, List<string> oids, Action<Form1.snmp_result> callback, Action<string> error_callback)
+        {
+			if (oids != null)
+            {
+				foreach (string oid in oids)
+					if (oid != null)
+						list.VbList.Add(oid);
+
+				ip = address;
+				localResult = callback;
+				localError = error_callback;
+			}
+        }
+
+		void Init(object obj, IPAddress address, Action<Form1.snmp_result> callback, Action<string> error_callback)
 		{
-			if (list.VbCount != 0)
-				SurveyList(ip, localResult, localError);
+			if(obj != null)
+			{
+				FillList(obj);
+
+				ip = address;
+				localResult = callback;
+				localError = error_callback;
+			}
 		}
 
-		void SurveyList(IPAddress address, Action<Form1.snmp_result> callback, Action<string> error_callback)
-		{
-			ip = address;
-			localResult = callback;
-			localError = error_callback;
+		void FillList(object obj)
+        {
+			if (obj.GetType() == typeof(string))
+				list.VbList.Add((string)obj);
+			else if((obj.GetType() == typeof(string[])))
+			{
+				foreach (string oid in (string[])obj)
+					if (oid != null)
+						list.VbList.Add(oid);
+			}
+			else if ((obj.GetType() == typeof(string[,])))
+			{
+				foreach (string oid in (string[,])obj)
+					if (oid != null)
+						list.VbList.Add(oid);
 
+				/*string[,] iftable = (string[,])obj;
+
+				for (int i = 0; i < iftable.Length / 5; i++)
+					for (int j = 0; j < 5; j++)
+						if (iftable[i, j] != null)
+							list.VbList.Add(iftable[i, j]);*/
+			}
+
+			/*foreach (string oid in obj)
+            {
+
+            }*/
+		}
+
+		public void Start()
+		{
+			if (list.VbCount != 0)
+				SurveyList();
+		}
+
+		void SurveyList()
+		{
 			// Define agent parameters class
 			AgentParameters param = new AgentParameters(SnmpVersion.Ver1, new OctetString("public"));
 			// Construct target
-			UdpTarget target = new UdpTarget(ip, 161, 2000, 1);
+			UdpTarget target = new UdpTarget(ip, 161, 2000, 0);
 
 			try
 			{
