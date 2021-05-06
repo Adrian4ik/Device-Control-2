@@ -126,28 +126,61 @@ namespace Device_Control_2.snmp
             }*/
 		}
 
-		public void Start()
+		public void AsyncSurvey()
 		{
 			if (list.VbCount != 0)
-				SurveyList();
+			{
+				// Define agent parameters class
+				AgentParameters param = new AgentParameters(SnmpVersion.Ver1, new OctetString("public"));
+				// Construct target
+				UdpTarget target = new UdpTarget(ip, 161, 2000, 0);
+
+				try
+				{
+					// Make SNMP request
+					target.RequestAsync(list, param, new SnmpAsyncResponse(ReceiveCallback));
+				}
+				catch
+				{
+					PostAsyncResult("Связь с устройством: [SNMP]= ");
+				}
+			}
 		}
 
-		void SurveyList()
+		public void snmpSurvey()
 		{
 			// Define agent parameters class
 			AgentParameters param = new AgentParameters(SnmpVersion.Ver1, new OctetString("public"));
 			// Construct target
 			UdpTarget target = new UdpTarget(ip, 161, 2000, 0);
 
-			try
+			// Make SNMP request
+			SnmpV1Packet result = (SnmpV1Packet)target.Request(list, param);
+
+			Form1.snmp_result res = new Form1.snmp_result();
+
+			// If result is null then agent didn't reply or we couldn't parse the reply.
+			if (result != null)
+			//if (result.Pdu.ErrorStatus != 0)
+			//    Console.WriteLine("Error in SNMP reply. Error {0} index {1}", result.Pdu.ErrorStatus, result.Pdu.ErrorIndex);
+			//else
 			{
-				// Make SNMP request
-				target.RequestAsync(list, param, new SnmpAsyncResponse(ReceiveCallback));
+				target.Close();
+
+				int i = 0;
+				res.Ip = ip;
+				res.vb = new Vb[result.Pdu.VbList.Count];
+
+				foreach (Vb v in result.Pdu.VbList) { res.vb[i++] = v; }
+
+				PostAsyncResult(res);
 			}
-			catch
-			{
-				PostAsyncResult("Связь с устройством: [SNMP]= ");
-			}
+			else
+				Console.WriteLine("No response received from SNMP agent.");
+
+			target.Close();
+
+			PostAsyncResult(res);
 		}
 
 		void ReceiveCallback(AsyncRequestResult result, SnmpPacket packet) // program itself

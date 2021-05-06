@@ -123,7 +123,7 @@ namespace Device_Control_2
 		#endregion Внешние классы
 
 		const string version = "2.1.4",
-					   patch = " (17)";
+					   patch = " (18)";
 
 		public Form1()
 		{
@@ -435,8 +435,6 @@ namespace Device_Control_2
 			for(int l = 0; l < k; l++)
 			{
 				Add_labels[l] = new Label();
-				tabPage3.Controls.Add(Add_labels[l]);
-
 				Add_labels[l].AutoSize = true;
 				Add_labels[l].Name = "Add_label" + l;
 				Add_labels[l].TabIndex = l + 40;
@@ -445,6 +443,8 @@ namespace Device_Control_2
 				Add_labels[l].Location = new Point(20, ((l - 10) * 30) + 15);
 				Add_labels[l].Text = "";
 				Add_labels[l].Visible = false;
+
+				tabPage3.Controls.Add(Add_labels[l]);
 			}
 		}
 

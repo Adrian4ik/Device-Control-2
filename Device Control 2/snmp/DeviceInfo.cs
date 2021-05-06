@@ -177,7 +177,7 @@ namespace Device_Control_2.snmp
                     survey_exists[0] = true;
                 }
                 else
-                    survey[0].Start();
+                    survey[0].snmpSurvey();
             }
             else
             {
@@ -477,7 +477,7 @@ namespace Device_Control_2.snmp
                 survey_exists[1] = true;
             }
             else
-                survey[1].Start();
+                survey[1].snmpSurvey();
         } //---------------------------------------------------------------------------
 
         void RewriteTable(Form1.snmp_result res)
