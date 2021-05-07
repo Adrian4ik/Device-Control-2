@@ -113,6 +113,7 @@ namespace Device_Control_2
 		DeviceInfo[] deviceInfo;
 
 		Label[] UI_labels = new Label[20];
+		Label[] Add_names;
 		Label[] Add_labels;
 		#endregion Классовые объекты
 
@@ -123,7 +124,7 @@ namespace Device_Control_2
 		#endregion Внешние классы
 
 		const string version = "2.1.4",
-					   patch = " (18)";
+					   patch = " (19)";
 
 		public Form1()
 		{
@@ -412,39 +413,57 @@ namespace Device_Control_2
 
 		void InitAdditionalLabels()
         {
-			int i = 0, j = 0, k = 0;
+			int i = 1, j = 0, k = 0;
 
-			while (i < cl.Length)
-            {
-				if (cl[i].Addition != null)
+			if (cl.Length > 1)
+			{
+				while (i < cl.Length)
 				{
-					if (cl[j].Addition != null)
-						j = cl[i].Addition.Length > cl[j].Addition.Length ? cl[i].Addition.Length : cl[j].Addition.Length;
-					else
-                    {
+					if (cl[i].Addition != null)
+					{
+						if (cl[j].Addition != null)
+							k = cl[i].Addition.Length > cl[j].Addition.Length ? cl[i].Addition.Length / 6 : cl[j].Addition.Length / 6;
+
 						i++;
 						j++;
-                    }
+					}
+					else
+						i++;
 				}
-				else
-					i++;
-            }
+			}
+			else if (cl[0].Addition != null)
+				k = cl[0].Addition.Length / 6;
 
-			Add_labels = new Label[j];
-
-			for(int l = 0; l < k; l++)
+			if(k > 0)
 			{
-				Add_labels[l] = new Label();
-				Add_labels[l].AutoSize = true;
-				Add_labels[l].Name = "Add_label" + l;
-				Add_labels[l].TabIndex = l + 40;
-				Add_labels[l].Size = new Size(0, 15);
+				Add_names = new Label[k];
+				Add_labels = new Label[k];
 
-				Add_labels[l].Location = new Point(20, ((l - 10) * 30) + 15);
-				Add_labels[l].Text = "";
-				Add_labels[l].Visible = false;
+				for (int l = 0; l < k; l++)
+				{
+					Add_names[l] = new Label();
+					Add_names[l].AutoSize = true;
+					Add_names[l].Name = "Add_name" + l;
+					Add_names[l].TabIndex = l + 40;
+					Add_names[l].Size = new Size(0, 15);
 
-				tabPage3.Controls.Add(Add_labels[l]);
+					Add_labels[l] = new Label();
+					Add_labels[l].AutoSize = true;
+					Add_labels[l].Name = "Add_label" + l;
+					Add_labels[l].TabIndex = l + 50;
+					Add_labels[l].Size = new Size(0, 15);
+
+					tabPage3.Controls.Add(Add_names[l]);
+					tabPage3.Controls.Add(Add_labels[l]);
+
+					Add_names[l].Location = new Point(20, (l * 30) + 105);
+					Add_names[l].Text = "";
+					Add_names[l].Visible = true;
+
+					Add_labels[l].Location = new Point(190, (l * 30) + 105);
+					Add_labels[l].Text = "";
+					Add_labels[l].Visible = true;
+				}
 			}
 		}
 
@@ -1603,6 +1622,26 @@ namespace Device_Control_2
 				for(int i = 0; i < 3; i++) { UI_labels[i + 16].Text = status.temperatures[i] != null ? status.temperatures[i] : ""; }
 			else
 				for (int i = 0; i < 3; i++) { UI_labels[i + 16].Text = ""; }
+
+			if(Add_names.Length != 0)
+			{
+				if (cl[selected_client].Addition != null)// && status.additional.Length != 0)
+				{
+					for (int i = 0; i < cl[selected_client].Addition.Length / 6; i++)
+					{
+						Add_names[i].Text = cl[selected_client].Addition[i, 2];
+						Add_labels[i].Text = status.additional.Length != 0 ? status.additional[i, 1] : "";
+					}
+				}
+				else
+				{
+					for (int i = 0; i < Add_names.Length; i++)
+					{
+						Add_names[i].Text = "";
+						Add_labels[i].Text = "";
+					}
+				}
+			}
 		}
 
 		private void ClearInfo()
@@ -1618,6 +1657,15 @@ namespace Device_Control_2
 			for (int i = 10; i < 15; i++) { UI_labels[i].Text = ""; }
 			UI_labels[15].Visible = cl[selected_client].Temperature != null;
 			for (int i = 16; i < 19; i++) { UI_labels[i].Text = ""; }
+
+			if (Add_names.Length != 0)
+			{
+				for (int i = 0; i < Add_names.Length; i++)
+				{
+					Add_names[i].Text = "";
+					Add_labels[i].Text = "";
+				}
+			}
 		}
 
 		private void Switch_UI_visibility(bool show_UI)

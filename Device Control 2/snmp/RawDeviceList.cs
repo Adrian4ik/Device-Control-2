@@ -204,26 +204,28 @@ namespace Device_Control_2.snmp
 			if (optlist.Length > 0)
 			{
 				int mod = int.Parse(optlist[0, 1]),
-				add = int.Parse(optlist[0, 2]);
+					add = int.Parse(optlist[0, 2]),
+				   time = int.Parse(optlist[0, 3]),
+				ifnames = int.Parse(optlist[0, 4]);
 
 				client.SysTime = optlist[0, 0];
 				client.IfName = optlist[1, 0];
 
-				client.Temperature = new string[mod - 2, 3];
-				client.Addition = new string[add, 3];
+				client.Temperature = new string[mod, 3];
+				client.Addition = new string[add, 6];
 
-				for (int i = 2; i < mod; i++)
+				for (int i = 0; i < mod; i++)
 				{
-					client.Temperature[i - 2, 0] = optlist[i, 0];
-					client.Temperature[i - 2, 1] = optlist[i, 1];
-					client.Temperature[i - 2, 2] = optlist[i, 2];
+					client.Temperature[i, 0] = optlist[i + 2, 0];
+					client.Temperature[i, 1] = optlist[i + 2, 1];
+					client.Temperature[i, 2] = optlist[i + 2, 2];
 				}
 
-				for (int i = 2 + mod; i < mod + add; i++)
+				for (int i = 0, j = mod + time + ifnames; i < add; i++)
 				{
-					client.Addition[i - 2, 0] = optlist[i, 0];
-					client.Addition[i - 2, 1] = optlist[i, 1];
-					client.Addition[1 - 2, 2] = optlist[i, 2];
+					client.Addition[i, 0] = optlist[i + j, 0];
+					client.Addition[i, 1] = optlist[i + j, 1];
+					client.Addition[i, 2] = optlist[i + j, 2];
 				}
 			}
 
@@ -251,19 +253,25 @@ namespace Device_Control_2.snmp
 
 		private string[,] OptlistParse(string folder_name)
 		{
-			int mod = 0, add = 0;
+			int mod = 0, add = 0, time = 0, ifnames = 0;
 			string[] optlist = File.ReadAllLines(path + "devices\\" + folder_name + "\\optlist.xml");
 
-			string[,] parsed_optlist = new string[optlist.Length, 3];
+			string[,] parsed_optlist = new string[optlist.Length, 6];
 
 			for (int i = 0, j = 5; i < optlist.Length; i++)
 			{
 				if (optlist[i].Length > 25 && optlist[i].Substring(optlist[i].IndexOf("1.")) != "1." && optlist[i].Substring(optlist[i].IndexOf("1.")) != "1...ifIndex")
 				{
 					if (optlist[i].Substring(optlist[i].IndexOf('('), 13) == "(system time)")
+					{
 						parsed_optlist[0, 0] = optlist[i].Substring(optlist[i].IndexOf("1."));
+						time++;
+					}
 					else if (optlist[i].Substring(optlist[i].IndexOf('('), 9) == "(ifNames)")
+					{
 						parsed_optlist[1, 0] = optlist[i].Substring(optlist[i].IndexOf("1."), optlist[i].IndexOf("ifIndex") - optlist[i].IndexOf("1."));
+						ifnames++;
+					}
 					else if (optlist[i].Substring(optlist[i].IndexOf('('), 13) == "(temperature)")
 					{
 						parsed_optlist[2, 0] = optlist[i].Substring(optlist[i].IndexOf("1."));
@@ -288,34 +296,39 @@ namespace Device_Control_2.snmp
 					else if (optlist[i].Substring(optlist[i].IndexOf('('), 12) == "(power state")
 					{
 						parsed_optlist[j, 0] = optlist[i].Substring(optlist[i].IndexOf("1."));
-						parsed_optlist[j, 1] = optlist[i].Substring(optlist[i].IndexOf('(') + 1, optlist[i].IndexOf(':') - optlist[i].IndexOf('('));
-						parsed_optlist[j, 2] = optlist[i].Substring(0, optlist[i].IndexOf('('));
-						mod++;
+						parsed_optlist[j, 1] = optlist[i].Substring(optlist[i].IndexOf('(') + 1, optlist[i].IndexOf(')') - optlist[i].IndexOf('(') - 1);
+						parsed_optlist[j, 2] = optlist[i].Substring(0, optlist[i].IndexOf('(') - 1);
+						add++;
+						j++;
 					}
 					else if (optlist[i].Substring(optlist[i].IndexOf('('), 10) == "(fan speed")
 					{
 						parsed_optlist[j, 0] = optlist[i].Substring(optlist[i].IndexOf("1."));
-						parsed_optlist[j, 1] = optlist[i].Substring(optlist[i].IndexOf('(') + 1, optlist[i].IndexOf(':') - optlist[i].IndexOf('('));
-						parsed_optlist[j, 2] = optlist[i].Substring(0, optlist[i].IndexOf('('));
-						mod++;
+						parsed_optlist[j, 1] = optlist[i].Substring(optlist[i].IndexOf('(') + 1, optlist[i].IndexOf(')') - optlist[i].IndexOf('(') - 1);
+						parsed_optlist[j, 2] = optlist[i].Substring(0, optlist[i].IndexOf('(') - 1);
+						add++;
+						j++;
 					}
 					else
 					{
 						parsed_optlist[j, 0] = optlist[i].Substring(optlist[i].IndexOf("1."));
-						parsed_optlist[j, 1] = optlist[i].Substring(optlist[i].IndexOf('(') + 1, optlist[i].IndexOf(':') - optlist[i].IndexOf('('));
-						parsed_optlist[j, 2] = optlist[i].Substring(0, optlist[i].IndexOf('('));
+						parsed_optlist[j, 1] = optlist[i].Substring(optlist[i].IndexOf('(') + 1, optlist[i].IndexOf(')') - optlist[i].IndexOf('(') - 1);
+						parsed_optlist[j, 2] = optlist[i].Substring(0, optlist[i].IndexOf('(') - 1);
 						add++;
+						j++;
 					}
 
 					parsed_optlist[0, 1] = mod.ToString();
 					parsed_optlist[0, 2] = add.ToString();
+					parsed_optlist[0, 3] = time.ToString();
+					parsed_optlist[0, 4] = ifnames.ToString();
 				}
 			}
 
-			string[,] res_optlist = new string[mod + add, 3];
+			string[,] res_optlist = new string[mod + add + time + ifnames, 6];
 
-			for(int i = 0; i < res_optlist.Length / 3; i++)
-				for(int k = 0; k < 3; k++)
+			for(int i = 0; i < res_optlist.Length / 6; i++)
+				for(int k = 0; k < 6; k++)
 					res_optlist[i, k] = parsed_optlist[i, k];
 
 			return res_optlist;

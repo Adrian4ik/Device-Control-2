@@ -70,7 +70,7 @@ namespace Device_Control_2.snmp
 			}
 		}
 
-		public Survey(IPAddress address, List<string> oids, Action<Form1.snmp_result> callback, Action<string> error_callback)
+		/*public Survey(IPAddress address, List<string> oids, Action<Form1.snmp_result> callback, Action<string> error_callback)
         {
 			if (oids != null)
             {
@@ -82,7 +82,7 @@ namespace Device_Control_2.snmp
 				localResult = callback;
 				localError = error_callback;
 			}
-        }
+        }*/
 
 		void Init(object obj, IPAddress address, Action<Form1.snmp_result> callback, Action<string> error_callback)
 		{
@@ -147,7 +147,7 @@ namespace Device_Control_2.snmp
 			}
 		}
 
-		public void snmpSurvey()
+		public Form1.snmp_result snmpSurvey()
 		{
 			// Define agent parameters class
 			AgentParameters param = new AgentParameters(SnmpVersion.Ver1, new OctetString("public"));
@@ -173,14 +173,14 @@ namespace Device_Control_2.snmp
 
 				foreach (Vb v in result.Pdu.VbList) { res.vb[i++] = v; }
 
-				PostAsyncResult(res);
+				return res;
 			}
 			else
 				Console.WriteLine("No response received from SNMP agent.");
 
 			target.Close();
 
-			PostAsyncResult(res);
+			return res;
 		}
 
 		void ReceiveCallback(AsyncRequestResult result, SnmpPacket packet) // program itself

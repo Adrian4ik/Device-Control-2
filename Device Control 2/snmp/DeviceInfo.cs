@@ -127,6 +127,27 @@ namespace Device_Control_2.snmp
         {
             if (cl.Connect)
             {
+                survey[0] = new Survey(cl.Ip, GetStandart, GetError);
+                survey[2] = new Survey(cl.Ip, cl.SysTime, GetSysTime, GetError);
+
+                if(cl.Temperature != null)
+                {
+                    string[] temp = new string[cl.Temperature.Length / 3];
+
+                    for (int i = 0; i < temp.Length; i++) { temp[i] = cl.Temperature[i, 0]; }
+
+                    survey[3] = new Survey(cl.Ip, temp, GetTemperatures, GetError);
+                }
+
+                if(cl.Addition != null)
+                {
+                    string[] add = new string[cl.Addition.Length / 6];
+
+                    for (int i = 0; i < add.Length; i++) { add[i] = cl.Addition[i, 0]; }
+
+                    survey[5] = new Survey(cl.Ip, add, GetAdditional, GetError);
+                }
+
                 try { ping.SendAsync(cl.Ip, 3000, waiter); }
                 catch
                 {
@@ -173,7 +194,7 @@ namespace Device_Control_2.snmp
 
                 if (!survey_exists[0])
                 {
-                    survey[0] = new Survey(cl.Ip, GetStandart, GetError);
+                    survey[0].snmpSurvey();
                     survey_exists[0] = true;
                 }
                 else
@@ -220,14 +241,14 @@ namespace Device_Control_2.snmp
 
                     status.interface_list = new int[int.Parse(status.standart[4])];
 
-                    /*if (row_counter == 0)
+                    if (row_counter == 0)
                     {
                         if_table = new string[int.Parse(status.standart[4]), 5];
                         status.interface_table = new string[int.Parse(status.standart[4]), 5];
 
                         NextRow();
                     }
-                    else*/
+                    else
                         is_first = false;
                 }
                 else
@@ -235,27 +256,27 @@ namespace Device_Control_2.snmp
 
                 if (cl.SysTime != null)
                 {
-                    survey[2] = new Survey(cl.Ip, cl.SysTime, GetSysTime, GetError);
+                    GetSysTime(survey[2].snmpSurvey());
                     UpdateInfo();
                 }
                 else if (cl.Temperature != null)
                 {
                     if (cl.Temperature.Length != 0)
                     {
-                        //survey[3] = new Survey(cl.Ip, cl.Temperature, GetTemperatures, GetError);
+                        survey[3].snmpSurvey();
                         UpdateInfo();
                     }
                 }
                 else if (cl.IfName != null)
                 {
-                    //survey[4] = new Survey(cl.Ip, cl.IfName, GetIfNames, GetError);
+                    survey[4].snmpSurvey();
                     UpdateInfo();
                 }
                 else if (cl.Addition != null)
                 {
                     if (cl.Addition.Length != 0)
                     {
-                        //survey[5] = new Survey(cl.Ip, cl.Addition, GetAdditional, GetError);
+                        survey[5].snmpSurvey();
                         UpdateInfo();
                     }
                 }
@@ -291,7 +312,22 @@ namespace Device_Control_2.snmp
 
         }
 
-        void GetError(string msg)
+        void GetTemperatures(Form1.snmp_result res)
+        {
+
+        }
+
+        void GetIfNames(Form1.snmp_result res)
+        {
+            survey[4] = new Survey(cl.Ip, cl.IfName, GetIfNames, GetError);
+        }
+
+        void GetAdditional(Form1.snmp_result res)
+        {
+
+        }
+
+    void GetError(string msg)
         {
 
         }
@@ -474,6 +510,7 @@ namespace Device_Control_2.snmp
             if(!survey_exists[1])
             {
                 survey[1] = new Survey(cl.Ip, if_table, RewriteTable, GetError);
+                RewriteTable(survey[1].snmpSurvey());
                 survey_exists[1] = true;
             }
             else
