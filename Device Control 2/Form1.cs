@@ -31,7 +31,7 @@ using SnmpSharpNet;
 //
 // Подсказки:
 //
-// Группы методов, которые используются сразу после событий или в других методах
+// Группы методов, которые используются сразу после событий или в других методах,
 // объединены в регионы и идут сразу после событий или методов в которых используются
 
 namespace Device_Control_2
@@ -124,7 +124,7 @@ namespace Device_Control_2
 		#endregion Внешние классы
 
 		const string version = "2.1.4",
-					   patch = " (19)";
+					   patch = " (20)";
 
 		public Form1()
 		{
@@ -1614,7 +1614,8 @@ namespace Device_Control_2
 			else
 				for (int i = 0; i < 4; i++) { UI_labels[i + 10].Text = ""; }
 
-			Fill_grid(status.interface_table, status.ifnames, status.interface_count);
+			if(status.interface_count != 0)
+				Fill_grid(status.interface_table, status.ifnames, status.interface_count);
 
 			UI_labels[14].Text = status.SysTime != null ? status.SysTime : "";
 

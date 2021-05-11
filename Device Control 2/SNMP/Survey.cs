@@ -37,7 +37,7 @@ namespace Device_Control_2.snmp
 		{
 			if (oid != null)
 			{
-				list.VbList.Add(oid);
+				//list.VbList.Add(oid);
 
 				Init(oid, address, callback, error_callback);
 			}
@@ -47,11 +47,11 @@ namespace Device_Control_2.snmp
 		{
 			if(oid_list != null)
 			{
-				foreach (string oid in oid_list)
+				/*foreach (string oid in oid_list)
 				{
 					if (oid != null)
 						list.VbList.Add(oid);
-				}
+				}*/
 
 				Init(oid_list, address, callback, error_callback);
 			}
@@ -61,10 +61,10 @@ namespace Device_Control_2.snmp
         {
 			if (iftable != null)
 			{
-				for (int i = 0; i < iftable.Length / 5; i++)
+				/*for (int i = 0; i < iftable.Length / 5; i++)
 					for (int j = 0; j < 5; j++)
 						if (iftable[i, j] != null)
-							list.VbList.Add(iftable[i, j]);
+							list.VbList.Add(iftable[i, j]);*/
 
 				Init(iftable, address, callback, error_callback);
 			}

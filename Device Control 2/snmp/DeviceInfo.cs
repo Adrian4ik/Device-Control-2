@@ -41,7 +41,7 @@ namespace Device_Control_2.snmp
 
         RawDeviceList.Client cl;
 
-        Survey[] survey = new Survey[6];
+        Survey[] survey = new Survey[7];
         Logs log = new Logs(); // простые изменения кидать в логи отсюда, а в форму передавать лишь нештатные состояния
 
         Action<Status> localResult;
@@ -102,16 +102,56 @@ namespace Device_Control_2.snmp
             localResult = status_callback;
             localNote = notification_callback;
 
-            FillArray();
+            FillSurveyArray();
             TryPing();
         }
 
-        void FillArray()
-        {
 
+
+        /// <summary>
+        /// Заполняет массив Survey каждого клиента
+        /// </summary>
+        void FillSurveyArray()
+        {
+            survey[0] = new Survey(cl.Ip, GetStandart, GetError);
+
+            string[,] table = new string[100, 6];
+
+            for (int i = 0; i < 100; i++)
+            {
+                table[i, 0] = "1.3.6.1.2.1.2.2.1.1." + (i + 1); // 1 столбец
+                table[i, 1] = "1.3.6.1.2.1.2.2.1.2." + (i + 1); // 2 столбец
+
+                table[i, 2] = "1.3.6.1.2.1.2.2.1.8." + (i + 1); // 4 столбец
+                table[i, 3] = "1.3.6.1.2.1.2.2.1.5." + (i + 1); // 5 столбец
+                table[i, 4] = "1.3.6.1.2.1.2.2.1.3." + (i + 1); // 6 столбец
+            }
+
+            survey[1] = new Survey(cl.Ip, table, GetTable, GetError);
+            survey[2] = new Survey(cl.Ip, cl.SysTime, GetSysTime, GetError);
+
+            if (cl.Temperature != null)
+            {
+                string[] temp = new string[cl.Temperature.Length / 3];
+
+                for (int i = 0; i < temp.Length; i++) { temp[i] = cl.Temperature[i, 0]; }
+
+                survey[3] = new Survey(cl.Ip, temp, GetTemperatures, GetError);
+            }
+
+            if (cl.Addition != null)
+            {
+                string[] add = new string[cl.Addition.Length / 6];
+
+                for (int i = 0; i < add.Length; i++) { add[i] = cl.Addition[i, 0]; }
+
+                survey[5] = new Survey(cl.Ip, add, GetAdditional, GetError);
+            }
+
+            survey[6] = new Survey(cl.Ip, "1.3.6.1.2.1.1.1.0", GetConnection, GetError);
         }
 
-        public void RegisterCallback(Action<Status> callback)
+        /*public void RegisterCallback(Action<Status> callback)
         {
             localResult = callback;
         }
@@ -121,33 +161,14 @@ namespace Device_Control_2.snmp
             localNote = callback;
 
             TryPing();
-        }
+        }*/
+
+
 
         void TryPing()
         {
             if (cl.Connect)
             {
-                survey[0] = new Survey(cl.Ip, GetStandart, GetError);
-                survey[2] = new Survey(cl.Ip, cl.SysTime, GetSysTime, GetError);
-
-                if(cl.Temperature != null)
-                {
-                    string[] temp = new string[cl.Temperature.Length / 3];
-
-                    for (int i = 0; i < temp.Length; i++) { temp[i] = cl.Temperature[i, 0]; }
-
-                    survey[3] = new Survey(cl.Ip, temp, GetTemperatures, GetError);
-                }
-
-                if(cl.Addition != null)
-                {
-                    string[] add = new string[cl.Addition.Length / 6];
-
-                    for (int i = 0; i < add.Length; i++) { add[i] = cl.Addition[i, 0]; }
-
-                    survey[5] = new Survey(cl.Ip, add, GetAdditional, GetError);
-                }
-
                 try { ping.SendAsync(cl.Ip, 3000, waiter); }
                 catch
                 {
@@ -168,8 +189,6 @@ namespace Device_Control_2.snmp
                 PostAsyncResult(status);
             }
         } // 1
-
-
 
         void Received_ping_reply(object sender, PingCompletedEventArgs e)
         {
@@ -192,13 +211,15 @@ namespace Device_Control_2.snmp
 
                 status.icmp_conn = 1;
 
-                if (!survey_exists[0])
-                {
-                    survey[0].snmpSurvey();
-                    survey_exists[0] = true;
-                }
-                else
-                    survey[0].snmpSurvey();
+                //if (!survey_exists[0])
+                //{
+                //    survey_exists[0] = true;
+                //    getstandart(survey[0].snmpsurvey()); // -----------------------
+                //}
+                //else
+                //    getstandart(survey[0].snmpsurvey()); // -----------------------
+
+                GetConnection(survey[6].snmpSurvey());
             }
             else
             {
@@ -211,132 +232,62 @@ namespace Device_Control_2.snmp
                 PostAsyncNotification(notification);
             }
 
-            if (!timer.Enabled) timer.Start();
+            //if (!timer.Enabled)
+            //    timer.Start();
 
             UpdateInfo();
             PostAsyncResult(status);
-        } // 1 res & 2
-        
+        }
 
 
-        void GetStandart(Form1.snmp_result res) //---------------------------------------------------------------------------
+
+        void GetConnection(Form1.snmp_result res)
         {
             notification.type[1] = false;
 
-            if (res.vb != null)
-            {
-                snmp_connection[conn_state_counter] = true;
-
-                notification.type[2] = false;
-
-                if (is_first) // is_first можно убрать
-                {
-                    status.standart = new string[5];
-
-                    status.snmp_conn = 0;
-
-                    int i = 0;
-
-                    foreach (Vb vb in res.vb) { status.standart[i++] = vb.Value.ToString(); }
-
-                    status.interface_list = new int[int.Parse(status.standart[4])];
-
-                    if (row_counter == 0)
-                    {
-                        if_table = new string[int.Parse(status.standart[4]), 5];
-                        status.interface_table = new string[int.Parse(status.standart[4]), 5];
-
-                        NextRow();
-                    }
-                    else
-                        is_first = false;
-                }
-                else
-                    InspectStdChanges(res.vb);
-
-                if (cl.SysTime != null)
-                {
-                    GetSysTime(survey[2].snmpSurvey());
-                    UpdateInfo();
-                }
-                else if (cl.Temperature != null)
-                {
-                    if (cl.Temperature.Length != 0)
-                    {
-                        survey[3].snmpSurvey();
-                        UpdateInfo();
-                    }
-                }
-                else if (cl.IfName != null)
-                {
-                    survey[4].snmpSurvey();
-                    UpdateInfo();
-                }
-                else if (cl.Addition != null)
-                {
-                    if (cl.Addition.Length != 0)
-                    {
-                        survey[5].snmpSurvey();
-                        UpdateInfo();
-                    }
-                }
-                else if (!timer.Enabled)
-                {
-                    timer.Start();
-                    UpdateInfo();
-                }
-            }
-            else
-            {
-                snmp_connection[conn_state_counter] = false;
-
-                notification.type[2] = true;
-                PostAsyncNotification(notification);
-
-                status.snmp_conn = 1;
-
-                if (!timer.Enabled) timer.Start();
-            }
-
             conn_state_counter++;
+
+            if (res.vb == null)
+                RestartConnection();
 
             if (conn_state_counter == 10)
                 AnalyzeConnection(); //----------------------------------------------
 
             UpdateInfo();
             PostAsyncResult(status);
-        } // 2 res & 3
 
-        void GetSysTime(Form1.snmp_result res)
-        {
+            if (conn_state_counter == 10)
+            {
+                conn_state_counter = 0;
 
-        }
+                if (timer.Enabled)
+                    timer.Stop();
 
-        void GetTemperatures(Form1.snmp_result res)
-        {
-
-        }
-
-        void GetIfNames(Form1.snmp_result res)
-        {
-            survey[4] = new Survey(cl.Ip, cl.IfName, GetIfNames, GetError);
-        }
-
-        void GetAdditional(Form1.snmp_result res)
-        {
+                GetNext();
+            }
+            else if (!timer.Enabled)
+                timer.Start();
 
         }
 
-    void GetError(string msg)
+        void RestartConnection() //----------------------------------------------
         {
+            snmp_connection[conn_state_counter] = false;
 
+            notification.type[2] = true;
+            PostAsyncNotification(notification);
+
+            status.snmp_conn = 1;
+
+            if (!timer.Enabled)
+                timer.Start();
         }
 
         void AnalyzeConnection()
         {
             int bad_connections = 0;
 
-            foreach(bool conn_state in icmp_connection)
+            foreach (bool conn_state in icmp_connection)
             {
                 if (!conn_state)
                     bad_connections++;
@@ -369,9 +320,72 @@ namespace Device_Control_2.snmp
             }
             else
                 status.snmp_conn = 0;
-
-            conn_state_counter = 0;
         }
+
+
+
+        void GetStandart(Form1.snmp_result res) //---------------------------------------------------------------------------
+        {
+            if (res.vb != null)
+            {
+                snmp_connection[conn_state_counter] = true;
+
+                notification.type[2] = false;
+
+                UpdateInfo();
+                PostAsyncResult(status);
+
+                status.standart = new string[5];
+
+                status.snmp_conn = 0;
+
+                int i = 0;
+
+                foreach (Vb vb in res.vb)
+                {
+                    if (status.standart[i] != vb.Value.ToString())
+                        log.Write(cl.Name, "Значение переменной было изменено: [" + "]=" + vb.Value.ToString()); //\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+                    status.standart[i++] = vb.Value.ToString();
+                }
+
+                status.interface_list = new int[int.Parse(status.standart[4])];
+
+                if (row_counter == 0)
+                {
+                    if_table = new string[int.Parse(status.standart[4]), 5];
+                    status.interface_table = new string[int.Parse(status.standart[4]), 5];
+
+                    NextRow();
+                }
+                else
+                {
+                    is_first = false;
+
+                    if (!survey_exists[1])
+                    {
+                        //survey[1] = new Survey(cl.Ip, if_table, RewriteTable, GetError);
+                        survey_exists[1] = true;
+                        //RewriteTable(survey[1].snmpSurvey());
+                    }
+                    else
+                        survey[1].snmpSurvey();
+
+                    //GetNext();
+                }
+            }
+        } // 2 res & 3
+
+        void InspectStdChanges(Vb[] vbs)
+        {
+            int i = 0;
+
+            foreach (Vb vb in vbs) { status.standart[i++] = vb.Value.ToString(); }
+
+            status.interface_list = new int[int.Parse(status.standart[4])];
+        } //---------------------------------------------------------------------------
+
+
 
         void NextRow()
         {
@@ -387,7 +401,10 @@ namespace Device_Control_2.snmp
             arr[4] = "1.3.6.1.2.1.2.2.1.3." + row_counter; // 6 столбец
 
             if (ri_counter + 1 <= status.interface_list.Length)
+            {
                 survey[1] = new Survey(cl.Ip, arr, Save, GetError);
+                Save(survey[1].snmpSurvey());
+            }
         }
 
         void Save(Form1.snmp_result res)
@@ -488,7 +505,7 @@ namespace Device_Control_2.snmp
                 {
                     status.interface_count = ri_counter;
 
-                    if (cl.Temperature.Length == 0)
+                    if (cl.Temperature!= null)
                     {
                         if (!timer.Enabled)
                             timer.Start();
@@ -497,37 +514,216 @@ namespace Device_Control_2.snmp
                         timer.Start();
                 }
             }
-        } //---------------------------------------------------------------------------
-
-        void InspectStdChanges(Vb[] vbs)
-        {
-            int i = 0;
-
-            foreach (Vb vb in vbs) { status.standart[i++] = vb.Value.ToString(); }
-
-            status.interface_list = new int[int.Parse(status.standart[4])];
-
-            if(!survey_exists[1])
-            {
-                survey[1] = new Survey(cl.Ip, if_table, RewriteTable, GetError);
-                RewriteTable(survey[1].snmpSurvey());
-                survey_exists[1] = true;
-            }
             else
-                survey[1].snmpSurvey();
+                RestartConnection();
         } //---------------------------------------------------------------------------
+
+
+
+        void GetTable(Form1.snmp_result res)
+        {
+
+        }
+
+        void RewriteTable()
+        {
+
+        }
 
         void RewriteTable(Form1.snmp_result res)
         {
-            for (int i = 0; i < res.vb.Length / 5; i++)
+            if(res.vb.Length > 5)
+                for (int i = 0; i < res.vb.Length / 5; i++)
+                {
+                    status.interface_table[i, 0] = res.vb[i * 5].Value.ToString();
+                    status.interface_table[i, 1] = res.vb[i * 5 + 1].Value.ToString();
+                    status.interface_table[i, 2] = res.vb[i * 5 + 2].Value.ToString() == "1" ? "Связь есть" : "Отключен";
+                    status.interface_table[i, 3] = (int.Parse(res.vb[i * 5 + 3].Value.ToString()) / 1000000).ToString();
+                    status.interface_table[i, 4] = "Ethernet";
+
+                    if(i >= 25)
+                    {
+                        int j = i * 5;
+                        string n = cl.Name;
+                    }
+                }
+            else
             {
-                status.interface_table[i, 0] = res.vb[i * 5].Value.ToString();
-                status.interface_table[i, 1] = res.vb[i * 5 + 1].Value.ToString();
-                status.interface_table[i, 2] = res.vb[i * 5 + 2].Value.ToString() == "1" ? "Связь есть" : "Отключен";
-                status.interface_table[i, 3] = (int.Parse(res.vb[i * 5 + 3].Value.ToString()) / 1000000).ToString();
-                status.interface_table[i, 4] = "Ethernet";
+                status.interface_table[row_counter, 0] = res.vb[0].Value.ToString();
+                status.interface_table[row_counter, 1] = res.vb[1].Value.ToString();
+                status.interface_table[row_counter, 2] = res.vb[2].Value.ToString() == "1" ? "Связь есть" : "Отключен";
+                status.interface_table[row_counter, 3] = (int.Parse(res.vb[3].Value.ToString()) / 1000000).ToString();
+                status.interface_table[row_counter, 4] = "Ethernet";
             }
         }
+
+
+
+        void GetNext()
+        {
+            step++;
+
+            switch (step)
+            {
+                case 0:
+                    // standart
+                    break;
+                case 1:
+                    if(is_first)
+                    {
+                        //interface_table
+                    }
+                    else
+                    {
+
+                    }
+                    break;
+                case 2:
+                    if (cl.SysTime != null)
+                        GetSysTime(survey[2].snmpSurvey());
+                    break;
+                case 3:
+                    if (cl.Temperature != null && cl.Temperature.Length != 0)
+                        GetTemperatures(survey[3].snmpSurvey());
+                    break;
+                case 4:
+                    //if (cl.IfName != null && cl.Temperature.Length != 0) // ------------------
+                        //GetIfNames(survey[4].snmpSurvey());
+                    break;
+                case 5:
+                    step = -1;
+
+                    if (cl.Addition != null && cl.Addition.Length != 0)
+                        GetAdditional(survey[5].snmpSurvey());
+                    break;
+            }
+
+            UpdateInfo();
+
+            if (step == -1 && !timer.Enabled)
+                timer.Start();
+            else
+                GetNext();
+        }
+
+        #region Survey [2]
+        void GetSysTime(Form1.snmp_result res)
+        {
+            if (res.vb != null)
+            {
+                string time = "0";
+
+                try { time = res.vb[0].Value.ToString(); }
+                catch { Console.WriteLine("time = " + time); }
+
+                if (res.vb[0].Value.Type == SnmpVariableType.TimeTicks)
+                    time = Decrypt_Time(time);
+
+                long convertedTime = Convert.ToInt64(time); //сконвертированное в long время из string
+
+                time = DateTimeOffset.FromUnixTimeSeconds(convertedTime).ToString().Substring(0, 19);
+
+                if(status.SysTime != null)
+                    if (status.SysTime.Substring(0, status.SysTime.IndexOf(' ')) != time.Substring(0, status.SysTime.IndexOf(' ')))
+                        log.Write(cl.Name, "Значение переменной было изменено: [system time]=" + time);
+
+                status.SysTime = time;
+            }
+
+            //GetNext();
+        }
+
+        private string Decrypt_Time(string value)
+        {
+            string result, days = "", hours = "", minutes = "", seconds = "", milliseconds = "";
+
+            value = value.Substring(0, value.Length - 2);
+
+            for (int i = 0, flag = 0; i < value.Length; i++)
+            {
+                if (value[i] == 'd' || value[i] == 'h' || value[i] == 'm' || value[i] == 's' || value[i] == ' ')
+                {
+                    if (value[i] != ' ')
+                        flag++;
+                }
+                else
+                    switch (flag)
+                    {
+                        case 0:
+                            days += value[i];
+                            break;
+                        case 1:
+                            hours += value[i];
+                            break;
+                        case 2:
+                            minutes += value[i];
+                            break;
+                        case 3:
+                            seconds += value[i];
+                            break;
+                        case 4:
+                            milliseconds += value[i];
+                            break;
+                    }
+            }
+
+            long i_d = Convert.ToInt64(days);
+            long i_h = Convert.ToInt64(hours);
+            long i_m = Convert.ToInt64(minutes);
+            long i_s = Convert.ToInt64(seconds);
+            long ims = Convert.ToInt64(milliseconds);
+
+            ims += i_s * 1000;
+            ims += i_m * 60000;
+            ims += i_h * 3600000;
+            ims += i_d * 86400000;
+
+            ims /= 10;
+
+            result = ims.ToString();
+
+            return result;
+        }
+        #endregion
+
+        void GetTemperatures(Form1.snmp_result res)
+        {
+            if(res.vb != null)
+            {
+
+            }
+
+            //GetNext();
+        }
+
+        void GetIfNames(Form1.snmp_result res)
+        {
+            if (res.vb != null)
+            {
+
+            }
+
+            //GetNext();
+
+            survey[4] = new Survey(cl.Ip, cl.IfName, GetIfNames, GetError);
+        }
+
+        void GetAdditional(Form1.snmp_result res)
+        {
+            if (res.vb != null)
+            {
+                
+            }
+
+            //GetNext();
+        }
+
+        void GetError(string msg)
+        {
+
+        }
+
+
 
         void UpdateInfo()
         {
@@ -545,7 +741,7 @@ namespace Device_Control_2.snmp
 
         //public void ChangeStat(Form1.snmp_result trap)
         //{
-            // сканируем все oid'ы trap'а на соответствие и возможно выдаём нештатное состояние
+        // сканируем все oid'ы trap'а на соответствие и возможно выдаём нештатное состояние
         //} // метод применяемый при поимке snmp trap
 
 
