@@ -703,9 +703,9 @@ namespace Device_Control_2.snmp
 
             }
 
-            //GetNext();
-
             survey[4] = new Survey(cl.Ip, cl.IfName, GetIfNames, GetError);
+
+            //GetNext();
         }
 
         void GetAdditional(Form1.snmp_result res)

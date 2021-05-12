@@ -33,7 +33,7 @@
             // Notification
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
-            this.ClientSize = new System.Drawing.Size(511, 172);
+            this.ClientSize = new System.Drawing.Size(507, 168);
             this.ControlBox = false;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
@@ -41,7 +41,7 @@
             this.Name = "Notification";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            this.Text = "DeviceControl 2 - Уведомления";
+            this.Text = "DeviceControl БКМ - Уведомления";
             this.TopMost = true;
             this.ResumeLayout(false);
 

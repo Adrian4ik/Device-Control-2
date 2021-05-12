@@ -124,7 +124,7 @@ namespace Device_Control_2
 		#endregion Внешние классы
 
 		const string version = "2.1.4",
-					   patch = " (20)";
+					   patch = " (21)";
 
 		public Form1()
 		{
@@ -1481,7 +1481,14 @@ namespace Device_Control_2
 
         void Form1_Resize(object sender, EventArgs e)
 		{
-			Resize_form();
+			if (WindowState == FormWindowState.Minimized)
+			{
+				WindowState = FormWindowState.Normal;
+
+				Hide();
+			}
+			else
+				Resize_form();
 		}
 
 		#region Form1_Resize
@@ -1532,24 +1539,36 @@ namespace Device_Control_2
 		}
 
 		#region Tray
-		private void openTSM_Click(object sender, EventArgs e)
+		void TrayIcon_MouseDoubleClick(object sender, MouseEventArgs e)
+		{
+			ShowWindow();
+		}
+
+		void openTSM_Click(object sender, EventArgs e)
+		{
+			ShowWindow();
+		}
+
+		void ShowWindow()
 		{
 			Show();
 
 			WindowState = FormWindowState.Normal;
+
+			Focus();
 		}
 
-		private void commentTSM_Click(object sender, EventArgs e)
+		void commentTSM_Click(object sender, EventArgs e)
 		{
 
 		}
 
-		private void aboutTSM_Click(object sender, EventArgs e)
+		void aboutTSM_Click(object sender, EventArgs e)
 		{
 
 		}
 
-		private void exitTSM_Click(object sender, EventArgs e)
+		void exitTSM_Click(object sender, EventArgs e)
 		{
 			TrayIcon.Visible = false;
 
@@ -1588,7 +1607,7 @@ namespace Device_Control_2
 		}
 
 		#region dataGridView2_CellMouseClick
-		private void ChangeInfo() //---------------------------------------------------------------------------
+		void ChangeInfo() //---------------------------------------------------------------------------
 		{
 			UI_labels[1].Text = cl[selected_client].Name;
 
@@ -1598,7 +1617,7 @@ namespace Device_Control_2
 				ClearInfo();
 		}
 
-		private void ShowInfo(DeviceInfo.Status status)
+		void ShowInfo(DeviceInfo.Status status)
         {
 			Change_Ping_Status(status.icmp_conn);
 			//Change_SNMP_Status(status.snmp_conn, selected_client);
@@ -1645,7 +1664,7 @@ namespace Device_Control_2
 			}
 		}
 
-		private void ClearInfo()
+		void ClearInfo()
 		{
 			//Change_SNMP_Status(5, selected_client);
 			Change_Ping_Status(5);
@@ -1669,7 +1688,7 @@ namespace Device_Control_2
 			}
 		}
 
-		private void Switch_UI_visibility(bool show_UI)
+		void Switch_UI_visibility(bool show_UI)
 		{
 			panel1.Visible = show_UI;
 			tabControl1.Visible = show_UI;
@@ -1684,10 +1703,10 @@ namespace Device_Control_2
 				}
 			}
 		}
-		#endregion dataGridView2_CellMouseClick
+        #endregion dataGridView2_CellMouseClick
 
-		#region Button
-		private void button1_MouseEnter(object sender, EventArgs e)
+        #region Button
+        private void button1_MouseEnter(object sender, EventArgs e)
 		{
 			panel3.BackColor = SystemColors.Highlight;
 		}

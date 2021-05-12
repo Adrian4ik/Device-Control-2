@@ -318,6 +318,7 @@
             this.TrayIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("TrayIcon.Icon")));
             this.TrayIcon.Text = "DeviceControl";
             this.TrayIcon.Visible = true;
+            this.TrayIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.TrayIcon_MouseDoubleClick);
             // 
             // contextMenuStrip1
             // 
@@ -411,7 +412,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(566, 339);
             this.Name = "Form1";
-            this.Text = "DeviceControl 2 - Устройства";
+            this.Text = "DeviceControl БКМ";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Resize += new System.EventHandler(this.Form1_Resize);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
