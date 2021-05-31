@@ -237,6 +237,8 @@ namespace Device_Control_2.snmp
 
             UpdateInfo();
             PostAsyncResult(status);
+
+            GetStandart(survey[0].snmpSurvey());
         }
 
 
