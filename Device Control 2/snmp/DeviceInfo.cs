@@ -21,7 +21,7 @@ namespace Device_Control_2.snmp
             icmp_connection = new bool[10],
             snmp_connection = new bool[10];
 
-        int step = 0,
+        int step = -1,
             conn_state_counter = 0, row_counter = 0, ri_counter = 0; // номер строки в таблице интерфейсов
 
         string[,] if_table; // таблица с 5-ю столбцами, доп. столбец заполняется в string[] ifnames
@@ -137,6 +137,8 @@ namespace Device_Control_2.snmp
                 for (int i = 0; i < temp.Length; i++) { temp[i] = cl.Temperature[i, 0]; }
 
                 survey[3] = new Survey(cl.Ip, temp, GetTemperatures, GetError);
+
+                status.temperatures = new string[cl.Temperature.Length / 3];
             }
 
             if (cl.Addition != null)
@@ -210,16 +212,6 @@ namespace Device_Control_2.snmp
                 notification.type[1] = false;
 
                 status.icmp_conn = 1;
-
-                //if (!survey_exists[0])
-                //{
-                //    survey_exists[0] = true;
-                //    getstandart(survey[0].snmpsurvey()); // -----------------------
-                //}
-                //else
-                //    getstandart(survey[0].snmpsurvey()); // -----------------------
-
-                GetConnection(survey[6].snmpSurvey());
             }
             else
             {
@@ -232,13 +224,16 @@ namespace Device_Control_2.snmp
                 PostAsyncNotification(notification);
             }
 
-            //if (!timer.Enabled)
-            //    timer.Start();
-
-            UpdateInfo();
+            //UpdateInfo();
             PostAsyncResult(status);
 
-            GetStandart(survey[0].snmpSurvey());
+            if(e.Reply.Status == IPStatus.Success)
+            {
+                if (conn_state_counter == 0)
+                    GetNext();
+
+                GetConnection(survey[6].snmpSurvey());
+            }
         }
 
 
@@ -255,7 +250,7 @@ namespace Device_Control_2.snmp
             if (conn_state_counter == 10)
                 AnalyzeConnection(); //----------------------------------------------
 
-            UpdateInfo();
+            //UpdateInfo();
             PostAsyncResult(status);
 
             if (conn_state_counter == 10)
@@ -269,7 +264,6 @@ namespace Device_Control_2.snmp
             }
             else if (!timer.Enabled)
                 timer.Start();
-
         }
 
         void RestartConnection() //----------------------------------------------
@@ -300,10 +294,10 @@ namespace Device_Control_2.snmp
                 if (bad_connections == 10)
                     status.icmp_conn = 3;
                 else
-                    status.icmp_conn = 1;
+                    status.icmp_conn = 2;
             }
             else
-                status.icmp_conn = 2;
+                status.icmp_conn = 1;
 
             bad_connections = 0;
 
@@ -358,7 +352,7 @@ namespace Device_Control_2.snmp
                     if_table = new string[int.Parse(status.standart[4]), 5];
                     status.interface_table = new string[int.Parse(status.standart[4]), 5];
 
-                    NextRow();
+                    //GetNext();
                 }
                 else
                 {
@@ -516,8 +510,8 @@ namespace Device_Control_2.snmp
                         timer.Start();
                 }
             }
-            else
-                RestartConnection();
+            //else
+                //RestartConnection();
         } //---------------------------------------------------------------------------
 
 
@@ -568,7 +562,7 @@ namespace Device_Control_2.snmp
             switch (step)
             {
                 case 0:
-                    // standart
+                    GetStandart(survey[0].snmpSurvey());
                     break;
                 case 1:
                     if(is_first)
@@ -692,7 +686,15 @@ namespace Device_Control_2.snmp
         {
             if(res.vb != null)
             {
+                for (int i = 0; i < 3; i++)
+                {
+                    if (status.temperatures[i] == null)
+                        log.Write(cl.Name, "Значение переменной: [" + cl.Temperature[i, 1] + "]=" + res.vb[i].Value.ToString());
+                    else if (status.temperatures[i] != res.vb[i].Value.ToString())
+                        log.Write(cl.Name, "Значение переменной было изменено: [" + cl.Temperature[i, 1] + "]=" + res.vb[i].Value.ToString());
 
+                    status.temperatures[i] = res.vb[i].Value.ToString();
+                }
             }
 
             //GetNext();
@@ -714,7 +716,11 @@ namespace Device_Control_2.snmp
         {
             if (res.vb != null)
             {
-                
+                for (int i = 0; i < cl.Addition.Length / 4; i++)
+                {
+                    if (status.additional[i] == null)
+                        Console.WriteLine();
+                }
             }
 
             //GetNext();
@@ -731,7 +737,7 @@ namespace Device_Control_2.snmp
         {
             string time = (DateTime.Now.Hour < 10) ? "0" + DateTime.Now.Hour + ":" : DateTime.Now.Hour + ":";
             time += (DateTime.Now.Minute < 10) ? "0" + DateTime.Now.Minute : DateTime.Now.Minute.ToString();
-            status.info_updated_time = "Последний раз обновлено: " + time;
+            status.info_updated_time = "Последний раз обновлено: " + time + ":" + DateTime.Now.Second.ToString();
         }
 
         void TimerTick(object sender, EventArgs e)
