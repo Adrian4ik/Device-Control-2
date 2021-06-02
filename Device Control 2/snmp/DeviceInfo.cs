@@ -115,6 +115,8 @@ namespace Device_Control_2.snmp
         {
             survey[0] = new Survey(cl.Ip, GetStandart, GetError);
 
+            status.standart = new string[5];
+
             string[,] table = new string[100, 6];
 
             for (int i = 0; i < 100; i++)
@@ -127,10 +129,12 @@ namespace Device_Control_2.snmp
                 table[i, 4] = "1.3.6.1.2.1.2.2.1.3." + (i + 1); // 6 столбец
             }
 
-            status.standart = new string[5];
-
             survey[1] = new Survey(cl.Ip, table, GetTable, GetError);
-            survey[2] = new Survey(cl.Ip, cl.SysTime, GetSysTime, GetError);
+
+            status.interface_table = new string[100, 6];
+
+            if (cl.SysTime != null)
+                survey[2] = new Survey(cl.Ip, cl.SysTime, GetSysTime, GetError);
 
             if (cl.Temperature != null)
             {
@@ -381,7 +385,7 @@ namespace Device_Control_2.snmp
                     //GetNext();
                 }
             }
-        } // 2 res & 3
+        }
 
         void InspectStdChanges(Vb[] vbs)
         {
@@ -525,6 +529,25 @@ namespace Device_Control_2.snmp
                 //RestartConnection();
         } //---------------------------------------------------------------------------
 
+        void BunchSave(Form1.snmp_result res)
+        {
+            if (res.vb != null)
+            {
+                for (int i = 0; i < 100; i++)
+                {
+                    for (int j = 0; j < 5; j++)
+                    {
+                        if (status.interface_table[i, j] == null)
+                            log.Write(cl.Name, "Значение переменной: [" + cl.[i, 1] + "]=" + res.vb[i].Value.ToString());
+                        else if (status.interface_table[i, j] != res.vb[i].Value.ToString())
+                            log.Write(cl.Name, "Значение переменной было изменено: [" + cl.[i, 1] + "]=" + res.vb[i].Value.ToString());
+
+                        status.temperatures[i] = res.vb[i].Value.ToString();
+                    }
+                }
+            }
+        }
+
 
 
         void GetTable(Form1.snmp_result res)
@@ -578,6 +601,11 @@ namespace Device_Control_2.snmp
                 case 1:
                     if(is_first)
                     {
+                        //for(int i = 0; i < )
+                        //survey[1] = new Survey();
+                        
+                        BunchSave(survey[1].snmpSurvey());
+                        
                         //interface_table
                     }
                     else
@@ -586,21 +614,21 @@ namespace Device_Control_2.snmp
                     }
                     break;
                 case 2:
-                    if (cl.SysTime != null)
+                    if (survey[2] != null) // (cl.SysTime != null)
                         GetSysTime(survey[2].snmpSurvey());
                     break;
                 case 3:
-                    if (cl.Temperature != null && cl.Temperature.Length != 0)
+                    if (survey[3] != null) // if (cl.Temperature != null && cl.Temperature.Length != 0)
                         GetTemperatures(survey[3].snmpSurvey());
                     break;
                 case 4:
-                    //if (cl.IfName != null && cl.Temperature.Length != 0) // ------------------
-                        //GetIfNames(survey[4].snmpSurvey());
+                    if (survey[4] != null) // if (cl.IfName != null && cl.Temperature.Length != 0) // ------------------
+                        GetIfNames(survey[4].snmpSurvey());
                     break;
                 case 5:
                     step = -1;
 
-                    if (cl.Addition != null && cl.Addition.Length != 0)
+                    if (survey[5] != null) // if (cl.Addition != null && cl.Addition.Length != 0)
                         GetAdditional(survey[5].snmpSurvey());
                     break;
             }
@@ -718,7 +746,7 @@ namespace Device_Control_2.snmp
 
             }
 
-            survey[4] = new Survey(cl.Ip, cl.IfName, GetIfNames, GetError);
+            //survey[4] = new Survey(cl.Ip, cl.IfName, GetIfNames, GetError);
 
             //GetNext();
         }
@@ -752,7 +780,10 @@ namespace Device_Control_2.snmp
         {
             string time = (DateTime.Now.Hour < 10) ? "0" + DateTime.Now.Hour + ":" : DateTime.Now.Hour + ":";
             time += (DateTime.Now.Minute < 10) ? "0" + DateTime.Now.Minute : DateTime.Now.Minute.ToString();
-            status.info_updated_time = "Последний раз обновлено: " + time + ":" + DateTime.Now.Second.ToString();
+            
+            //time += (DateTime.Now.Second < 10) ? "0" + DateTime.Now.Second : DateTime.Now.Second.ToString();
+            
+            status.info_updated_time = "Последний раз обновлено: " + time;
         }
 
         void TimerTick(object sender, EventArgs e)
