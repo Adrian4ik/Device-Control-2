@@ -64,7 +64,7 @@ namespace Device_Control_2.snmp
             public string[] temperatures; // survey 3
             public string[] ifnames; // survey 4
 
-            public string[,] additional; // survey 5
+            public string[] additional; // survey 5
             public string[,] interface_table; // survey 1
         }
 
@@ -88,7 +88,7 @@ namespace Device_Control_2.snmp
             status.interface_list = new int[0];
             status.temperatures = new string[0];
             status.ifnames = new string[0];
-            status.additional = new string[0, 0];
+            status.additional = new string[0];
             status.interface_table = new string[0, 0];
 
             notification.id = cl.id;
@@ -127,6 +127,8 @@ namespace Device_Control_2.snmp
                 table[i, 4] = "1.3.6.1.2.1.2.2.1.3." + (i + 1); // 6 столбец
             }
 
+            status.standart = new string[5];
+
             survey[1] = new Survey(cl.Ip, table, GetTable, GetError);
             survey[2] = new Survey(cl.Ip, cl.SysTime, GetSysTime, GetError);
 
@@ -148,6 +150,8 @@ namespace Device_Control_2.snmp
                 for (int i = 0; i < add.Length; i++) { add[i] = cl.Addition[i, 0]; }
 
                 survey[5] = new Survey(cl.Ip, add, GetAdditional, GetError);
+
+                status.additional = new string[cl.Addition.Length / 6];
             }
 
             survey[6] = new Survey(cl.Ip, "1.3.6.1.2.1.1.1.0", GetConnection, GetError);
@@ -169,6 +173,9 @@ namespace Device_Control_2.snmp
 
         void TryPing()
         {
+            if (timer.Enabled)
+                timer.Stop();
+
             if (cl.Connect)
             {
                 try { ping.SendAsync(cl.Ip, 3000, waiter); }
@@ -234,6 +241,8 @@ namespace Device_Control_2.snmp
 
                 GetConnection(survey[6].snmpSurvey());
             }
+            else if (!timer.Enabled)
+                    timer.Start();
         }
 
 
@@ -331,18 +340,20 @@ namespace Device_Control_2.snmp
                 UpdateInfo();
                 PostAsyncResult(status);
 
-                status.standart = new string[5];
+                //status.standart = new string[5];
 
                 status.snmp_conn = 0;
 
-                int i = 0;
+                string[] names = { "sysDescr", "sysUpTime", "sysName", "sysLocation", "ifNumber" };
 
-                foreach (Vb vb in res.vb)
+                for (int i = 0; i < 5; i++)
                 {
-                    if (status.standart[i] != vb.Value.ToString())
-                        log.Write(cl.Name, "Значение переменной было изменено: [" + "]=" + vb.Value.ToString()); //\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+                    if (status.standart[i] == null)
+                        log.Write(cl.Name, "Значение переменной: [" + names[i] + "]=" + res.vb[i].Value.ToString());
+                    else if (status.standart[i] != res.vb[i].Value.ToString())
+                        log.Write(cl.Name, "Значение переменной было изменено: [" + names[i] + "]=" + res.vb[i].Value.ToString());
 
-                    status.standart[i++] = vb.Value.ToString();
+                    status.standart[i] = res.vb[i].Value.ToString();
                 }
 
                 status.interface_list = new int[int.Parse(status.standart[4])];
@@ -716,10 +727,14 @@ namespace Device_Control_2.snmp
         {
             if (res.vb != null)
             {
-                for (int i = 0; i < cl.Addition.Length / 4; i++)
+                for (int i = 0; i < cl.Addition.Length / 6; i++)
                 {
                     if (status.additional[i] == null)
-                        Console.WriteLine();
+                        log.Write(cl.Name, "Значение переменной: [" + cl.Addition[i, 1] + "]=" + res.vb[i].Value.ToString());
+                    else if (status.additional[i] != res.vb[i].Value.ToString())
+                        log.Write(cl.Name, "Значение переменной было изменено: [" + cl.Addition[i, 1] + "]=" + res.vb[i].Value.ToString());
+
+                    status.additional[i] = res.vb[i].Value.ToString();
                 }
             }
 

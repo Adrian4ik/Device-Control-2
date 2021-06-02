@@ -12,8 +12,6 @@ namespace Device_Control_2.Features
         {
             FileInfo fi = new FileInfo(Application.ExecutablePath);
             path = Application.ExecutablePath.Substring(0, Application.ExecutablePath.Length - fi.Name.Length);
-
-            WriteEvent("Программа запущена");
         }
 
         public void Write(string description)

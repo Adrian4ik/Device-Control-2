@@ -124,7 +124,7 @@ namespace Device_Control_2
 		#endregion Внешние классы
 
 		const string version = "2.1.4",
-					   patch = " (22)";
+					   patch = " (23)";
 
 		public Form1()
 		{
@@ -152,7 +152,7 @@ namespace Device_Control_2
 				dataGridView2.Rows.Add(cl.Length + 1);
 				traps = new Traps(GetTrap, GetError);
 
-
+				log.WriteEvent("Программа запущена");
 
 				InitAdditionalLabels();
 
@@ -668,7 +668,7 @@ namespace Device_Control_2
 			GetMod();
 			GetAdd();
 
-			Change_SNMP_Status(1, selected_client);
+			//Change_SNMP_Status(1, selected_client);
 
 			return ifNumber;
 		} // Метка старости (Пересмотреть)
@@ -1650,7 +1650,11 @@ namespace Device_Control_2
 					for (int i = 0; i < cl[selected_client].Addition.Length / 6; i++)
 					{
 						Add_names[i].Text = cl[selected_client].Addition[i, 2];
-						Add_labels[i].Text = status.additional.Length != 0 ? status.additional[i, 1] : "";
+
+						if(status.additional.Length != 0)
+							Add_labels[i].Text = cl[selected_client].Addition[i, 1].Contains("state") && status.additional[i] == "1" ? "Ok" : status.additional[i];
+						else
+							Add_labels[i].Text = "";
 					}
 				}
 				else

@@ -78,7 +78,7 @@ namespace Device_Control_2.snmp
 			}
 		}
 
-		private string[] ReadDeviceList()
+		string[] ReadDeviceList()
 		{
 			string[] folders = { };
 
@@ -103,7 +103,7 @@ namespace Device_Control_2.snmp
 			return folders;
 		}
 
-		private void CheckExample()
+		void CheckExample()
 		{
 			string[] example_config = { "Имя: Localhost", "ip: 127.0.0.1", "autoconnect: true" };
 
@@ -137,7 +137,7 @@ namespace Device_Control_2.snmp
 				File.WriteAllLines(path + "devices\\example\\optlist.xml", example_optlist);
 		}
 
-		private bool CheckFiles(string folder_name)
+		bool CheckFiles(string folder_name)
 		{
 			bool is_created = true;
 
@@ -175,7 +175,7 @@ namespace Device_Control_2.snmp
 			return is_created;
 		}
 
-		private bool CheckDevice(string folder_name)
+		bool CheckDevice(string folder_name)
 		{
 			bool accept = true;
 			string[] config = ConfigParse(folder_name);
@@ -190,7 +190,7 @@ namespace Device_Control_2.snmp
 			return accept;
 		}
 
-		private Client GetClient(string folder_name)
+		Client GetClient(string folder_name)
 		{
 			Client client = new Client();
 
@@ -213,6 +213,9 @@ namespace Device_Control_2.snmp
 
 				client.Temperature = new string[mod, 3];
 				client.Addition = new string[add, 6];
+				// [2, 0, 2] т.е. критичность, минимальное значение для выдачи уведомления нештатки, максимальное значение для выдачи уведомления нештатки
+				// [1, 1000, 1500] данный пункт необходимо прописывать для всех значений в 3й вкладке кроме температуры, так как она записывается отдельно
+				// [0] критичность имеет значения 0-2, 2 - высокая, вырубает закрытие уведомлялки, 1 - низкая, выдаёт стандартные уведомления, 0 - не выдаёт никакую информацию
 
 				for (int i = 0; i < mod; i++)
 				{
@@ -222,17 +225,14 @@ namespace Device_Control_2.snmp
 				}
 
 				for (int i = 0, j = mod + time + ifnames; i < add; i++)
-				{
-					client.Addition[i, 0] = optlist[i + j, 0];
-					client.Addition[i, 1] = optlist[i + j, 1];
-					client.Addition[i, 2] = optlist[i + j, 2];
-				}
+					for (int k = 0; k < 6; k++)
+						client.Addition[i, k] = optlist[i + j, k];
 			}
 
 			return client;
 		}
 
-		private string[] ConfigParse(string folder_name)
+		string[] ConfigParse(string folder_name)
 		{
 			string[] parsed_config = new string[3];
 
@@ -251,7 +251,7 @@ namespace Device_Control_2.snmp
 			return parsed_config;
 		}
 
-		private string[,] OptlistParse(string folder_name)
+		string[,] OptlistParse(string folder_name)
 		{
 			int mod = 0, add = 0, time = 0, ifnames = 0;
 			string[] optlist = File.ReadAllLines(path + "devices\\" + folder_name + "\\optlist.xml");
@@ -293,7 +293,21 @@ namespace Device_Control_2.snmp
 						parsed_optlist[4, 2] = "Температура минимально\r\nдопустимая, °С";
 						mod++;
 					}
-					else if (optlist[i].Substring(optlist[i].IndexOf('('), 12) == "(power state")
+					else
+					{
+						parsed_optlist[j, 0] = optlist[i].Substring(optlist[i].IndexOf("1."));
+						parsed_optlist[j, 1] = optlist[i].Substring(optlist[i].IndexOf('(') + 1, optlist[i].IndexOf(')') - optlist[i].IndexOf('(') - 1);
+						parsed_optlist[j, 2] = optlist[i].Substring(0, optlist[i].IndexOf('(') - 1);
+
+						string[] configs = GetAddData(optlist[i].Substring(optlist[i].IndexOf('[') + 1, optlist[i].IndexOf(']') - optlist[i].IndexOf('[') - 1));
+
+						parsed_optlist[j, 3] = configs[0];
+						parsed_optlist[j, 4] = configs[1];
+						parsed_optlist[j, 5] = configs[2];
+						add++;
+						j++;
+					}
+					/*else if (optlist[i].Substring(optlist[i].IndexOf('('), 12) == "(power state")
 					{
 						parsed_optlist[j, 0] = optlist[i].Substring(optlist[i].IndexOf("1."));
 						parsed_optlist[j, 1] = optlist[i].Substring(optlist[i].IndexOf('(') + 1, optlist[i].IndexOf(')') - optlist[i].IndexOf('(') - 1);
@@ -308,15 +322,7 @@ namespace Device_Control_2.snmp
 						parsed_optlist[j, 2] = optlist[i].Substring(0, optlist[i].IndexOf('(') - 1);
 						add++;
 						j++;
-					}
-					else
-					{
-						parsed_optlist[j, 0] = optlist[i].Substring(optlist[i].IndexOf("1."));
-						parsed_optlist[j, 1] = optlist[i].Substring(optlist[i].IndexOf('(') + 1, optlist[i].IndexOf(')') - optlist[i].IndexOf('(') - 1);
-						parsed_optlist[j, 2] = optlist[i].Substring(0, optlist[i].IndexOf('(') - 1);
-						add++;
-						j++;
-					}
+					}*/
 
 					parsed_optlist[0, 1] = mod.ToString();
 					parsed_optlist[0, 2] = add.ToString();
@@ -334,7 +340,22 @@ namespace Device_Control_2.snmp
 			return res_optlist;
 		}
 
-		private bool GetBoolFromString(string text)
+		string[] GetAddData(string text)
+        {
+			string[] configs = new string[3];
+
+			for (int i = 0, j = 0; i < text.Length; i++)
+            {
+				if (text[i] == ',')
+					j++;
+				else if (text[i] != ' ')
+					configs[j] += text[i];
+            }
+
+			return configs;
+        }
+
+		bool GetBoolFromString(string text)
 		{
 			if (text == "true" || text == "1" || text == "yes" || text == "y")
 				return true;
