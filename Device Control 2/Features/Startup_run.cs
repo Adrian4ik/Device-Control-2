@@ -11,7 +11,8 @@ namespace Device_Control_2.Features
 		FileInfo fi = new FileInfo(Application.ExecutablePath);
 		string name;
 
-		private bool minimized = false;
+		bool minimized = false;
+		public bool notifications = true;
 
 		public Startup_run()
 		{
@@ -20,9 +21,9 @@ namespace Device_Control_2.Features
 			SetConfigs(ReadConfig());
 		}
 
-		private bool[] ReadConfig()
+		bool[] ReadConfig()
 		{
-			bool[] cfgs = new bool[2];
+			bool[] cfgs = new bool[3];
 
 			string path = Application.ExecutablePath.Substring(0, Application.ExecutablePath.Length - fi.Name.Length);
 
@@ -34,6 +35,7 @@ namespace Device_Control_2.Features
 
 				cfgs[0] = true;
 				cfgs[1] = false;
+				cfgs[2] = true;
 			}
 			else
 			{
@@ -46,13 +48,16 @@ namespace Device_Control_2.Features
 
 					if (config[i].Length > 15 && config[i][4] == 'm')
 						cfgs[1] = GetBoolFromString(config[i].Substring(config[i].IndexOf(": ") + 2));
+
+					if (config[i].Length > 20 && config[i][5] == 'n')
+						cfgs[1] = GetBoolFromString(config[i].Substring(config[i].IndexOf(": ") + 2));
 				}
 			}
 
 			return cfgs;
 		}
 
-		private void SetConfigs(bool[] configs)
+		void SetConfigs(bool[] configs)
 		{
 			string Startup_folder = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
 
@@ -62,7 +67,7 @@ namespace Device_Control_2.Features
 			minimized = configs[1];
 		}
 
-		private bool GetBoolFromString(string text)
+		bool GetBoolFromString(string text)
 		{
 			if (text == "true" || text == "1" || text == "yes" || text == "y")
 				return true;
@@ -78,7 +83,7 @@ namespace Device_Control_2.Features
 				return FormWindowState.Normal;
 		}
 
-		private static class ShellLink
+		static class ShellLink
 		{
 			[ComImport,
 			Guid("000214F9-0000-0000-C000-000000000046"),
@@ -166,7 +171,7 @@ namespace Device_Control_2.Features
 			[ComImport,
 			Guid("00021401-0000-0000-C000-000000000046"),
 			ClassInterface(ClassInterfaceType.None)]
-			private class shl_link { }
+			class shl_link { }
 
 			internal static IShellLinkW CreateShellLink()
 			{
@@ -174,7 +179,7 @@ namespace Device_Control_2.Features
 			}
 		}
 
-		private static class ShortCut
+		static class ShortCut
 		{
 			public static void Create(
 				string PathToFile, string PathToLink,

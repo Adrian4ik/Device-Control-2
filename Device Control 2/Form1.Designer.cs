@@ -316,7 +316,7 @@
             // 
             this.TrayIcon.ContextMenuStrip = this.contextMenuStrip1;
             this.TrayIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("TrayIcon.Icon")));
-            this.TrayIcon.Text = "DeviceControl";
+            this.TrayIcon.Text = "DeviceControl БКМ";
             this.TrayIcon.Visible = true;
             this.TrayIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.TrayIcon_MouseDoubleClick);
             // 

@@ -124,7 +124,7 @@ namespace Device_Control_2
 		#endregion Внешние классы
 
 		const string version = "2.1.4",
-					   patch = " (25)";
+					   patch = " (26)";
 
 		public Form1()
 		{
@@ -415,7 +415,7 @@ namespace Device_Control_2
         {
 			int i = 1, j = 0, k = 0;
 
-			if (cl.Length > 1)
+			if (cl.Length > 2)
 			{
 				while (i < cl.Length)
 				{
@@ -429,6 +429,23 @@ namespace Device_Control_2
 					}
 					else
 						i++;
+				}
+			}
+			else if (cl.Length == 2)
+			{
+				if (cl[j].Addition != null)
+				{
+					k = cl[j].Addition.Length / 6;
+
+					if (cl[i].Addition != null)
+						k = cl[i].Addition.Length > cl[j].Addition.Length ? cl[i].Addition.Length / 6 : cl[j].Addition.Length / 6;
+				}
+				else
+                {
+					if (cl[i].Addition != null)
+						k = cl[i].Addition.Length / 6;
+					else
+						k = 0;
 				}
 			}
 			else if (cl[0].Addition != null)
@@ -985,8 +1002,8 @@ namespace Device_Control_2
 
 		int FindRowFromClient(int client)
 		{
-			if (cl[client].Connect)
-				return client;
+			//if (cl[client].Connect)
+				//return client;
 
 			int row = 0;
 
@@ -1635,6 +1652,8 @@ namespace Device_Control_2
 
 			if(status.interface_count != 0)
 				Fill_grid(status.interface_table, status.ifnames, status.interface_count);
+			else
+				dataGridView1.Rows.Clear();
 
 			UI_labels[14].Text = status.SysTime != null ? status.SysTime : "";
 
@@ -1643,7 +1662,7 @@ namespace Device_Control_2
 			else
 				for (int i = 0; i < 3; i++) { UI_labels[i + 16].Text = ""; }
 
-			if(Add_names.Length != 0)
+			if (Add_names != null && Add_names.Length != 0)
 			{
 				if (cl[selected_client].Addition != null)// && status.additional.Length != 0)
 				{
@@ -1682,7 +1701,7 @@ namespace Device_Control_2
 			UI_labels[15].Visible = cl[selected_client].Temperature != null;
 			for (int i = 16; i < 19; i++) { UI_labels[i].Text = ""; }
 
-			if (Add_names.Length != 0)
+			if (Add_names != null && Add_names.Length != 0)
 			{
 				for (int i = 0; i < Add_names.Length; i++)
 				{

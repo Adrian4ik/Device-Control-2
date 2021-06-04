@@ -94,8 +94,8 @@ namespace Device_Control_2.snmp
             notification.id = cl.id;
             notification.type = new bool[5];
 
-            if (cl.Addition != null)
-                notification.add_type = new bool[cl.Addition.Length];
+            //if (cl.Addition != null)
+                //notification.add_type = new bool[cl.Addition.Length];
 
             for (int i = 0; i < 5; i++) { notification.type[i] = false; }
 
@@ -251,6 +251,8 @@ namespace Device_Control_2.snmp
             //UpdateInfo();
             PostAsyncResult(status);
 
+            notification.type[2] = true;
+
             if (e.Reply.Status == IPStatus.Success)
                 GetConnection(survey[6].snmpSurvey());
             else if (!timer.Enabled)
@@ -263,7 +265,7 @@ namespace Device_Control_2.snmp
         {
             snmp_connection[conn_state_counter] = true;
 
-            notification.type[2] = false;
+            //notification.type[2] = false;
 
             UpdateInfo();
             PostAsyncResult(status);
@@ -752,10 +754,15 @@ namespace Device_Control_2.snmp
 
             if (res.vb == null)
                 RestartConnection();
-            else if (conn_state_counter == 1)
-                NextStep();
-            else if (conn_state_counter == 10)
-                AnalyzeConnection(); //----------------------------------------------
+            else
+            {
+                notification.type[2] = false;
+                
+                if (conn_state_counter == 1)
+                    NextStep();
+                else if (conn_state_counter == 10)
+                    AnalyzeConnection(); //----------------------------------------------
+            }
 
             //UpdateInfo();
             PostAsyncResult(status);
