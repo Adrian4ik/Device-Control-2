@@ -96,7 +96,7 @@ namespace Device_Control_2
 
 		#region Структурные объекты
 		message[] mess;
-		Notification_message[] notifications/* = new Message[10240]*/;
+		public static Notification_message[] notifications/* = new Message[10240]*/;
 		note notif;
 		RawDeviceList.Client[] cl; // список клиентов (не более 1024 клиентов)
 		#endregion Структурные объекты
@@ -106,7 +106,7 @@ namespace Device_Control_2
 
 		Pdu std = new Pdu(PduType.Get);
 
-		Notification notify;
+		public static Notification notify;
 
 		Traps traps;
 
@@ -120,11 +120,10 @@ namespace Device_Control_2
 		#region Внешние классы
 		Logs log = new Logs();
 		RawDeviceList devs = new RawDeviceList();
-		Display display = new Display();
 		#endregion Внешние классы
 
 		const string version = "2.1.4",
-					   patch = " (26)";
+					   patch = " (27)";
 
 		public Form1()
 		{
@@ -156,11 +155,11 @@ namespace Device_Control_2
 
 				InitAdditionalLabels();
 
+				FillConstants();
+
 				InitClientList();
 
 				InitNotifier();
-
-				FillConstants();
 
 				InitDeviceList();
 			}
@@ -513,7 +512,10 @@ namespace Device_Control_2
 
 		void ShowClientNotification(note result)
 		{
-
+			//notifications[(result.id * 10) + 2].State;
+			//notifications[0].
+			notify.Update_list(notifications);
+			Focus();
 		}
 
 
@@ -1252,7 +1254,7 @@ namespace Device_Control_2
 			{
 				Console.WriteLine("Network is unavailable, check connection and restart program.");
 
-				display.On();
+				//display.On();
 
 				Console.Beep(2000, 1000);
 
@@ -1320,7 +1322,7 @@ namespace Device_Control_2
 			}
 			catch // else
 			{
-				display.On();
+				//display.On();
 
 				Console.Beep(2000, 1000);
 
@@ -1360,7 +1362,7 @@ namespace Device_Control_2
 
 				connection[current_client, 0] = 1;
 
-				display.On();
+				//display.On();
 
 				Console.Beep(2000, 1000);
 			}
@@ -1438,7 +1440,7 @@ namespace Device_Control_2
 
 				connection[selected_client, 0] = 1;
 
-				display.On();
+				//display.On();
 
 				Console.Beep(2000, 1000);
 
@@ -1531,6 +1533,7 @@ namespace Device_Control_2
 		private void timer1_Tick(object sender, EventArgs e)
 		{
 			//Survey();
+			//ChangeInfo();
 		}
 
 		private void timer2_Tick(object sender, EventArgs e)
@@ -1685,6 +1688,9 @@ namespace Device_Control_2
 					}
 				}
 			}
+
+			//if (!timer1.Enabled)
+				//timer1.Start();
 		}
 
 		void ClearInfo()
@@ -1709,6 +1715,9 @@ namespace Device_Control_2
 					Add_labels[i].Text = "";
 				}
 			}
+
+			//if (timer1.Enabled)
+				//timer1.Stop();
 		}
 
 		void Switch_UI_visibility(bool show_UI)

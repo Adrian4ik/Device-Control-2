@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using Device_Control_2.Features;
+
 namespace Device_Control_2
 {
 	public partial class Notification : Form
@@ -20,6 +22,8 @@ namespace Device_Control_2
 		PictureBox[] pbx;
 		Label[] ttl;
 		Label[] txt;
+
+		Display display = new Display();
 
 		private struct Notification_message
 		{
@@ -153,7 +157,13 @@ namespace Device_Control_2
 			}
 
 			if (states_count > 0)
+            {
+				Console.Beep(2000, 1000);
+
+				display.On();
+
 				Show();
+			}
 			else
 			{
 				if (gb != null)

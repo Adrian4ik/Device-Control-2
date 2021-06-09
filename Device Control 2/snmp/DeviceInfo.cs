@@ -103,6 +103,10 @@ namespace Device_Control_2.snmp
             localNote = notification_callback;
 
             FillSurveyArray();
+
+            //if(cl.Addition != null)
+                //FillNotificationConstants();
+            
             TryPing();
         }
 
@@ -187,6 +191,36 @@ namespace Device_Control_2.snmp
         }*/
 
 
+        void FillNotificationConstants()
+        {
+            for (int i = 0; i < Form1.notifications.Length; i++)
+            {
+                int n_id = i % 10;
+
+                switch (n_id)
+                {
+                    case 0:
+                        //notifications[i].Text = "Нештатное состояние системы питания устройства " + cl[(i / 10) + 0].Name;
+                        Form1.notifications[(cl.id * 10) + 4].Text = "Прервана связь с устройством " + cl.Name;
+                        Form1.notifications[(cl.id * 10) + 4].Criticality = 2;
+                        break;
+                    case 1:
+                        Form1.notifications[(cl.id * 10) + 4].Text = "Нештатное состояние системы питания устройства " + cl.Name;
+                        Form1.notifications[(cl.id * 10) + 4].Criticality = 2;
+                        break;
+                    case 2:
+                        Form1.notifications[(cl.id * 10) + 4].Text = "Нештатное значение температуры устройства " + cl.Name;
+                        Form1.notifications[(cl.id * 10) + 4].Criticality = 2;
+                        break;
+                    case 3:
+                        Form1.notifications[(cl.id * 10) + 4].Text = "Нештатное состояние вентилятора устройства " + cl.Name;
+                        Form1.notifications[(cl.id * 10) + 4].Criticality = 2;
+                        break;
+                }
+            }
+        }
+
+
 
         void TryPing()
         {
@@ -199,6 +233,12 @@ namespace Device_Control_2.snmp
                 catch
                 {
                     //to_survey = false;
+
+                    if (!Form1.notifications[cl.id * 10].State)
+                    {
+                        Form1.notifications[cl.id * 10].Time = GetTime();
+                        Form1.notifications[cl.id * 10].State = true;
+                    }
 
                     notification.type[0] = true;
                     PostAsyncNotification(notification);
@@ -233,6 +273,9 @@ namespace Device_Control_2.snmp
             {
                 icmp_connection[conn_state_counter] = true;
 
+                Form1.notifications[cl.id * 10].Time = "";
+                Form1.notifications[cl.id * 10].State = false;
+
                 notification.type[1] = false;
 
                 status.icmp_conn = 1;
@@ -243,6 +286,14 @@ namespace Device_Control_2.snmp
 
                 status.icmp_conn = 3;
                 status.snmp_conn = 2;
+
+                if (!Form1.notifications[cl.id * 10].State)
+                {
+                    Form1.notifications[cl.id * 10].Time = GetTime();
+                    Form1.notifications[cl.id * 10].State = true;
+                }
+
+                log.WriteEvent(Form1.notifications[cl.id * 10].Text);
 
                 notification.type[1] = true;
                 PostAsyncNotification(notification);
@@ -451,6 +502,8 @@ namespace Device_Control_2.snmp
 
         void BunchSave(Form1.snmp_result res)
         {
+            bool rewrite_if_count = status.interface_count == 0 ? true : false;
+
             for (int i = 0, k = 0; i < res.vb.Length / 5; i++)
             {
                 bool to_up = false;
@@ -466,7 +519,7 @@ namespace Device_Control_2.snmp
                     {
                         status.interface_table[k, j] = res.vb[(i * 5) + j].Value.ToString();
 
-                        if(j == 4 && res.vb[(i * 5) + j].Value.ToString() == "6")
+                        if (j == 4 && res.vb[(i * 5) + j].Value.ToString() == "6")
                             to_up = true;
                     }
                     else
@@ -485,7 +538,9 @@ namespace Device_Control_2.snmp
                     RewriteRow(k);
 
                     k++;
-                    status.interface_count++;
+
+                    if(rewrite_if_count)
+                        status.interface_count++;
                 }
             }
         }
@@ -568,8 +623,13 @@ namespace Device_Control_2.snmp
 
             UpdateInfo();
 
-            if (step == -1 && !timer.Enabled)
-                timer.Start();
+            if (step == -1) // && !timer.Enabled
+            {
+                //timer.Start();
+
+                UpdateInfo();
+                PostAsyncResult(status);
+            }
             else
                 NextStep();
         }
@@ -708,6 +768,28 @@ namespace Device_Control_2.snmp
                 status.temperatures[i] = res.vb[i].Value.ToString();
             }
 
+            if(int.Parse(res.vb[0].Value.ToString()) > int.Parse(res.vb[1].Value.ToString()) || int.Parse(res.vb[2].Value.ToString()) > int.Parse(res.vb[0].Value.ToString()))
+            {
+                if (!Form1.notifications[(cl.id * 10) + 2].State)
+                {
+                    Form1.notifications[(cl.id * 10) + 2].Time = GetTime();
+                    Form1.notifications[(cl.id * 10) + 2].State = true;
+                }
+
+                //notification.type[1] = true;
+                PostAsyncNotification(notification);
+
+                log.WriteEvent(Form1.notifications[(cl.id * 10) + 2].Text);
+            }
+            else
+            {
+                Form1.notifications[(cl.id * 10) + 2].Time = "";
+                Form1.notifications[(cl.id * 10) + 2].State = false;
+
+                //notification.type[1] = true;
+                PostAsyncNotification(notification);
+            }
+
             //GetNext();
         }
 
@@ -771,10 +853,11 @@ namespace Device_Control_2.snmp
             {
                 conn_state_counter = 0;
 
-                if (timer.Enabled)
-                    timer.Stop();
+                /*if (timer.Enabled)
+                    timer.Stop();*/
             }
-            else if (!timer.Enabled)
+            
+            if (!timer.Enabled)
                 timer.Start();
         }
 
@@ -819,7 +902,12 @@ namespace Device_Control_2.snmp
                     bad_connections++;
             }
 
-            if (bad_connections > 0)
+            if (bad_connections == 9)
+                status.snmp_conn = 0;
+            else
+                status.snmp_conn = 1;
+
+            /*if (bad_connections > 0)
             {
                 if (bad_connections == 10)
                     status.snmp_conn = 2;
@@ -827,19 +915,24 @@ namespace Device_Control_2.snmp
                     status.snmp_conn = 1;
             }
             else
-                status.snmp_conn = 0;
+                status.snmp_conn = 0;*/
         }
 
 
 
         void UpdateInfo()
+        {            
+            status.info_updated_time = "Последний раз обновлено: " + GetTime();
+        }
+
+        string GetTime()
         {
             string time = (DateTime.Now.Hour < 10) ? "0" + DateTime.Now.Hour + ":" : DateTime.Now.Hour + ":";
             time += (DateTime.Now.Minute < 10) ? "0" + DateTime.Now.Minute : DateTime.Now.Minute.ToString();
-            
+
             //time += (DateTime.Now.Second < 10) ? "0" + DateTime.Now.Second : DateTime.Now.Second.ToString();
-            
-            status.info_updated_time = "Последний раз обновлено: " + time;
+
+            return time;
         }
 
         void TimerTick(object sender, EventArgs e)
