@@ -123,7 +123,7 @@ namespace Device_Control_2
 		#endregion Внешние классы
 
 		const string version = "2.1.4",
-					   patch = " (29.1e)";
+					   patch = "2.1.4 (29.2e)";
 
 		public Form1()
 		{
@@ -142,7 +142,7 @@ namespace Device_Control_2
 
 			InitStandartLabels();
 
-			toolTip1.SetToolTip(UI_labels[0], "Версия: " + version + patch);
+			toolTip1.SetToolTip(UI_labels[0], "Версия: " + patch);
 
 			cl = devs.ScanDevices;
 
@@ -960,7 +960,7 @@ namespace Device_Control_2
 		}
 
 		void Change_SNMP_Status(int stat, int client)
-		{
+		{			
 			switch (stat)
 			{
 				case 0:
@@ -1612,12 +1612,12 @@ namespace Device_Control_2
 					dataGridView2.Rows[hit.RowIndex].Selected = true;
 
 					//MessageBox.Show("Right click" + dataGridView2.Rows[hit.RowIndex].Index);
-					/*if (selected_client != 0)
+					if (selected_client != 0)
 					{
 						panel3.Location = new Point(e.X + 6, e.Y + 51);
 
 						button1.Text = cl[selected_client].Connect ? "Завершить сканирование" : "Начать сканирование";
-					}*/
+					}
 				}
 
 				ChangeInfo();
@@ -1735,17 +1735,18 @@ namespace Device_Control_2
 				}
 			}
 		}
-        #endregion dataGridView2_CellMouseClick
 
-        #region Button
-        private void button1_MouseEnter(object sender, EventArgs e)
+		#endregion dataGridView2_CellMouseClick
+
+		#region Button
+		private void button1_MouseEnter(object sender, EventArgs e)
 		{
 			panel3.BackColor = SystemColors.Highlight;
 		}
 
 		private void button1_MouseLeave(object sender, EventArgs e)
         {
-			//HideButton();
+			HideButton();
 		}
 
         private void button_Click(object sender, EventArgs e)
