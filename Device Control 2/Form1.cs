@@ -122,7 +122,7 @@ namespace Device_Control_2
 		RawDeviceList devs = new RawDeviceList();
 		#endregion Внешние классы
 
-		const string version = "2.1.4", patch = " (28)";
+		const string version = "2.1.4", patch = " (29.1)";
 
 		public Form1()
 		{
