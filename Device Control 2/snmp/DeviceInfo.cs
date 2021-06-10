@@ -295,6 +295,12 @@ namespace Device_Control_2.snmp
 
                 log.WriteEvent(Form1.notifications[cl.id * 10].Text);
 
+                //log.WriteEvent(cl[client].Name + " / " + cl[client].Ip, "Связь с устройством: [ICMP]= " + connection);
+                // connection = "утеряна";
+                // connection = "восстановлена";
+                // connection = "отсутствует";
+                // connection = "присутствует";
+
                 notification.type[1] = true;
                 PostAsyncNotification(notification);
             }
@@ -309,6 +315,28 @@ namespace Device_Control_2.snmp
             else if (!timer.Enabled)
                 timer.Start();
         }
+        
+        /*private void Connection(bool success)
+        {
+            if (success)
+            {
+                if (conn_state == 0)
+                    log.WriteEvent("Соединение присутствует");
+                else if (conn_state == 1)
+                    log.WriteEvent("Соединение восстановлено");
+
+                conn_state = 2;
+            }
+            else
+            {
+                if (conn_state == 0)
+                    log.WriteEvent("Соединение отсутствует");
+                else if (conn_state == 2)
+                    log.WriteEvent("Соединение утеряно");
+
+                conn_state = 1;
+            }
+        }*/
 
 
 
