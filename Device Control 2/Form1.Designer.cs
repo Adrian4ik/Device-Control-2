@@ -91,7 +91,7 @@
             this.Column5,
             this.Column6});
             this.dataGridView1.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
-            this.dataGridView1.Location = new System.Drawing.Point(5, 5);
+            this.dataGridView1.Location = new System.Drawing.Point(1, 3);
             this.dataGridView1.Margin = new System.Windows.Forms.Padding(0);
             this.dataGridView1.MultiSelect = false;
             this.dataGridView1.Name = "dataGridView1";
@@ -109,7 +109,7 @@
             this.dataGridView1.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
             this.dataGridView1.RowTemplate.Height = 28;
             this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.dataGridView1.Size = new System.Drawing.Size(370, 185);
+            this.dataGridView1.Size = new System.Drawing.Size(376, 190);
             this.dataGridView1.TabIndex = 0;
             // 
             // Column2
@@ -173,6 +173,7 @@
             this.tabControl1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.tabControl1.HotTrack = true;
             this.tabControl1.Location = new System.Drawing.Point(160, 55);
+            this.tabControl1.Margin = new System.Windows.Forms.Padding(0);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
             this.tabControl1.Size = new System.Drawing.Size(388, 223);
@@ -193,8 +194,8 @@
             // 
             this.tabPage2.Controls.Add(this.dataGridView1);
             this.tabPage2.Location = new System.Drawing.Point(4, 24);
+            this.tabPage2.Margin = new System.Windows.Forms.Padding(0);
             this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
             this.tabPage2.Size = new System.Drawing.Size(380, 195);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Интерфейсы";
@@ -330,43 +331,45 @@
             this.toolStripSeparator1,
             this.exitTSM});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(160, 104);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 126);
             // 
             // openTSM
             // 
             this.openTSM.Name = "openTSM";
-            this.openTSM.Size = new System.Drawing.Size(159, 22);
+            this.openTSM.Size = new System.Drawing.Size(180, 22);
             this.openTSM.Text = "Открыть";
             this.openTSM.Click += new System.EventHandler(this.openTSM_Click);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(156, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(177, 6);
             // 
             // commentTSM
             // 
+            this.commentTSM.Enabled = false;
             this.commentTSM.Name = "commentTSM";
-            this.commentTSM.Size = new System.Drawing.Size(159, 22);
+            this.commentTSM.Size = new System.Drawing.Size(180, 22);
             this.commentTSM.Text = "Оставить отзыв";
             this.commentTSM.Click += new System.EventHandler(this.commentTSM_Click);
             // 
             // aboutTSM
             // 
+            this.aboutTSM.Enabled = false;
             this.aboutTSM.Name = "aboutTSM";
-            this.aboutTSM.Size = new System.Drawing.Size(159, 22);
+            this.aboutTSM.Size = new System.Drawing.Size(180, 22);
             this.aboutTSM.Text = "О программе";
             this.aboutTSM.Click += new System.EventHandler(this.aboutTSM_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(156, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
             // 
             // exitTSM
             // 
             this.exitTSM.Name = "exitTSM";
-            this.exitTSM.Size = new System.Drawing.Size(159, 22);
+            this.exitTSM.Size = new System.Drawing.Size(180, 22);
             this.exitTSM.Text = "Выход";
             this.exitTSM.Click += new System.EventHandler(this.exitTSM_Click);
             // 

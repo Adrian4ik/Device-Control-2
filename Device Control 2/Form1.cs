@@ -123,7 +123,7 @@ namespace Device_Control_2
 		#endregion Внешние классы
 
 		const string version = "2.1.4",
-					   patch = " (27)";
+					   patch = " (28)";
 
 		public Form1()
 		{
@@ -1515,7 +1515,7 @@ namespace Device_Control_2
 		{
 			if (ClientSize.Width > 777)
 			{
-				int width = (ClientSize.Width - 564) / 2;
+				int width = (ClientSize.Width - 556) / 2;
 				Column2.Width = width;
 				Column3.Width = width;
 			}

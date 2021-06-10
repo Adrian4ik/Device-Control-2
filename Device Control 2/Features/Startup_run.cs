@@ -50,7 +50,7 @@ namespace Device_Control_2.Features
 						cfgs[1] = GetBoolFromString(config[i].Substring(config[i].IndexOf(": ") + 2));
 
 					if (config[i].Length > 20 && config[i][5] == 'n')
-						cfgs[1] = GetBoolFromString(config[i].Substring(config[i].IndexOf(": ") + 2));
+						cfgs[2] = GetBoolFromString(config[i].Substring(config[i].IndexOf(": ") + 2));
 				}
 			}
 
