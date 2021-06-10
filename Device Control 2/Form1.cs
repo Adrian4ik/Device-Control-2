@@ -1612,12 +1612,12 @@ namespace Device_Control_2
 					dataGridView2.Rows[hit.RowIndex].Selected = true;
 
 					//MessageBox.Show("Right click" + dataGridView2.Rows[hit.RowIndex].Index);
-					if (selected_client != 0)
+					/*if (selected_client != 0)
 					{
 						panel3.Location = new Point(e.X + 6, e.Y + 51);
 
 						button1.Text = cl[selected_client].Connect ? "Завершить сканирование" : "Начать сканирование";
-					}
+					}*/
 				}
 
 				ChangeInfo();

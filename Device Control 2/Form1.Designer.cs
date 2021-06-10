@@ -48,6 +48,10 @@
             this.dataGridView2 = new System.Windows.Forms.DataGridView();
             this.PictureCol = new System.Windows.Forms.DataGridViewImageColumn();
             this.NameCol = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.contextMenuStrip3 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.EndScanTSMItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuStrip2 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.BeginScanTSMItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.timer2 = new System.Windows.Forms.Timer(this.components);
             this.TrayIcon = new System.Windows.Forms.NotifyIcon(this.components);
@@ -69,6 +73,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).BeginInit();
+            this.contextMenuStrip3.SuspendLayout();
+            this.contextMenuStrip2.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
             this.panel3.SuspendLayout();
             this.SuspendLayout();
@@ -274,6 +280,7 @@
             this.dataGridView2.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.PictureCol,
             this.NameCol});
+            this.dataGridView2.ContextMenuStrip = this.contextMenuStrip3;
             this.dataGridView2.Location = new System.Drawing.Point(5, 50);
             this.dataGridView2.MultiSelect = false;
             this.dataGridView2.Name = "dataGridView2";
@@ -303,6 +310,36 @@
             this.NameCol.ReadOnly = true;
             this.NameCol.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             // 
+            // contextMenuStrip3
+            // 
+            this.contextMenuStrip3.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.EndScanTSMItem});
+            this.contextMenuStrip3.Name = "contextMenuStrip3";
+            this.contextMenuStrip3.ShowImageMargin = false;
+            this.contextMenuStrip3.Size = new System.Drawing.Size(192, 48);
+            // 
+            // EndScanTSMItem
+            // 
+            this.EndScanTSMItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.EndScanTSMItem.Name = "EndScanTSMItem";
+            this.EndScanTSMItem.Size = new System.Drawing.Size(191, 22);
+            this.EndScanTSMItem.Text = "Завершить сканирование";
+            // 
+            // contextMenuStrip2
+            // 
+            this.contextMenuStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.BeginScanTSMItem});
+            this.contextMenuStrip2.Name = "contextMenuStrip2";
+            this.contextMenuStrip2.ShowImageMargin = false;
+            this.contextMenuStrip2.Size = new System.Drawing.Size(163, 26);
+            // 
+            // BeginScanTSMItem
+            // 
+            this.BeginScanTSMItem.Name = "BeginScanTSMItem";
+            this.BeginScanTSMItem.ShowShortcutKeys = false;
+            this.BeginScanTSMItem.Size = new System.Drawing.Size(162, 22);
+            this.BeginScanTSMItem.Text = "Начать сканирование";
+            // 
             // timer1
             // 
             this.timer1.Interval = 60000;
@@ -331,25 +368,26 @@
             this.toolStripSeparator1,
             this.exitTSM});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 126);
+            this.contextMenuStrip1.ShowImageMargin = false;
+            this.contextMenuStrip1.Size = new System.Drawing.Size(135, 104);
             // 
             // openTSM
             // 
             this.openTSM.Name = "openTSM";
-            this.openTSM.Size = new System.Drawing.Size(180, 22);
+            this.openTSM.Size = new System.Drawing.Size(134, 22);
             this.openTSM.Text = "Открыть";
             this.openTSM.Click += new System.EventHandler(this.openTSM_Click);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(177, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(131, 6);
             // 
             // commentTSM
             // 
             this.commentTSM.Enabled = false;
             this.commentTSM.Name = "commentTSM";
-            this.commentTSM.Size = new System.Drawing.Size(180, 22);
+            this.commentTSM.Size = new System.Drawing.Size(134, 22);
             this.commentTSM.Text = "Оставить отзыв";
             this.commentTSM.Click += new System.EventHandler(this.commentTSM_Click);
             // 
@@ -357,19 +395,19 @@
             // 
             this.aboutTSM.Enabled = false;
             this.aboutTSM.Name = "aboutTSM";
-            this.aboutTSM.Size = new System.Drawing.Size(180, 22);
+            this.aboutTSM.Size = new System.Drawing.Size(134, 22);
             this.aboutTSM.Text = "О программе";
             this.aboutTSM.Click += new System.EventHandler(this.aboutTSM_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(131, 6);
             // 
             // exitTSM
             // 
             this.exitTSM.Name = "exitTSM";
-            this.exitTSM.Size = new System.Drawing.Size(180, 22);
+            this.exitTSM.Size = new System.Drawing.Size(134, 22);
             this.exitTSM.Text = "Выход";
             this.exitTSM.Click += new System.EventHandler(this.exitTSM_Click);
             // 
@@ -426,6 +464,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).EndInit();
+            this.contextMenuStrip3.ResumeLayout(false);
+            this.contextMenuStrip2.ResumeLayout(false);
             this.contextMenuStrip1.ResumeLayout(false);
             this.panel3.ResumeLayout(false);
             this.panel3.PerformLayout();
@@ -466,6 +506,10 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn NameCol;
         private System.Windows.Forms.Panel panel3;
         private System.Windows.Forms.TabPage tabPage3;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip2;
+        private System.Windows.Forms.ToolStripMenuItem BeginScanTSMItem;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip3;
+        private System.Windows.Forms.ToolStripMenuItem EndScanTSMItem;
     }
 }
 
