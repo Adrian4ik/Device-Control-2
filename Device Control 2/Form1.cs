@@ -123,7 +123,7 @@ namespace Device_Control_2
 		#endregion Внешние классы
 
 		const string version = "2.1.4",
-					   patch = "2.1.4 (29.3e)";
+					   patch = "2.1.4 (29.4e)";
 
 		public Form1()
 		{
@@ -970,34 +970,28 @@ namespace Device_Control_2
 					dataGridView2[0, FindRowFromClient(client)].Value = Properties.Resources.device_warning48;
 					break;
 				case 2:
-					dataGridView2[0, FindRowFromClient(client)].Value = Properties.Resources.device_fail48;
+					dataGridView2[0, FindRowFromClient(client)].Value = Properties.Resources.device_no_connect48;
 					break;
 				case 5:
 					dataGridView2[0, FindRowFromClient(client)].Value = Properties.Resources.device48;
 					break;
-				/*case 0:
-					pictureBox1.Image = Properties.Resources.ajax_loader;
-					UI_labels[2].Text = "Соединение";
+				case 6:
+					dataGridView2[0, FindRowFromClient(client)].Value = Properties.Resources.device_no_connect_e48;
 					break;
-				case 1:
-					pictureBox1.Image = Properties.Resources.green24;
-					UI_labels[2].Text = "Режим опроса";
+				/*case 1:
+					dataGridView2[0, FindRowFromClient(client)].Value = Properties.Resources.;
 					break;
-				case 2:
-					pictureBox1.Image = Properties.Resources.orange24;
-					UI_labels[2].Text = "Режим опроса";
+				/*case 2:
+					dataGridView2[0, FindRowFromClient(client)].Value = Properties.Resources.;
 					break;
-				case 3:
-					pictureBox1.Image = Properties.Resources.red24;
-					UI_labels[2].Text = "Автономный";
+				/*case 3:
+					dataGridView2[0, FindRowFromClient(client)].Value = Properties.Resources.;
 					break;
-				case 4:
-					pictureBox1.Image = Properties.Resources.gray24;
-					UI_labels[2].Text = "Автономный";
+				/*case 4:
+					dataGridView2[0, FindRowFromClient(client)].Value = Properties.Resources.;
 					break;
-				case 5:
-					pictureBox1.Image = Properties.Resources.gray24;
-					UI_labels[2].Text = "Неактивный";
+				/*case 5:
+					dataGridView2[0, FindRowFromClient(client)].Value = Properties.Resources.;
 					break;*/
 			}
 		}
