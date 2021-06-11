@@ -122,7 +122,7 @@ namespace Device_Control_2
 		RawDeviceList devs = new RawDeviceList();
 		#endregion Внешние классы
 
-		const string version = "2.1.4", patch = " (29.1)";
+		const string version = "2.1.4", patch = " (29.2)";
 
 		public Form1()
 		{
@@ -1063,21 +1063,12 @@ namespace Device_Control_2
 		#region Tray
 		void TrayIcon_MouseDoubleClick(object sender, MouseEventArgs e)
 		{
-			ShowWindow();
+			Show();
 		}
 
 		void openTSM_Click(object sender, EventArgs e)
 		{
-			ShowWindow();
-		}
-
-		void ShowWindow()
-		{
 			Show();
-
-			WindowState = FormWindowState.Normal;
-
-			Focus();
 		}
 
 		void commentTSM_Click(object sender, EventArgs e)
@@ -1095,7 +1086,7 @@ namespace Device_Control_2
 			TrayIcon.Visible = false;
 
 			Application.Exit();
-		} // Метка старости (Изменить)
+		}
 		#endregion Tray
 
         void dataGridView2_CellMouseClick(object sender, MouseEventArgs e)
