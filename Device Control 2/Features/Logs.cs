@@ -36,6 +36,22 @@ namespace Device_Control_2.Features
             File.AppendAllText(path + "log\\" + date + ".txt", "[" + DateTime.Now + "] <" + name + "> " + description + "\n");
         }
 
+        public void Write(string name, string[] description)
+        {
+            CheckLog();
+
+            string date = DateTime.Now.Year.ToString();
+            date += (DateTime.Now.Month < 10) ? "0" + DateTime.Now.Month : DateTime.Now.Month.ToString();
+            date += (DateTime.Now.Day < 10) ? "0" + DateTime.Now.Day : DateTime.Now.Day.ToString();
+
+            string desc = "";
+
+            for (int i = 0; i < description.Length; i++)
+                desc += "[" + DateTime.Now + "] <" + name + "> " + description[i] + "\n";
+
+            File.AppendAllText(path + "log\\" + date + ".txt", desc);
+        }
+
         private void CheckLog()
         {
             string date = DateTime.Now.Year.ToString();
@@ -78,6 +94,23 @@ namespace Device_Control_2.Features
             date += (DateTime.Now.Month < 10) ? "0" + DateTime.Now.Month : DateTime.Now.Month.ToString();
 
             File.AppendAllText(path + "event log\\" + date + ".txt", "[" + DateTime.Now + "] <" + name + "> " + description + "\n");
+        }
+
+        public void WriteEvent(string name, string[] description)
+        {
+            Write(name, description);
+
+            CheckEventLog();
+
+            string date = DateTime.Now.Year.ToString();
+            date += (DateTime.Now.Month < 10) ? "0" + DateTime.Now.Month : DateTime.Now.Month.ToString();
+
+            string desc = "";
+
+            for (int i = 0; i < description.Length; i++)
+                desc += "[" + DateTime.Now + "] <" + name + "> " + description[i] + "\n";
+
+            File.AppendAllText(path + "event log\\" + date + ".txt", desc);
         }
 
         private void CheckEventLog()

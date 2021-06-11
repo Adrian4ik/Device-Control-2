@@ -123,7 +123,7 @@ namespace Device_Control_2
 		#endregion Внешние классы
 
 		const string version = "2.1.4",
-					   patch = "2.1.4 (29.4e)";
+					   patch = "2.1.4 (29.5e)";
 
 		public Form1()
 		{
@@ -1212,9 +1212,17 @@ namespace Device_Control_2
 					dataGridView1.Rows[i].HeaderCell.Value = iftable[i, 0];
 					dataGridView1[0, i].Value = iftable[i, 1];
 
-					for (int j = 2; j < 5; j++) { dataGridView1[j, i].Value = iftable[i, j]; }
+					//for (int j = 2; j < 5; j++) { dataGridView1[j, i].Value = iftable[i, j]; }
 
-					if (iftable[i, 2] == "Отключен")
+					dataGridView1[2, i].Value = iftable[i, 2] == "1" ? "Связь есть" : "Отключен";
+					dataGridView1[3, i].Value = (int.Parse(iftable[i, 3]) / 1000000).ToString();
+					dataGridView1[4, i].Value = "Ethernet";
+
+					//status.interface_table[row, 2] = status.interface_table[row, 2] == "1" ? "Связь есть" : "Отключен";
+					//status.interface_table[row, 3] = (int.Parse(status.interface_table[row, 3]) / 1000000).ToString();
+					//status.interface_table[row, 4] = "Ethernet";
+
+					if (iftable[i, 2] != "1")
 						for(int j = 0; j < 5; j++)
 							dataGridView1[j, i].Style.BackColor = Color.LightGray;
 				}
@@ -1494,13 +1502,13 @@ namespace Device_Control_2
 
         void Form1_Resize(object sender, EventArgs e)
 		{
-			if (WindowState == FormWindowState.Minimized)
+			/*if (WindowState == FormWindowState.Minimized)
 			{
 				WindowState = FormWindowState.Normal;
 
 				Hide();
 			}
-			else
+			else*/
 				Resize_form();
 		}
 

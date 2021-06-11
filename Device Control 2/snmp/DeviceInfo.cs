@@ -330,9 +330,9 @@ namespace Device_Control_2.snmp
             for (int i = 0; i < 5; i++)
             {
                 if (status.standart[i] == null)
-                    log.Write(cl.Name, "Значение переменной: [" + names[i] + "]=" + res.vb[i].Value.ToString());
+                    log.Write(cl.Name + " / " + cl.Ip, "Значение переменной: [" + names[i] + "]=" + res.vb[i].Value.ToString());
                 else if (status.standart[i] != res.vb[i].Value.ToString())
-                    log.Write(cl.Name, "Значение переменной было изменено: [" + names[i] + "]=" + res.vb[i].Value.ToString());
+                    log.Write(cl.Name + " / " + cl.Ip, "Значение переменной было изменено: [" + names[i] + "]=" + res.vb[i].Value.ToString());
 
                 status.standart[i] = res.vb[i].Value.ToString();
             }
@@ -508,41 +508,151 @@ namespace Device_Control_2.snmp
             {
                 bool to_up = false;
 
+                string[] val = new string[5];
+
                 for (int j = 0; j < 5; j++)
                 {
-                    /*if (status.interface_table[i, j] == null)
-                        log.Write(cl.Name, "Значение переменной: [" + GetNameFromTable(i) + "]=" + res.vb[(i * 5) + j].Value.ToString());
-                    else if (status.interface_table[i, j] != res.vb[(i * 5) + j].Value.ToString())
-                        log.Write(cl.Name, "Значение переменной было изменено: [" + GetNameFromTable(i) + "]=" + res.vb[(i * 5) + j].Value.ToString());*/
+                    val[j] = res.vb[(i * 5) + j].Value.ToString();
+                }
 
-                    if (res.vb[(i * 5) + j].Value != null && res.vb[(i * 5) + j].Value.ToString() != "Null")
+                if (val != null && val[4] == "6")
+                {
+                    if (status.interface_table[k, 0] == "" && status.interface_table[k, 0] != null)
                     {
-                        status.interface_table[k, j] = res.vb[(i * 5) + j].Value.ToString();
+                        /*for (int j = 0; j < 5; j++)
+                        {
+                            log.Write(cl.Name + " / " + cl.Ip, "Значение переменной: [" + GetIfType(j) + ":" + i.ToString() + "]=" + val);
 
-                        if (j == 4 && res.vb[(i * 5) + j].Value.ToString() == "6")
-                            to_up = true;
+                            status.interface_table[k, j] = val[j];
+                        }*/
+
+                        status.interface_table[k, 0] = val[0];
+                        status.interface_table[k, 1] = val[1];
+                        status.interface_table[k, 2] = val[2];
+                        status.interface_table[k, 3] = val[3];
+                        status.interface_table[k, 4] = val[4];
+
+                        string[] desc = new string[5];
+
+                        desc[0] = "Значение переменной: [ifIndex:" + (i + 1).ToString() + "]=" + val[0];
+                        desc[1] = "Значение переменной: [ifDescr:" + (i + 1).ToString() + "]=" + val[1];
+                        desc[2] = "Значение переменной: [ifOperStatus:" + (i + 1).ToString() + "]=" + val[2];
+                        desc[3] = "Значение переменной: [ifSpeed:" + (i + 1).ToString() + "]=" + val[3];
+                        desc[4] = "Значение переменной: [ifType:" + (i + 1).ToString() + "]=" + val[4];
+
+                        log.Write(cl.Name + " / " + cl.Ip, desc);
+                    }
+                    else
+                    {
+                        /*for (int j = 1; j < 4; j++)
+                        {
+                            log.Write(cl.Name + " / " + cl.Ip, "Значение переменной было изменено: [" + GetIfType(j) + ":" + i.ToString() + "]=" + val[1]);
+                            status.interface_table[k, j] = val[j];
+                        }*/
+
+                        if (status.interface_table[k, 1] != val[1])
+                        {
+                            log.Write(cl.Name + " / " + cl.Ip, "Значение переменной было изменено: [ifDescr:" + (i + 1).ToString() + "]=" + val[1]);
+                            status.interface_table[k, 1] = val[1];
+                        }
+                        
+                        if (status.interface_table[k, 2] != val[2])
+                        {
+                            log.Write(cl.Name + " / " + cl.Ip, "Значение переменной было изменено: [ifOperStatus:" + (i + 1).ToString() + "]=" + val[2]);
+                            status.interface_table[k, 2] = val[2];
+                        }
+                        
+                        if (status.interface_table[k, 3] != val[3])
+                        {
+                            log.Write(cl.Name + " / " + cl.Ip, "Значение переменной было изменено: [ifSpeed:" + (i + 1).ToString() + "]=" + val[3]);
+                            status.interface_table[k, 3] = val[3];
+                        }
+
+                        //for (int j = 1; j < 4; j++)
+                        //    status.interface_table[k, j] = val[j];
+                    }
+
+                    k++;
+
+                    if (rewrite_if_count)
+                        status.interface_count++;
+                }
+
+                /*for (int j = 0; j < 5; j++)
+                {
+                    //if (status.interface_table[i, j] == null)
+                    //    log.Write(cl.Name + " / " + cl.Ip, "Значение переменной: [" + GetNameFromTable(i) + "]=" + res.vb[(i * 5) + j].Value.ToString());
+                    //else if (status.interface_table[i, j] != res.vb[(i * 5) + j].Value.ToString())
+                    //    log.Write(cl.Name + " / " + cl.Ip, "Значение переменной было изменено: [" + GetNameFromTable(i) + "]=" + res.vb[(i * 5) + j].Value.ToString());
+
+                    string eth = res.vb[(i * 5) + 4].Value.ToString();
+
+                    if (val != null && val[j] != "Null" && status.interface_table[k, j] != val[j] && eth == "6")
+                    {
+                        to_up = true;
+
+                        if (j != 5 || j != 0)
+                        {
+                            if (status.interface_table[k, j] == "" || status.interface_table[k, j] == null)
+                                log.Write(cl.Name + " / " + cl.Ip, "Значение переменной: [" + GetIfType(j) + ":" + i.ToString() + "]=" + val[j]);
+                            else
+                            {
+                                switch (j)
+                                {
+                                    case 1:
+                                        if ((status.interface_table[k, j] == "Связь есть" && val[j] != "1") || (status.interface_table[k, j] == "Отключен" && val[j] == "1"))
+                                            log.Write(cl.Name + " / " + cl.Ip, "Значение переменной было изменено: [ifDescr:" + i.ToString() + "]=" + val[j]);
+                                        break;
+                                    case 2:
+                                        if (status.interface_table[k, j] != val[j])
+                                            log.Write(cl.Name + " / " + cl.Ip, "Значение переменной было изменено: [ifOperStatus:" + i.ToString() + "]=" + val[j]);
+                                        break;
+                                    case 3:
+                                        if (status.interface_table[k, j] != val[j] + "000000")
+                                            log.Write(cl.Name + " / " + cl.Ip, "Значение переменной было изменено: [ifSpeed:" + i.ToString() + "]=" + val[j]);
+                                        break;
+                                }
+                            }
+                        }
+
+                        status.interface_table[k, j] = val;
                     }
                     else
                     {
 
                     }
 
-                    /*if ((i * 5) + j >= 90)
-                    {
-                        Console.WriteLine(k + " " + ((i * 5) + j));
-                    }*/
+                    //if ((i * 5) + j >= 90)
+                    //{
+                    //    Console.WriteLine(k + " " + ((i * 5) + j));
+                    //}
                 }
+                */
 
-                if (to_up)
+                /*if (to_up)
                 {
-                    RewriteRow(k);
+                    //RewriteRow(k);
 
                     k++;
 
                     if(rewrite_if_count)
                         status.interface_count++;
-                }
+                }*/
             }
+        }
+
+        string GetIfType(int id)
+        {
+            if (id == 0)
+                return "ifIndex";
+            if (id == 1)
+                return "ifDescr";
+            if (id == 2)
+                return "ifOperStatus";
+            if (id == 3)
+                return "ifSpeed";
+            else
+                return "ifType";
         }
 
         void RewriteRow(int row)
@@ -646,6 +756,8 @@ namespace Device_Control_2.snmp
                 for (int i = 1; i <= status.interface_count; i++) { ifn[i - 1] = cl.IfName + i; }
 
                 survey[4] = new Survey(cl.Ip, ifn, GetIfNames, GetError);
+
+                //AnalyzeTable();
                 /*if (is_first)
                 {
                     //for(int i = 0; i < )
@@ -696,7 +808,7 @@ namespace Device_Control_2.snmp
 
             if(status.SysTime != null)
                 if (status.SysTime.Substring(0, status.SysTime.IndexOf(' ')) != time.Substring(0, status.SysTime.IndexOf(' ')))
-                    log.Write(cl.Name, "Значение переменной было изменено: [system time]=" + time);
+                    log.Write(cl.Name + " / " + cl.Ip, "Значение переменной было изменено: [system time]=" + time);
 
             status.SysTime = time;
 
@@ -761,9 +873,9 @@ namespace Device_Control_2.snmp
             for (int i = 0; i < 3; i++)
             {
                 if (status.temperatures[i] == null)
-                    log.Write(cl.Name, "Значение переменной: [" + cl.Temperature[i, 1] + "]=" + res.vb[i].Value.ToString());
+                    log.Write(cl.Name + " / " + cl.Ip, "Значение переменной: [" + cl.Temperature[i, 1] + "]=" + res.vb[i].Value.ToString());
                 else if (status.temperatures[i] != res.vb[i].Value.ToString())
-                    log.Write(cl.Name, "Значение переменной было изменено: [" + cl.Temperature[i, 1] + "]=" + res.vb[i].Value.ToString());
+                    log.Write(cl.Name + " / " + cl.Ip, "Значение переменной было изменено: [" + cl.Temperature[i, 1] + "]=" + res.vb[i].Value.ToString());
 
                 status.temperatures[i] = res.vb[i].Value.ToString();
             }
@@ -811,14 +923,26 @@ namespace Device_Control_2.snmp
             for (int i = 0; i < cl.Addition.Length / 6; i++)
             {
                 if (status.additional[i] == null)
-                    log.Write(cl.Name, "Значение переменной: [" + cl.Addition[i, 1] + "]=" + res.vb[i].Value.ToString());
+                    log.Write(cl.Name + " / " + cl.Ip, "Значение переменной: [" + cl.Addition[i, 1] + "]=" + res.vb[i].Value.ToString());
                 else if (status.additional[i] != res.vb[i].Value.ToString())
-                    log.Write(cl.Name, "Значение переменной было изменено: [" + cl.Addition[i, 1] + "]=" + res.vb[i].Value.ToString());
+                    log.Write(cl.Name + " / " + cl.Ip, "Значение переменной было изменено: [" + cl.Addition[i, 1] + "]=" + res.vb[i].Value.ToString());
 
                 status.additional[i] = res.vb[i].Value.ToString();
             }
 
             //GetNext();
+        }
+
+        void AnalyzeTable()
+        {
+            for(int i = 0; i < status.interface_table.Length / 6; i++)
+            {
+                for(int j = 0; j < 5; j++)
+                {
+                    if (status.interface_table[i, j] != "")
+                        log.Write("Значение переменной было изменено []=");
+                }
+            }
         }
 
         void GetError(string msg)
