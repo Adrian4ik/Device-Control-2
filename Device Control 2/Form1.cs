@@ -123,7 +123,7 @@ namespace Device_Control_2
 		#endregion Внешние классы
 
 		const string version = "2.1.4",
-					   patch = "2.1.4 (29.2e)";
+					   patch = "2.1.4 (29.3e)";
 
 		public Form1()
 		{
@@ -1561,12 +1561,14 @@ namespace Device_Control_2
 		#region Tray
 		void TrayIcon_MouseDoubleClick(object sender, MouseEventArgs e)
 		{
-			ShowWindow();
+			Show();
+			//ShowWindow();
 		}
 
 		void openTSM_Click(object sender, EventArgs e)
 		{
-			ShowWindow();
+			Show();
+			//ShowWindow();
 		}
 
 		void ShowWindow()
