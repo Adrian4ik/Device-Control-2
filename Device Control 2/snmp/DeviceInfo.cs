@@ -18,10 +18,9 @@ namespace Device_Control_2.snmp
             to_survey = true; // переменная наличия связи с интернетом / кабелем
 
         bool[] survey_exists = new bool[6],
-            icmp_connection = new bool[10],
-            snmp_connection = new bool[10];
+            icmp_connection, snmp_connection;
 
-        int step = -1,
+        int step = -1, requests_per_minute = 6,
             conn_state_counter = 0, row_counter = 0, ri_counter = 0; // номер строки в таблице интерфейсов
 
         string[,] if_table; // таблица с 5-ю столбцами, доп. столбец заполняется в string[] ifnames
@@ -81,8 +80,11 @@ namespace Device_Control_2.snmp
 
             ping.PingCompleted += new PingCompletedEventHandler(Received_ping_reply);
 
-            timer.Interval = 6000;
+            timer.Interval = 6 * 1000; // (60 / requests_per_minute) * 1000
             timer.Tick += new EventHandler(TimerTick);
+
+            icmp_connection = new bool[requests_per_minute];
+            snmp_connection = new bool[requests_per_minute];
 
             status.id = cl.id;
             status.interface_list = new int[0];
@@ -329,10 +331,13 @@ namespace Device_Control_2.snmp
 
             for (int i = 0; i < 5; i++)
             {
-                if (status.standart[i] == null)
-                    log.Write(cl.Name + " / " + cl.Ip, "Значение переменной: [" + names[i] + "]=" + res.vb[i].Value.ToString());
-                else if (status.standart[i] != res.vb[i].Value.ToString())
-                    log.Write(cl.Name + " / " + cl.Ip, "Значение переменной было изменено: [" + names[i] + "]=" + res.vb[i].Value.ToString());
+                if(i != 5)
+                {
+                    if (status.standart[i] == null)
+                        log.Write(cl.Name + " / " + cl.Ip, "Значение переменной: [" + names[i] + "]=" + res.vb[i].Value.ToString());
+                    else if (status.standart[i] != res.vb[i].Value.ToString())
+                        log.Write(cl.Name + " / " + cl.Ip, "Значение переменной было изменено: [" + names[i] + "]=" + res.vb[i].Value.ToString());
+                }
 
                 status.standart[i] = res.vb[i].Value.ToString();
             }
@@ -966,14 +971,14 @@ namespace Device_Control_2.snmp
                 
                 if (conn_state_counter == 1)
                     NextStep();
-                else if (conn_state_counter == 10)
+                else if (conn_state_counter == requests_per_minute)
                     AnalyzeConnection(); //----------------------------------------------
             }
 
             //UpdateInfo();
             PostAsyncResult(status);
 
-            if (conn_state_counter == 10)
+            if (conn_state_counter == requests_per_minute)
             {
                 conn_state_counter = 0;
 
@@ -1010,7 +1015,7 @@ namespace Device_Control_2.snmp
 
             if (bad_connections > 0)
             {
-                if (bad_connections == 10)
+                if (bad_connections == requests_per_minute)
                     status.icmp_conn = 3;
                 else
                     status.icmp_conn = 2;
@@ -1026,14 +1031,14 @@ namespace Device_Control_2.snmp
                     bad_connections++;
             }
 
-            if (bad_connections == 9)
+            if (bad_connections == requests_per_minute - 1)
                 status.snmp_conn = 0;
             else
                 status.snmp_conn = 1;
 
             /*if (bad_connections > 0)
             {
-                if (bad_connections == 10)
+                if (bad_connections == max_oproses)
                     status.snmp_conn = 2;
                 else
                     status.snmp_conn = 1;

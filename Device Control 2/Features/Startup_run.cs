@@ -63,6 +63,8 @@ namespace Device_Control_2.Features
 
 			if (configs[0])
 				ShortCut.Create(Application.ExecutablePath, Startup_folder + "\\" + name.Substring(0, name.Length - 4) + ".lnk", "", "");
+			else if(File.Exists(Startup_folder + "\\" + name.Substring(0, name.Length - 4) + ".lnk"))
+				File.Delete(Startup_folder + "\\" + name.Substring(0, name.Length - 4) + ".lnk");
 
 			minimized = configs[1];
 		}
