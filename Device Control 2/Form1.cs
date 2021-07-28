@@ -126,7 +126,7 @@ namespace Device_Control_2
 		#endregion Внешние классы
 
 		const string version = "2.1.4",
-					   patch = "2.1.4 (32e)";
+					   patch = "2.1.4 (33e)";
 
 		public Form1()
 		{

@@ -454,6 +454,7 @@
             this.MinimumSize = new System.Drawing.Size(566, 339);
             this.Name = "Form1";
             this.Text = "DeviceControl БКМ";
+            this.TopMost = true;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Resize += new System.EventHandler(this.Form1_Resize);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();

@@ -131,11 +131,11 @@ namespace Device_Control_2
 		{
 			msg = message;
 
-			Update();
+			Update_form();
 			//Task.Factory.StartNew(() => { Update(); }).ContinueWith(t => { Show_or_Hide(); });
 		}
 
-		private void Update()
+		private void Update_form()
 		{
 			int states_count = 0;
 
@@ -171,7 +171,7 @@ namespace Device_Control_2
 				txt[i].Text = "Ситуация возникла: " + msg[notifies[i]].Time;
 			}
 
-			Show_or_Hide();
+			Show_or_Hide(notifies.Count());
 
 			/*if (states_count > 0)
             {
@@ -198,9 +198,9 @@ namespace Device_Control_2
 			//th.Interrupt();
 		}
 
-		void Show_or_Hide()
+		void Show_or_Hide(int count)
 		{
-			if (msg.Count() > 0)
+			if (count > 0)
 			{
 				Console.Beep(2000, 1000);
 

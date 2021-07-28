@@ -154,29 +154,38 @@ namespace Device_Control_2.snmp
 			// Construct target
 			UdpTarget target = new UdpTarget(ip, 161, 2000, 0);
 
-			// Make SNMP request
-			SnmpV1Packet result = (SnmpV1Packet)target.Request(list, param);
-
 			Form1.snmp_result res = new Form1.snmp_result();
 
-			// If result is null then agent didn't reply or we couldn't parse the reply.
-			if (result != null)
-			//if (result.Pdu.ErrorStatus != 0)
-			//    Console.WriteLine("Error in SNMP reply. Error {0} index {1}", result.Pdu.ErrorStatus, result.Pdu.ErrorIndex);
-			//else
+			try
 			{
-				target.Close();
+				// Make SNMP request
+				SnmpV1Packet result = (SnmpV1Packet)target.Request(list, param);
 
-				int i = 0;
-				res.Ip = ip;
-				res.vb = new Vb[result.Pdu.VbList.Count];
+				// If result is null then agent didn't reply or we couldn't parse the reply.
+				if (result != null)
+				{
+					if (result.Pdu.ErrorStatus != 0)
+						Console.WriteLine("Error in SNMP reply. Error {0} index {1}", result.Pdu.ErrorStatus, result.Pdu.ErrorIndex);
+					else
+					{
+						target.Close();
 
-				foreach (Vb v in result.Pdu.VbList) { res.vb[i++] = v; }
+						int i = 0;
+						res.Ip = ip;
+						res.vb = new Vb[result.Pdu.VbList.Count];
 
-				return res;
+						foreach (Vb v in result.Pdu.VbList) { res.vb[i++] = v; }
+
+						return res;
+					}
+				}
+				else
+					Console.WriteLine("No response received from SNMP agent.");
 			}
-			else
-				Console.WriteLine("No response received from SNMP agent.");
+			catch
+            {
+
+            }
 
 			target.Close();
 
