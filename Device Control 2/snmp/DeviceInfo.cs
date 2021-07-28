@@ -1,11 +1,11 @@
 ﻿using System;
-//using System.Collections.Generic;
-//using System.Linq;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.NetworkInformation;
-//using System.Text;
+using System.Text;
 using System.Threading;
-//using System.Threading.Tasks;
-//using System.Windows.Forms;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 using SnmpSharpNet;
 using Device_Control_2.Features;
 
@@ -108,10 +108,16 @@ namespace Device_Control_2.snmp
 
             //if(cl.Addition != null)
                 //FillNotificationConstants();
-            
-            TryPing();
         }
 
+        public void Start()
+        {
+            TryPing();
+
+            //Thread th = new Thread(TryPing);
+
+            //Task task = Task.Factory.StartNew(() => TryPing());
+        }
 
 
         /// <summary>
@@ -143,7 +149,6 @@ namespace Device_Control_2.snmp
 
             if (cl.SysTime != null)
                 survey[2] = new Survey(cl.Ip, cl.SysTime, GetSysTime, GetError);
-
             if (cl.Temperature != null)
             {
                 string[] temp = new string[cl.Temperature.Length / 3];
@@ -242,8 +247,15 @@ namespace Device_Control_2.snmp
                         Form1.notifications[cl.id * 10].State = true;
                     }
 
+                    status.icmp_conn = 3;
+                    status.snmp_conn = 2;
+
+                    log.WriteEvent(Form1.notifications[cl.id * 10].Text);
+
                     notification.type[0] = true;
                     PostAsyncNotification(notification);
+
+                    PostAsyncResult(status);
 
                     if (!timer.Enabled)
                         timer.Start();

@@ -39,7 +39,8 @@ namespace Device_Control_2
 	public partial class Form1 : Form
 	{
         #region Переменные
-        int current_client = 0,
+        int flag = 0,
+			current_client = 0,
 			selected_client = 0, // выбранный клиент
 			ping_interval = 6, // периодичность быстрого (1 пакет ICMP и 1 пакет SNMP) опроса устройств (сек)
 			snmp_interval = 1, // периодичность полного опроса всех устройств (мин)
@@ -99,6 +100,7 @@ namespace Device_Control_2
 		public static Notification_message[] notifications/* = new Message[10240]*/;
 		note notif;
 		RawDeviceList.Client[] cl; // список клиентов (не более 1024 клиентов)
+		BackgroundWorker[] workers;
 		#endregion Структурные объекты
 
 		#region Классовые объекты
@@ -115,6 +117,7 @@ namespace Device_Control_2
 		Label[] UI_labels = new Label[20];
 		Label[] Add_names;
 		Label[] Add_labels;
+		Thread[] threads;
 		#endregion Классовые объекты
 
 		#region Внешние классы
@@ -123,7 +126,7 @@ namespace Device_Control_2
 		#endregion Внешние классы
 
 		const string version = "2.1.4",
-					   patch = "2.1.4 (31e)";
+					   patch = "2.1.4 (32e)";
 
 		public Form1()
 		{
@@ -157,9 +160,9 @@ namespace Device_Control_2
 
 				FillConstants();
 
-				InitClientList();
-
 				InitNotifier();
+
+				InitClientList();
 
 				InitDeviceList();
 			}
@@ -485,6 +488,9 @@ namespace Device_Control_2
 
 		void InitClientList()
 		{
+			threads = new Thread[cl.Length];
+			workers = new BackgroundWorker[cl.Length];
+
 			deviceInfo = new DeviceInfo[cl.Length];
 
 			enabled = new int[cl.Length + 1];
@@ -492,7 +498,25 @@ namespace Device_Control_2
 
 			GetConnList();
 
-			for (int i = 0; i < cl.Length; i++) { deviceInfo[i] = new DeviceInfo(cl[i], ShowClientStatus, ShowClientNotification); }
+			for (int i = 0; i < cl.Length; i++)
+			{
+				//workers[i] = new BackgroundWorker();
+				deviceInfo[i] = new DeviceInfo(cl[i], ShowClientStatus, ShowClientNotification);
+				//workers[i].RunWorkerAsync(deviceInfo[i]);
+
+				deviceInfo[i].Start();
+				//threads[i] = new Thread(deviceInfo[i].Start);
+				//threads[i].Start();
+			}
+		}
+
+		void ss()
+        {
+			if(flag < cl.Length)
+            {
+				deviceInfo[flag] = new DeviceInfo(cl[flag], ShowClientStatus, ShowClientNotification);
+				bool lol = threads[flag].IsAlive;
+			}
 		}
 
 		delegate void ShowClientStatusDelegate(DeviceInfo.Status status);
@@ -514,8 +538,9 @@ namespace Device_Control_2
 		{
 			//notifications[(result.id * 10) + 2].State;
 			//notifications[0].
+			//Change_SNMP_Status(2, result.id);
 			notify.Update_list(notifications);
-			Focus();
+			//Focus();
 		}
 
 
@@ -1502,13 +1527,13 @@ namespace Device_Control_2
 
         void Form1_Resize(object sender, EventArgs e)
 		{
-			/*if (WindowState == FormWindowState.Minimized)
+			if (WindowState == FormWindowState.Minimized)
 			{
-				WindowState = FormWindowState.Normal;
+				//WindowState = FormWindowState.Normal;
 
 				Hide();
 			}
-			else*/
+			else
 				Resize_form();
 		}
 
@@ -1556,6 +1581,11 @@ namespace Device_Control_2
 			{
 				TrayIcon.Visible = false;
 
+				/*for (int i = 0; i < cl.Length; i++)
+                {
+					workers[i].Dispose();
+                }*/
+
 				log.WriteEvent("Программа завершена");
 			}
 		}
@@ -1563,14 +1593,14 @@ namespace Device_Control_2
 		#region Tray
 		void TrayIcon_MouseDoubleClick(object sender, MouseEventArgs e)
 		{
-			Show();
-			//ShowWindow();
+			//Show();
+			ShowWindow();
 		}
 
 		void openTSM_Click(object sender, EventArgs e)
 		{
-			Show();
-			//ShowWindow();
+			//Show();
+			ShowWindow();
 		}
 
 		void ShowWindow()

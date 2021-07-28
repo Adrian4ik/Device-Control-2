@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -23,7 +24,11 @@ namespace Device_Control_2
 		Label[] ttl;
 		Label[] txt;
 
+		Task th;
+
 		Display display = new Display();
+
+		Form1.Notification_message[] msg;
 
 		private struct Notification_message
 		{
@@ -45,6 +50,8 @@ namespace Device_Control_2
 
 			for (int i = 0; i < device_list.Length; i++)
 				states[i] = false;
+
+			//th = new Task(Update);
 		}
 
 		public void InitMessages(int count)
@@ -122,24 +129,32 @@ namespace Device_Control_2
 
 		public void Update_list(Form1.Notification_message[] message) // Form1.message info)
 		{
+			msg = message;
+
+			Update();
+			//Task.Factory.StartNew(() => { Update(); }).ContinueWith(t => { Show_or_Hide(); });
+		}
+
+		private void Update()
+		{
 			int states_count = 0;
 
-			for (int i = 0; i < message.Count(); i++)
-				if(message[i].State)
+			for (int i = 0; i < msg.Count(); i++)
+				if(msg[i].State)
 					states_count++;
 
 			int[] notifies = new int[states_count];
 			states_count = 0;
 
-			for (int i = 0; i < message.Count(); i++)
-				if (message[i].State)
+			for (int i = 0; i < msg.Count(); i++)
+				if (msg[i].State)
 					notifies[states_count++] = i;
 
 			InitControls(notifies.Count());
 
 			for (int i = 0; i < notifies.Count(); i++)
 			{
-				switch (message[notifies[i]].Criticality)
+				switch (msg[notifies[i]].Criticality)
 				{
 					case 0:
 						pbx[i].Image = Properties.Resources.info32;
@@ -152,12 +167,41 @@ namespace Device_Control_2
 						break;
 				}
 
-				ttl[i].Text = message[notifies[i]].Text;
-				txt[i].Text = "Ситуация возникла: " + message[notifies[i]].Time;
+				ttl[i].Text = msg[notifies[i]].Text;
+				txt[i].Text = "Ситуация возникла: " + msg[notifies[i]].Time;
 			}
 
-			if (states_count > 0)
+			Show_or_Hide();
+
+			/*if (states_count > 0)
             {
+				Console.Beep(2000, 1000);
+
+				display.On();
+
+				Show();
+			}
+			else
+			{
+				if (gb != null)
+					for (int i = 0; i < gb.Length; i++)
+					{
+						pbx[i].Dispose();
+						ttl[i].Dispose();
+						txt[i].Dispose();
+						gb[i].Dispose();
+					}
+
+				Hide();
+			}*/
+
+			//th.Interrupt();
+		}
+
+		void Show_or_Hide()
+		{
+			if (msg.Count() > 0)
+			{
 				Console.Beep(2000, 1000);
 
 				display.On();
